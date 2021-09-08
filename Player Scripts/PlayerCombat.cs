@@ -57,7 +57,7 @@ public class PlayerCombat : MonoBehaviour
 	public void FindRespawnWindow()
 	{
 		respawnWindow = GameObject.Find("RespawnWindow");
-		respawnWindow.SetActive(false);
+		//respawnWindow.SetActive(false);
 		playerMovement = GetComponent<PlayerMovement>();
 	}
 	void HealthCheck()

@@ -9,7 +9,7 @@ public class StatPanel : MonoBehaviour
 
 	private CharacterStat[] stats;
 
-	[SerializeField] TextMeshProUGUI statsLevelText;
+	//[SerializeField] TextMeshProUGUI statsLevelText;
 
 	private void OnValidate()
 	{

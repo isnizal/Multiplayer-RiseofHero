@@ -180,37 +180,42 @@ public class Character : NetworkBehaviour
 	}
 	public void FindObjects()
 	{
-		playerMovement = gameObject.GetComponent<PlayerMovement>();
+
+		//gamemanager
 		achievement = FindObjectOfType<AchievementManager>();
+
+		//equipment and inventory
 		Inventory = FindObjectOfType<Inventory>();
 		EquipmentPanel = FindObjectOfType<EquipmentPanel>();
-		itemStash = FindObjectOfType<ItemStash>();
-		itemStash.gameObject.SetActive(false);
-
 		statPanel = FindObjectOfType<StatPanel>();
 		itemTooltip = FindObjectOfType<ItemTooltip>();
 		dropItemArea = FindObjectOfType<DropItemArea>();
-		sellItemArea = FindObjectOfType<DropSellArea>();
-
-		craftingWindow = FindObjectOfType<CraftingWindow>();
-		if(craftingWindow.gameObject.activeInHierarchy)
-			craftingWindow.gameObject.SetActive(false);
-
-		_shopWindow = sellItemArea.gameObject.transform.parent.gameObject;
-		if(_shopWindow.activeInHierarchy)
-			sellItemArea.gameObject.transform.parent.gameObject.SetActive(false);
-
 		dropItemDialog = GameObject.Find("DropItemDialog").GetComponent<QuestionDialog>();
 		if(dropItemDialog.gameObject.activeInHierarchy)
 			dropItemDialog.gameObject.SetActive(false);
 
-		sellItemDialog = GameObject.Find("SellItemDialog").GetComponent<QuestionDialog>();
-		if(sellItemDialog.gameObject.activeInHierarchy)
-			sellItemDialog.gameObject.SetActive(false);
-
+		//world
+		playerMovement = gameObject.GetComponent<PlayerMovement>();
+		//itemStash = FindObjectOfType<ItemStash>();
+		//itemStash.gameObject.SetActive(false);
 		itemSaveManager = FindObjectOfType<ItemSaveManager>();
-		SetupEvents();
 
+
+		//world shop area
+		//sellItemArea = FindObjectOfType<DropSellArea>();
+		//craftingWindow = FindObjectOfType<CraftingWindow>();
+		//if(craftingWindow.gameObject.activeInHierarchy)
+			//craftingWindow.gameObject.SetActive(false);
+		//_shopWindow = sellItemArea.gameObject.transform.parent.gameObject;
+		//if(_shopWindow.activeInHierarchy)
+			//sellItemArea.gameObject.transform.parent.gameObject.SetActive(false);
+		//sellItemDialog = GameObject.Find("SellItemDialog").GetComponent<QuestionDialog>();
+		//if(sellItemDialog.gameObject.activeInHierarchy)
+			//sellItemDialog.gameObject.SetActive(false);
+
+
+
+		SetupEvents();
 	}
 
 	private void SetupEvents()
@@ -225,11 +230,11 @@ public class Character : NetworkBehaviour
 		// Pointer Enter
 		Inventory.OnPointerEnterEvent += ShowTooltip;
 		EquipmentPanel.OnPointerEnterEvent += ShowTooltip;
-		craftingWindow.OnPointerEnterEvent += ShowTooltip;
+		//craftingWindow.OnPointerEnterEvent += ShowTooltip;
 		// Pointer Exit
 		Inventory.OnPointerExitEvent += HideTooltip;
 		EquipmentPanel.OnPointerExitEvent += HideTooltip;
-		craftingWindow.OnPointerExitEvent += HideTooltip;
+		//craftingWindow.OnPointerExitEvent += HideTooltip;
 		// Begin Drag
 		Inventory.OnBeginDragEvent += BeginDrag;
 		EquipmentPanel.OnBeginDragEvent += BeginDrag;
@@ -244,12 +249,10 @@ public class Character : NetworkBehaviour
 		EquipmentPanel.OnDropEvent += Drop;
 		dropItemArea.OnDropEvent += DropItemOutsideUI;
 
-		sellItemArea.OnDropEvent += DropItemSellArea;
+		//sellItemArea.OnDropEvent += DropItemSellArea;
 	}
 	private void Awake()
 	{
-
-
 
 	}
 
@@ -459,6 +462,8 @@ public class Character : NetworkBehaviour
 
 	private void ShowTooltip(BaseItemSlot itemSlot)
 	{
+		Debug.Log("item slot" + itemSlot);
+		Debug.Log("show" + itemTooltip);
 		if (itemSlot.Item != null)
 		{
 			itemTooltip.ShowTooltip(itemSlot.Item);
@@ -467,6 +472,7 @@ public class Character : NetworkBehaviour
 
 	private void HideTooltip(BaseItemSlot itemSlot)
 	{
+		Debug.Log(itemTooltip + "hide item tool tip");
 		if (itemTooltip.gameObject.activeSelf)
 		{
 			itemTooltip.HideTooltip();

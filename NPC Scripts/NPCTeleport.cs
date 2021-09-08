@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Mirror;
+using Mirror.Experimental;
 
 public class NPCTeleport : MonoBehaviour
 {
@@ -21,7 +21,6 @@ public class NPCTeleport : MonoBehaviour
 
 	private void OnValidate()
 	{
-		player = GameObject.FindGameObjectWithTag("Player");
 	}
 
 	private void Start()
@@ -39,20 +38,21 @@ public class NPCTeleport : MonoBehaviour
 		if(Input.GetKeyDown(KeyCode.Q) && inRange)
 		{
 			npcDialog.SetActive(true);
-			player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeAll;
+			player.GetComponent<NetworkRigidbody2D>().target.constraints = RigidbodyConstraints2D.FreezeAll;
 		}
 	}
 
 	public void OpenTeleportChat()
 	{
 		npcDialog.SetActive(true);
-		player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeAll;
+		player.GetComponent<NetworkRigidbody2D>().target.constraints = RigidbodyConstraints2D.FreezeAll;
 	}
 
 	private void OnTriggerEnter2D(Collider2D other)
 	{
 		if(other.gameObject.CompareTag("Player") && !other.isTrigger)
 		{
+			player = other.gameObject;
 			inRange = true;
 			if (GameManager.GameManagerInstance.isHandheld)
 			{
@@ -77,7 +77,7 @@ public class NPCTeleport : MonoBehaviour
 
 	IEnumerator EnterArea()
 	{
-		player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeAll;
+		player.GetComponent<NetworkRigidbody2D>().target.constraints = RigidbodyConstraints2D.FreezeAll;
 		transition.SetBool("Exit", true);
 		yield return new WaitForSeconds(teleportDelayTime);
 		player.transform.position = new Vector2(toLocation.transform.position.x, toLocation.transform.position.y);
@@ -89,16 +89,16 @@ public class NPCTeleport : MonoBehaviour
 			inventory.AddItem(startItemSO.GetCopy());
 			GameManager.GameManagerInstance.firstTimePlaying = 1;
 		}
-		player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.None;
-		player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeRotation;
+		player.GetComponent<NetworkRigidbody2D>().target.constraints = RigidbodyConstraints2D.None;
+		player.GetComponent<NetworkRigidbody2D>().target.constraints = RigidbodyConstraints2D.FreezeRotation;
 
 	}
 
 	public void CloseWindow()
 	{
 		npcDialog.SetActive(false);
-		player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.None;
-		player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeRotation;
+		player.GetComponent<NetworkRigidbody2D>().target.constraints = RigidbodyConstraints2D.None;
+		player.GetComponent<NetworkRigidbody2D>().target.constraints = RigidbodyConstraints2D.FreezeRotation;
 	}
 
 	public void LeaveArea()

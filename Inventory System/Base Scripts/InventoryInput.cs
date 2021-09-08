@@ -14,10 +14,10 @@ public class InventoryInput : NetworkBehaviour
     public override void OnStartClient()
     {
         base.OnStartClient();
-		_characterPanelObject = GameObject.Find("Character Panel").GetComponent<CanvasGroup>();
-		_skillWindowGameObject = GameObject.Find("SkillPanelWindow").GetComponent<CanvasGroup>();
-		_settingsWindowGameObject = GameObject.Find("SettingsPanel");
-		_settingsWindowGameObject.SetActive(false);
+		//_characterPanelObject = GameObject.Find("Character Panel").GetComponent<CanvasGroup>();
+		//_skillWindowGameObject = GameObject.Find("SkillPanelWindow").GetComponent<CanvasGroup>();
+		//_settingsWindowGameObject = GameObject.Find("SettingsPanel");
+		//_settingsWindowGameObject.SetActive(false);
 	}
     private void Update()
 	{

@@ -9,7 +9,7 @@ public class ItemTooltip : MonoBehaviour
 
 	private void Awake()
 	{
-		gameObject.SetActive(false);
+		//gameObject.SetActive(false);
 	}
 
 	public void ShowTooltip(Item item)

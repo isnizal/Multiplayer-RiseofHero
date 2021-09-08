@@ -23,7 +23,6 @@ public class Teleport : MonoBehaviour
 
 	private void OnValidate()
 	{
-		player = GameObject.FindGameObjectWithTag("Player");
 	}
 
     public GameObject player;
@@ -38,6 +37,7 @@ public class Teleport : MonoBehaviour
 	{
 		if(other.gameObject.CompareTag("Player") && !other.isTrigger)
 		{
+			player = other.gameObject;
 			if(LevelSystem.LevelInstance.currentLevel < requiredLevel)
 			{
 				Toast.Show("You arent high enough level for this area", 2f, ToastPosition.MiddleCenter);

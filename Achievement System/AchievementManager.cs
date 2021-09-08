@@ -34,11 +34,11 @@ public class AchievementManager : NetworkBehaviour
     public override void OnStartClient()
     {
         base.OnStartClient();
-		achivementNotice = GameObject.Find("AchivementNotice");
-		achNoticeTitle = GameObject.Find("AchNoticeTitle").GetComponent<TextMeshProUGUI>();
-		achNoticeDesc = GameObject.Find("AchNoticeDesc").GetComponent<TextMeshProUGUI>();
-		achivementNotice.SetActive(false);
-		LoadAchievementPanel();
+		//achivementNotice = GameObject.Find("AchivementNotice");
+		//achNoticeTitle = GameObject.Find("AchNoticeTitle").GetComponent<TextMeshProUGUI>();
+		//achNoticeDesc = GameObject.Find("AchNoticeDesc").GetComponent<TextMeshProUGUI>();
+		//achivementNotice.SetActive(false);
+		//LoadAchievementPanel();
 	}
     [Space]
 	[Header("Kill Red Slimes - KS1")]
@@ -111,10 +111,10 @@ public class AchievementManager : NetworkBehaviour
 		//}
 
 		//disable after initialize
-		for (int f = 0; f < achievementSlot.Length; f++)
-		{
-			achievementSlot[f].SetActive(false);
-		}
+		//for (int f = 0; f < achievementSlot.Length; f++)
+		//{
+		//	achievementSlot[f].SetActive(false);
+		//}
 	}
 	private void OnValidate()
 	{

@@ -65,7 +65,7 @@ public class UIManager : NetworkBehaviour
         base.OnStartAuthority();
         Debug.Log("local authority");
         base.OnStartLocalPlayer();
-        InitializeVariable();
+        //InitializeVariable();
     }
     
     void Update()

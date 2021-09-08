@@ -76,12 +76,12 @@ public class GameManager : NetworkBehaviour
 
 	public void InitializeVariable()
 	{
-		joystickCanvas = GameObject.Find("JoystickCanvas");
-		dialogText = GameObject.Find("DialogText").GetComponent<TextMeshProUGUI>();
-		dialogBox = GameObject.Find("DialogBox");
-		dialogBox.SetActive(false);
-		toLocation = GameObject.Find("PlayerStartPoint");
-		transition = GameObject.Find("CrossFade").GetComponent<Animator>();
+		//joystickCanvas = GameObject.Find("JoystickCanvas");
+		//dialogText = GameObject.Find("DialogText").GetComponent<TextMeshProUGUI>();
+		//dialogBox = GameObject.Find("DialogBox");
+		//dialogBox.SetActive(false);
+		//toLocation = GameObject.Find("PlayerStartPoint");
+		//transition = GameObject.Find("CrossFade").GetComponent<Animator>();
 		if (SystemInfo.deviceType == DeviceType.Handheld)
 		{
 			joystickCanvas.SetActive(true);
@@ -92,7 +92,6 @@ public class GameManager : NetworkBehaviour
 			joystickCanvas.SetActive(false);
 			isDesktop = true;
 		}
-
 
 		autoSave = true;
 		saveTimer = StartSaveTimer();

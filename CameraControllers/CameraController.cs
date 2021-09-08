@@ -17,7 +17,7 @@ public class CameraController : MonoBehaviour
 	{
         if (thePlayer == null)
 		{
-            thePlayer = GameObject.FindGameObjectWithTag("Player");
+            thePlayer = FindObjectOfType<PlayerMovement>().gameObject;
             if(thePlayer != null)
 			{
                 lookAtTarget = thePlayer.transform;

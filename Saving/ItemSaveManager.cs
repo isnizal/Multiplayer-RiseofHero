@@ -100,7 +100,7 @@ public class ItemSaveManager : MonoBehaviour
 
 	public void SaveItemStash(Character character)
 	{
-		SaveItems(character.itemStash.ItemSlots, ItemStashFileName);
+		//SaveItems(character.itemStash.ItemSlots, ItemStashFileName);
 	}
 
 	private void SaveItems(IList<ItemSlot> itemSlots, string fileName)
