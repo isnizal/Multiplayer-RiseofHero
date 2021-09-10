@@ -76,12 +76,22 @@ public class GameManager : NetworkBehaviour
 
 	public void InitializeVariable()
 	{
-		//joystickCanvas = GameObject.Find("JoystickCanvas");
-		//dialogText = GameObject.Find("DialogText").GetComponent<TextMeshProUGUI>();
-		//dialogBox = GameObject.Find("DialogBox");
-		//dialogBox.SetActive(false);
-		//toLocation = GameObject.Find("PlayerStartPoint");
-		//transition = GameObject.Find("CrossFade").GetComponent<Animator>();
+		player = FindObjectOfType<PlayerMovement>().gameObject;
+		Debug.Log(player);
+		if (player is null)
+			player = FindObjectOfType<Character>().gameObject;
+
+		Debug.Log(player);
+		joystickCanvas = GameObject.Find("JoystickCanvas");
+		//player hud
+		dialogText = GameObject.Find("DialogText").GetComponent<TextMeshProUGUI>();
+		dialogBox = GameObject.Find("DialogBox");
+		dialogBox.SetActive(false);
+		//castle
+		toLocation = GameObject.Find("PlayerStartPoint");
+		//transition
+		transition = GameObject.Find("CrossFade").GetComponent<Animator>();
+
 		if (SystemInfo.deviceType == DeviceType.Handheld)
 		{
 			joystickCanvas.SetActive(true);
@@ -96,12 +106,18 @@ public class GameManager : NetworkBehaviour
 		autoSave = true;
 		saveTimer = StartSaveTimer();
 		StartCoroutine(saveTimer);
-		player = GameObject.FindGameObjectWithTag("Player");
+
+
 	}
+
+    public override void OnStartAuthority()
+    {
+        base.OnStartAuthority();
+    }
     public override void OnStartClient()
     {
         base.OnStartClient();
-		InitializeVariable();
+
 	}
     private void Update()
 	{

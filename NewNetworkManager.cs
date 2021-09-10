@@ -10,9 +10,7 @@ public class NewNetworkManager : NetworkManager
     {
        // Debug.Log("add player");
         base.OnServerAddPlayer(conn);
-        var equipmentPanel = Instantiate(NetworkManager.singleton.spawnPrefabs[0]);
-        equipmentPanel.name = equipmentPanel.name + "" + conn;
-        NetworkServer.Spawn(equipmentPanel, conn);
-        Debug.Log("sucess spawn");
+        Debug.Log("server" + conn.identity);
     }
+
 }

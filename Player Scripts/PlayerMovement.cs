@@ -46,28 +46,14 @@ public class PlayerMovement : NetworkBehaviour
 
 	private GameClothes gameClothes;
 	private PlayerClothes playerClothes;
-	[SyncVar]
-	public int helmetValue;
-	[SyncVar]
-	public int torsoValue;
-	[SyncVar]
-	public int armValue;
-	[SyncVar]
-	public int bootValue;
-	[SyncVar]
-	public int swordValue;
-	[SyncVar]
-	public int shieldValue;
-	[SyncVar]
-	public int hairValue;
 
-	private void Awake()
-	{
-
-		//myRigidbody = GetComponent<Rigidbody2D>();
-		//anim = GetComponent<Animator>();
-
-	}
+	[SyncVar]public int helmetValue;
+	[SyncVar] public int torsoValue;
+	[SyncVar] public int armValue;
+	[SyncVar] public int bootValue;
+	[SyncVar] public int swordValue;
+	[SyncVar] public int shieldValue;
+	[SyncVar] public int hairValue;
 	public void Initialize() 
 	{
 		attacking = false;
@@ -90,9 +76,9 @@ public class PlayerMovement : NetworkBehaviour
 
 			netAnim.animator.SetBool("IdleFront", true);
 			netAnim.animator.Play("Base Layer.FrontIdleAnimation");
-			CmdSetSpriteFront();
-		}
 		
+		}
+
 
 		currePos = 0;
 		canMove = true;
@@ -119,7 +105,8 @@ public class PlayerMovement : NetworkBehaviour
 
 
 	}
-	public void CheckValueClothes()
+	[Command(requiresAuthority = false)]
+	public void CmdCheckValueClothes()
 	{
 		if (helmetValue == -1)
 			helmetAvatar.SetActive(false);
@@ -151,16 +138,59 @@ public class PlayerMovement : NetworkBehaviour
 			hairAvatar.SetActive(false);
 		else
 			hairAvatar.SetActive(true);
+		RpcCheckValueClothes();
+	}
+	[TargetRpc]
+	public void RpcCheckValueClothes()
+	{
+		if (helmetValue == -1)
+			helmetAvatar.SetActive(false);
+		else
+			helmetAvatar.SetActive(true);
 
+		if (torsoValue == -1)
+			torsoAvatar.SetActive(false);
+		else
+			torsoAvatar.SetActive(true);
+
+		if (armValue == -1) { leftarmAvatar.SetActive(false); rightarmAvatar.SetActive(false); }
+		else { leftarmAvatar.SetActive(true); rightarmAvatar.SetActive(true); }
+
+		if (bootValue == -1) { leftBootAvatar.gameObject.SetActive(false); rightBootAvatar.gameObject.SetActive(false); }
+		else { leftBootAvatar.SetActive(true); rightBootAvatar.SetActive(true); }
+
+		if (shieldValue == -1)
+			shieldAvatar.SetActive(false);
+		else
+			shieldAvatar.SetActive(true);
+
+		if (swordValue == -1)
+			swordAvatar.SetActive(false);
+		else
+			swordAvatar.SetActive(true);
+
+		if (hairValue == -1)
+			hairAvatar.SetActive(false);
+		else
+			hairAvatar.SetActive(true);
 	}
     public override void OnStartLocalPlayer()
     {
         base.OnStartLocalPlayer();
+		GameManager gameManager = FindObjectOfType<GameManager>();
+		if (gameManager is null)
+			gameManager = FindObjectOfType<GameManager>();
+		if (gameManager)
+			gameManager.InitializeVariable();
+
 
 	}
 	public override void OnStartClient()
 	{
 		base.OnStartClient();
+		Debug.Log("player start client" + connectionToClient);
+
+
 		helmetValue = 0;
 		torsoValue = 0;
 		armValue = 0;
@@ -169,58 +199,33 @@ public class PlayerMovement : NetworkBehaviour
 		shieldValue = 0;
 		hairValue = 0;
 
-		CheckValueClothes();
 		ObjectInitialize();
 		Initialize();
-		//anim = GetComponent<Animator>();
-		netRigidbody2D.target.simulated = base.hasAuthority;
+		SetSpriteFront();
 
-		Debug.Log("player start client");
+
+		netRigidbody2D.target.simulated = base.hasAuthority;
+		
 	}
 	public override void OnStartAuthority()
 	{
 		base.OnStartAuthority();
+
 		Debug.Log("player start authority");
-	}
-	public GameObject _helmetSprite,_hairSprite,_torsoSprite,_shieldSprite,_leftarmSprite
-		,_rightarmSprite,_leftbootSprite,_rightbootSprite,_swordSprite;
 
-	//public Sprite helmetSprite, hairSprite, torsoSprite, shieldSprite, leftarmSprite, rightarmSprite, leftbootSprite,
-		//rightbootSprite, swordSprite;
-	private void InitializeSprite()
-	{
-		_helmetSprite = helmetAvatar;
-		_hairSprite = hairAvatar;
-		_torsoSprite = torsoAvatar;
-		_shieldSprite = shieldAvatar;
-		_leftarmSprite = leftarmAvatar;
-		_rightarmSprite = rightarmAvatar;
-		_leftbootSprite = leftBootAvatar;
-		_rightbootSprite = rightBootAvatar;
-		_swordSprite = swordAvatar;
 
-		//helmetSprite = _helmetSprite.sprite;
-		//hairSprite = _hairSprite.sprite;
-		//torsoSprite = _torsoSprite.sprite;
-		//shieldSprite = _shieldSprite.sprite;
-		//leftarmSprite = _leftarmSprite.sprite;
-		//rightarmSprite = _rightarmSprite.sprite;
-		//leftbootSprite = _leftbootSprite.sprite;
-		//rightbootSprite = _rightbootSprite.sprite;
-		//swordSprite = _swordSprite.sprite;
 	}
 	public void ObjectInitialize()
 	{
-		InitializeSprite();
 		GetComponent<Character>().FindObjects();
 		GetComponent<PlayerCombat>().FindRespawnWindow();
 		netAnim = GetComponent<NetworkAnimator>();
 		netRigidbody2D = GetComponent<NetworkRigidbody2D>();
 		instance = this;
-		//fixedJoystick = FindObjectOfType<FixedJoystick>();
-		//actionText = GameObject.Find("ActionText").GetComponent<TextMeshProUGUI>();
+		fixedJoystick = FindObjectOfType<FixedJoystick>();
+		actionText = GameObject.Find("ActionText").GetComponent<TextMeshProUGUI>();
 		gameClothes = FindObjectOfType<GameClothes>();
-		playerClothes = FindObjectOfType<PlayerClothes>();
+		playerClothes = GetComponent<PlayerClothes>();
 
 	}
 
@@ -280,11 +285,42 @@ public class PlayerMovement : NetworkBehaviour
 	[SerializeField] private GameObject leftBootAvatar;
 	[SerializeField] private GameObject rightBootAvatar;
 	[SerializeField] private GameObject swordAvatar;
+
+	private GameObject _hairPlayer, _helmetPlayer, _torsoPlayer, _shieldPlayer,
+		_leftarmPlayer, _rightarmPlayer, _leftbootPlayer, _rightbootPlayer, 
+		_swordPlayer;
+	[Command]
+	private void CmdInitializePlayerClothes()
+	{
+		_hairPlayer = hairAvatar;
+		_helmetPlayer = helmetAvatar;
+		_torsoPlayer = torsoAvatar;
+		_shieldPlayer = shieldAvatar;
+		_leftarmPlayer = leftarmAvatar;
+		_rightarmPlayer = rightarmAvatar;
+		_leftbootPlayer = leftBootAvatar;
+		_rightbootPlayer = rightBootAvatar;
+		_swordPlayer = swordAvatar;
+		RpcInitializePlayerClothes();
+	}
+	[ClientRpc]
+	private void RpcInitializePlayerClothes()
+	{
+		_hairPlayer = hairAvatar;
+		_helmetPlayer = helmetAvatar;
+		_torsoPlayer = torsoAvatar;
+		_shieldPlayer = shieldAvatar;
+		_leftarmPlayer = leftarmAvatar;
+		_rightarmPlayer = rightarmAvatar;
+		_leftbootPlayer = leftBootAvatar;
+		_rightbootPlayer = rightBootAvatar;
+		_swordPlayer = swordAvatar;
+	}
 	private void CheckMovePos()
 	{
 			if (change.x == 1)
 			{
-				CmdSetSpriteRight();
+				SetSpriteRight();
 				rightPos = 1;
 				frontPos = 0;
 
@@ -298,7 +334,7 @@ public class PlayerMovement : NetworkBehaviour
 			else if (change.x == -1)
 			{
 
-				CmdSetSpriteLeft();
+				SetSpriteLeft();
 				rightPos = -1;
 				frontPos = 0;
 
@@ -312,7 +348,7 @@ public class PlayerMovement : NetworkBehaviour
 			else if (change.y == 1)
 			{
 
-				CmdSetSpriteBack();
+				SetSpriteBack();
 				rightPos = 0;
 				frontPos = 1;
 
@@ -325,7 +361,7 @@ public class PlayerMovement : NetworkBehaviour
 			}
 			else if (change.y == -1)
 			{
-				CmdSetSpriteFront();
+				SetSpriteFront();
 				rightPos = 0;
 				frontPos = -1;
 
@@ -439,196 +475,335 @@ public class PlayerMovement : NetworkBehaviour
 		}
 	}
 
-	[Command(requiresAuthority =true)]
+	[Command(requiresAuthority = false)]
 	private void CmdSetSpriteFront()
 	{
+		if (playerClothes is null)
+			playerClothes = GetComponent<PlayerClothes>();
+		if (playerClothes is null)
+			return;
 		if (helmetAvatar.activeInHierarchy)
-			this._helmetSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[0];
+			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[0];
 		if(torsoAvatar.activeInHierarchy)
-			this._torsoSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[0];
+			this.torsoAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[0];
 		if(leftarmAvatar.activeInHierarchy)
-			this._leftarmSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[0];
+			this.leftarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[0];
 		if(rightarmAvatar.activeInHierarchy)
-			this._rightarmSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[0];
+			this.rightarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[0];
 		if(leftBootAvatar.activeInHierarchy)
-			this._leftbootSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[0];
+			this.leftBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[0];
 		if(rightBootAvatar.activeInHierarchy)
-			this._rightbootSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[0];
+			this.rightBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[0];
 		if(swordAvatar.activeInHierarchy)
-			this._swordSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[0];
+			this.swordAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[0];
 		if(shieldAvatar.activeInHierarchy)
-			this._shieldSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[0];
+			this.shieldAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[0];
 		if(hairAvatar.activeInHierarchy)
-			this._hairSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[0];
+			this.hairAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[0];
 
-		RpcSetSpriteFront();
+		if (isServer)
+			RpcSetSpriteFront();
+		else
+			return;
 		//TargetSetSpriteFront();
 	}
 	[ClientRpc]
-	private void RpcSetSpriteFront()
+	public void RpcSetSpriteFront()
 	{
 		if (helmetAvatar.activeInHierarchy)
-			this._helmetSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[0];
+			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[0];
 		if (torsoAvatar.activeInHierarchy)
-			this._torsoSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[0];
+			this.torsoAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[0];
 		if (leftarmAvatar.activeInHierarchy)
-			this._leftarmSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[0];
+			this.leftarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[0];
 		if (rightarmAvatar.activeInHierarchy)
-			this._rightarmSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[0];
+			this.rightarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[0];
 		if (leftBootAvatar.activeInHierarchy)
-			this._leftbootSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[0];
+			this.leftBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[0];
 		if (rightBootAvatar.activeInHierarchy)
-			this._rightbootSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[0];
+			this.rightBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[0];
 		if (swordAvatar.activeInHierarchy)
-			this._swordSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[0];
+			this.swordAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[0];
 		if (shieldAvatar.activeInHierarchy)
-			this._shieldSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[0];
+			this.shieldAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[0];
 		if (hairAvatar.activeInHierarchy)
-			this._hairSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[0];
+			this.hairAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[0];
 	}
 
-	[Command(requiresAuthority = true)]
+	private void SetSpriteFront()
+	{
+
+		if (helmetAvatar.activeInHierarchy)
+			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[0];
+		if (torsoAvatar.activeInHierarchy)
+			this.torsoAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[0];
+		if (leftarmAvatar.activeInHierarchy)
+			this.leftarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[0];
+		if (rightarmAvatar.activeInHierarchy)
+			this.rightarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[0];
+		if (leftBootAvatar.activeInHierarchy)
+			this.leftBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[0];
+		if (rightBootAvatar.activeInHierarchy)
+			this.rightBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[0];
+		if (swordAvatar.activeInHierarchy)
+			this.swordAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[0];
+		if (shieldAvatar.activeInHierarchy)
+			this.shieldAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[0];
+		if (hairAvatar.activeInHierarchy)
+			this.hairAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[0];
+		if (isClient)
+			CmdSetSpriteFront();
+		else
+			return;
+
+	}
+
+
+	[Command(requiresAuthority = false)]
 	private void CmdSetSpriteLeft()
 	{
-		if(helmetAvatar.activeInHierarchy)
-			this._helmetSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[1];
+		if (playerClothes is null)
+			playerClothes = GetComponent<PlayerClothes>();
+		if (playerClothes is null)
+			return;
+		if (helmetAvatar.activeInHierarchy)
+			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[1];
 		if(torsoAvatar.activeInHierarchy)
-			this._torsoSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[1];
+			this.torsoAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[1];
 		if(leftarmAvatar.activeInHierarchy)
-			this._leftarmSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[1];
+			this.leftarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[1];
 		if(rightarmAvatar.activeInHierarchy)
-			this._rightarmSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[1];
+			this.rightarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[1];
 		if(leftBootAvatar.activeInHierarchy)
-			this._leftbootSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[1];
+			this.leftBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[1];
 		if(rightBootAvatar.activeInHierarchy)
-			this._rightbootSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[1];
+			this.rightBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[1];
 		if(swordAvatar.activeInHierarchy)
-			this._swordSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[1];
+			this.swordAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[1];
 		if(shieldAvatar.activeInHierarchy)
-			this._shieldSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[1];
+			this.shieldAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[1];
 		if(hairAvatar.activeInHierarchy)
-			this._hairSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[1];
-
-		RpcSetSpriteLeft();
+			this.hairAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[1];
+		if (isServer)
+			RpcSetSpriteLeft();
+		else
+			return;
 		//TargetSetSpriteLeft();
 	}
+
+
 	[ClientRpc]
 	private void RpcSetSpriteLeft()
 	{
 		if (helmetAvatar.activeInHierarchy)
-			this._helmetSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[1];
+			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[1];
 		if (torsoAvatar.activeInHierarchy)
-			this._torsoSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[1];
+			this.torsoAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[1];
 		if (leftarmAvatar.activeInHierarchy)
-			this._leftarmSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[1];
+			this.leftarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[1];
 		if (rightarmAvatar.activeInHierarchy)
-			this._rightarmSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[1];
+			this.rightarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[1];
 		if (leftBootAvatar.activeInHierarchy)
-			this._leftbootSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[1];
+			this.leftBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[1];
 		if (rightBootAvatar.activeInHierarchy)
-			this._rightbootSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[1];
+			this.rightBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[1];
 		if (swordAvatar.activeInHierarchy)
-			this._swordSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[1];
+			this.swordAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[1];
 		if (shieldAvatar.activeInHierarchy)
-			this._shieldSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[1];
+			this.shieldAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[1];
 		if (hairAvatar.activeInHierarchy)
-			this._hairSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[1];
+			this.hairAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[1];
+	}
+	private void SetSpriteLeft()
+	{
+		if (helmetAvatar.activeInHierarchy)
+			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[1];
+		if (torsoAvatar.activeInHierarchy)
+			this.torsoAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[1];
+		if (leftarmAvatar.activeInHierarchy)
+			this.leftarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[1];
+		if (rightarmAvatar.activeInHierarchy)
+			this.rightarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[1];
+		if (leftBootAvatar.activeInHierarchy)
+			this.leftBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[1];
+		if (rightBootAvatar.activeInHierarchy)
+			this.rightBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[1];
+		if (swordAvatar.activeInHierarchy)
+			this.swordAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[1];
+		if (shieldAvatar.activeInHierarchy)
+			this.shieldAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[1];
+		if (hairAvatar.activeInHierarchy)
+			this.hairAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[1];
+
+		if (isClient)
+			CmdSetSpriteLeft();
+		else
+			return;
+
 	}
 
-	[Command(requiresAuthority = true)]
+	[Command(requiresAuthority = false)]
 	private void CmdSetSpriteRight()
 	{
-		if(helmetAvatar.activeInHierarchy)
-			this._helmetSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[2];
+		if (playerClothes is null)
+			playerClothes = GetComponent<PlayerClothes>();
+		if (playerClothes is null)
+			return;
+		if (helmetAvatar.activeInHierarchy)
+			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[2];
 		if(torsoAvatar.activeInHierarchy)
-			this._torsoSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[2];
+			this.torsoAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[2];
 		if(leftarmAvatar.activeInHierarchy)
-			this._leftarmSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[1];
+			this.leftarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[1];
 		if(rightarmAvatar.activeInHierarchy)
-			this._rightarmSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[1];
+			this.rightarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[1];
 		if(leftBootAvatar.activeInHierarchy)
-			this._leftbootSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[2];
+			this.leftBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[2];
 		if(rightBootAvatar.activeInHierarchy)
-			this._rightbootSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[2];
+			this.rightBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[2];
 		if(swordAvatar.activeInHierarchy)
-			this._swordSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[2];
+			this.swordAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[2];
 		if(shieldAvatar.activeInHierarchy)
-			this._shieldSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[2];
+			this.shieldAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[2];
 		if(hairAvatar.activeInHierarchy)
-			this._hairSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[2];
-
-		RpcSetSpriteRight();
+			this.hairAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[2];
+		if (isServer)
+			RpcSetSpriteRight();
+		else
+			return;
 		//TargetSetSpriteRight();
 	}
+
 	[ClientRpc]
 	private void RpcSetSpriteRight()
 	{
 		if (helmetAvatar.activeInHierarchy)
-			this._helmetSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[2];
+			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[2];
 		if (torsoAvatar.activeInHierarchy)
-			this._torsoSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[2];
+			this.torsoAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[2];
 		if (leftarmAvatar.activeInHierarchy)
-			this._leftarmSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[1];
+			this.leftarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[1];
 		if (rightarmAvatar.activeInHierarchy)
-			this._rightarmSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[1];
+			this.rightarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[1];
 		if (leftBootAvatar.activeInHierarchy)
-			this._leftbootSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[2];
+			this.leftBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[2];
 		if (rightBootAvatar.activeInHierarchy)
-			this._rightbootSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[2];
+			this.rightBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[2];
 		if (swordAvatar.activeInHierarchy)
-			this._swordSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[2];
+			this.swordAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[2];
 		if (shieldAvatar.activeInHierarchy)
-			this._shieldSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[2];
+			this.shieldAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[2];
 		if (hairAvatar.activeInHierarchy)
-			this._hairSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[2];
+			this.hairAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[2];
+	}
+	
+	private void SetSpriteRight()
+	{
+		if (helmetAvatar.activeInHierarchy)
+			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[2];
+		if (torsoAvatar.activeInHierarchy)
+			this.torsoAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[2];
+		if (leftarmAvatar.activeInHierarchy)
+			this.leftarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[1];
+		if (rightarmAvatar.activeInHierarchy)
+			this.rightarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[1];
+		if (leftBootAvatar.activeInHierarchy)
+			this.leftBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[2];
+		if (rightBootAvatar.activeInHierarchy)
+			this.rightBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[2];
+		if (swordAvatar.activeInHierarchy)
+			this.swordAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[2];
+		if (shieldAvatar.activeInHierarchy)
+			this.shieldAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[2];
+		if (hairAvatar.activeInHierarchy)
+			this.hairAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[2];
+		if (isClient)
+			CmdSetSpriteRight();
+		else
+			return;
+
 	}
 
-	[Command(requiresAuthority = true)]
+	[Command(requiresAuthority = false)]
 	private void CmdSetSpriteBack()
 	{
-		if(helmetAvatar.activeInHierarchy)
-			this._helmetSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[3];
+		if (playerClothes is null)
+			playerClothes = GetComponent<PlayerClothes>();
+		if (playerClothes is null)
+			return;
+		if (helmetAvatar.activeInHierarchy)
+			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[3];
 		if(torsoAvatar.activeInHierarchy)
-			this._torsoSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[3];
+			this.torsoAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[3];
 		if(leftarmAvatar.activeInHierarchy)
-			this._leftarmSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[2];
+			this.leftarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[2];
 		if(rightarmAvatar.activeInHierarchy)
-			this._rightarmSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[2];
+			this.rightarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[2];
 		if(leftBootAvatar.activeInHierarchy)
-			this._leftbootSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[3];
+			this.leftBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[3];
 		if(rightBootAvatar.activeInHierarchy)
-			this._rightbootSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[3];
+			this.rightBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[3];
 		if(swordAvatar.activeInHierarchy)
-			this._swordSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[3];
+			this.swordAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[3];
 		if(shieldAvatar.activeInHierarchy)
-			this._shieldSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[3];
+			this.shieldAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[3];
 		if(hairAvatar.activeInHierarchy)
-			this._hairSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[3];
-
-		RpcSetSpriteBack();
+			this.hairAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[3];
+		if (isServer)
+			RpcSetSpriteBack();
+		else
+			return;
 		//TargetSetSpriteBack();
 	}
+
 	[ClientRpc]
 	private void RpcSetSpriteBack()
 	{
 		if (helmetAvatar.activeInHierarchy)
-			this._helmetSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[3];
+			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[3];
 		if (torsoAvatar.activeInHierarchy)
-			this._torsoSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[3];
+			this.torsoAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[3];
 		if (leftarmAvatar.activeInHierarchy)
-			this._leftarmSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[2];
+			this.leftarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[2];
 		if (rightarmAvatar.activeInHierarchy)
-			this._rightarmSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[2];
+			this.rightarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[2];
 		if (leftBootAvatar.activeInHierarchy)
-			this._leftbootSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[3];
+			this.leftBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[3];
 		if (rightBootAvatar.activeInHierarchy)
-			this._rightbootSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[3];
+			this.rightBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[3];
 		if (swordAvatar.activeInHierarchy)
-			this._swordSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[3];
+			this.swordAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[3];
 		if (shieldAvatar.activeInHierarchy)
-			this._shieldSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[3];
+			this.shieldAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[3];
 		if (hairAvatar.activeInHierarchy)
-			this._hairSprite.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[3];
+			this.hairAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[3];
+	}
+	private void SetSpriteBack()
+	{
+		if (helmetAvatar.activeInHierarchy)
+			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[3];
+		if (torsoAvatar.activeInHierarchy)
+			this.torsoAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[3];
+		if (leftarmAvatar.activeInHierarchy)
+			this.leftarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[2];
+		if (rightarmAvatar.activeInHierarchy)
+			this.rightarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[2];
+		if (leftBootAvatar.activeInHierarchy)
+			this.leftBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[3];
+		if (rightBootAvatar.activeInHierarchy)
+			this.rightBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[3];
+		if (swordAvatar.activeInHierarchy)
+			this.swordAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[3];
+		if (shieldAvatar.activeInHierarchy)
+			this.shieldAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[3];
+		if (hairAvatar.activeInHierarchy)
+			this.hairAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[3];
+
+		if (isClient)
+			CmdSetSpriteBack();
+		else
+			return;
+
 	}
 
 
@@ -639,25 +814,29 @@ public class PlayerMovement : NetworkBehaviour
 		{
 			netAnim.animator.SetBool("DeadRight", true);
 			netAnim.animator.SetBool("IdleRight", false);
-			CmdSetSpriteRight();
+			//CmdSetSpriteRight();
+			SetSpriteRight();
 		}
 		else if (rightPos == -1)
 		{
 			netAnim.animator.SetBool("DeadLeft", true);
 			netAnim.animator.SetBool("IdleLeft", false);
-			CmdSetSpriteLeft();
+			//CmdSetSpriteLeft();
+			SetSpriteLeft();
 		}
 		else if (frontPos == -1)
 		{
 			netAnim.animator.SetBool("DeadFront", true);
 			netAnim.animator.SetBool("IdleFront", false);
-			CmdSetSpriteFront();
+			//CmdSetSpriteFront();
+			SetSpriteFront();
 		}
 		else if (frontPos == 1)
 		{
 			netAnim.animator.SetBool("DeadBack", true);
 			netAnim.animator.SetBool("IdleBack", false);
-			CmdSetSpriteBack();
+			//CmdSetSpriteBack();
+			SetSpriteBack();
 		}
 	}
 	private void UpdateAnimation()
@@ -713,7 +892,8 @@ public class PlayerMovement : NetworkBehaviour
 			{
 				if (rightPos == 1)
 				{
-					CmdSetSpriteRight();
+					//CmdSetSpriteRight();
+					SetSpriteRight();
 					netAnim.animator.SetBool("IdleRight", true);
 
 					netAnim.animator.SetBool("MoveBack", false);
@@ -723,7 +903,8 @@ public class PlayerMovement : NetworkBehaviour
 				}
 				else if (rightPos == -1)
 				{
-					CmdSetSpriteLeft();
+					//CmdSetSpriteLeft();
+					SetSpriteLeft();
 					netAnim.animator.SetBool("IdleLeft", true);
 
 					netAnim.animator.SetBool("MoveBack", false);
@@ -733,7 +914,8 @@ public class PlayerMovement : NetworkBehaviour
 				}
 				else if (frontPos == -1)
 				{
-					CmdSetSpriteFront();
+					//CmdSetSpriteFront();
+					SetSpriteFront();
 					netAnim.animator.SetBool("IdleFront", true);
 
 					netAnim.animator.SetBool("MoveBack", false);
@@ -743,7 +925,8 @@ public class PlayerMovement : NetworkBehaviour
 				}
 				else if (frontPos == 1)
 				{
-					CmdSetSpriteBack();
+					//CmdSetSpriteBack();
+					SetSpriteBack();
 					netAnim.animator.SetBool("IdleBack", true);
 
 					netAnim.animator.SetBool("MoveBack", false);
@@ -787,4 +970,12 @@ public class PlayerMovement : NetworkBehaviour
 		GameManager.GameManagerInstance.dialogBox.SetActive(true);
 		GameManager.GameManagerInstance.DialogBox(message);
 	}
+
+    public void OnTriggerEnter2D(Collider2D collision)
+    {
+		if (collision.CompareTag("Player"))
+		{
+			Debug.Log(collision.GetComponent<NetworkIdentity>().connectionToClient);
+		}
+    }
 }

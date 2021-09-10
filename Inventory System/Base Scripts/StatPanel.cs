@@ -26,13 +26,9 @@ public class StatPanel : MonoBehaviour
 
 	private void Update()
 	{
-		//if (isClientOnly)
-		//{
-			//UpdateStatValues();
-			//UpdateStatNames();
-		//}
-		//else
-			//return;
+			UpdateStatValues();
+			UpdateStatNames();
+
 	}
 
 	public void SetStats(params CharacterStat[] charStats)

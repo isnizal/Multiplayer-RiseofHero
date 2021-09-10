@@ -8,21 +8,27 @@ public class CameraController : MonoBehaviour
     public Transform lookAtTarget;
     private CinemachineVirtualCamera vcam;
 
-    private void Start()
+    public void EnterArea(GameObject player)
     {
+        Debug.Log("entering area");
+        thePlayer = player;
         vcam = GetComponent<CinemachineVirtualCamera>();
-        AttachCam();
+        if (thePlayer != null)
+        {
+            lookAtTarget = thePlayer.transform;
+            vcam.Follow = lookAtTarget;
+        }
     }
-    void AttachCam()
-	{
-        if (thePlayer == null)
-		{
-            thePlayer = FindObjectOfType<PlayerMovement>().gameObject;
-            if(thePlayer != null)
-			{
-                lookAtTarget = thePlayer.transform;
-                vcam.Follow = lookAtTarget;
-			}
-		}
-	}
+    public void LeaveArea(GameObject player)
+    {
+        Debug.Log("leaving area");
+        thePlayer = player;
+        vcam = GetComponent<CinemachineVirtualCamera>();
+        if (thePlayer != null)
+        {
+            lookAtTarget = null;
+            vcam.Follow = null;
+        }
+
+    }
 }

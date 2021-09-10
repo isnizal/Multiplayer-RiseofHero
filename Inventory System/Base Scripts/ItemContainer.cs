@@ -23,7 +23,6 @@ public abstract class ItemContainer : MonoBehaviour, IItemContainer
 	{
 		for (int i = 0; i < ItemSlots.Count; i++)
 		{
-			Debug.Log("finding error" + ItemSlots[i].gameObject.name);
 
 			ItemSlots[i].OnPointerEnterEvent += slot => EventHelper(slot, OnPointerEnterEvent);
 			ItemSlots[i].OnPointerExitEvent += slot => EventHelper(slot, OnPointerExitEvent);

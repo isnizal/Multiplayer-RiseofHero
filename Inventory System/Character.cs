@@ -86,7 +86,7 @@ public class Character : NetworkBehaviour
 		PlayerCombat.CombatInstance.EnableSelfRegenHp();
 		PlayerCombat.CombatInstance.EnableSelfRegenMana();
 
-		playerMovement.CheckValueClothes();
+		playerMovement.CmdCheckValueClothes();
 		playerMovement.Initialize();
 		LoadPlayerAchievement(loadedStatsAchievement);
 	}
@@ -172,18 +172,46 @@ public class Character : NetworkBehaviour
 
 	public PlayerMovement playerMovement;
 
+	[SerializeField] private GameObject playerHUDPrefab,playerInventoryCanvPrefab,playerSkillCanvPrefab
+		,playerVCamPrefab;
 
 	private void OnValidate()
 	{
 		if (itemTooltip == null)
 			itemTooltip = FindObjectOfType<ItemTooltip>();
 	}
+	//spawn player canvas
+	[Command(requiresAuthority =false)]
+	public void CmdSpawnPlayerHUDCanvas()
+	{
+		var playerHUD = Instantiate(playerHUDPrefab);
+		NetworkServer.Spawn(playerHUD, connectionToClient);
+	}
+	//spawn player inventory and equipment
+	[Command(requiresAuthority =false)]
+	public void CmdSpawnPlayerInventory()
+	{
+		var playerCanvPref = Instantiate(playerInventoryCanvPrefab);
+
+
+
+		if (dropItemDialog.gameObject.activeInHierarchy)
+			dropItemDialog.gameObject.SetActive(false);
+
+		NetworkServer.Spawn(playerCanvPref, connectionToClient);
+	}
+	//player skill canvas
+	[Command(requiresAuthority = false)]
+	public void CmdSpawnPlayerSkillCanvas()
+	{
+		var playerSkillCanv = Instantiate(playerSkillCanvPrefab);
+		NetworkServer.Spawn(playerSkillCanv, connectionToClient);
+	}
+
 	public void FindObjects()
 	{
-
 		//gamemanager
 		achievement = FindObjectOfType<AchievementManager>();
-
 		//equipment and inventory
 		Inventory = FindObjectOfType<Inventory>();
 		EquipmentPanel = FindObjectOfType<EquipmentPanel>();
@@ -191,8 +219,7 @@ public class Character : NetworkBehaviour
 		itemTooltip = FindObjectOfType<ItemTooltip>();
 		dropItemArea = FindObjectOfType<DropItemArea>();
 		dropItemDialog = GameObject.Find("DropItemDialog").GetComponent<QuestionDialog>();
-		if(dropItemDialog.gameObject.activeInHierarchy)
-			dropItemDialog.gameObject.SetActive(false);
+		dropItemDialog.gameObject.SetActive(false);
 
 		//world
 		playerMovement = gameObject.GetComponent<PlayerMovement>();
@@ -202,16 +229,13 @@ public class Character : NetworkBehaviour
 
 
 		//world shop area
-		//sellItemArea = FindObjectOfType<DropSellArea>();
-		//craftingWindow = FindObjectOfType<CraftingWindow>();
-		//if(craftingWindow.gameObject.activeInHierarchy)
-			//craftingWindow.gameObject.SetActive(false);
-		//_shopWindow = sellItemArea.gameObject.transform.parent.gameObject;
-		//if(_shopWindow.activeInHierarchy)
-			//sellItemArea.gameObject.transform.parent.gameObject.SetActive(false);
-		//sellItemDialog = GameObject.Find("SellItemDialog").GetComponent<QuestionDialog>();
-		//if(sellItemDialog.gameObject.activeInHierarchy)
-			//sellItemDialog.gameObject.SetActive(false);
+		sellItemArea = FindObjectOfType<DropSellArea>();
+		craftingWindow = FindObjectOfType<CraftingWindow>();
+		craftingWindow.gameObject.SetActive(false);
+		_shopWindow = sellItemArea.gameObject.transform.parent.gameObject;
+		sellItemArea.gameObject.transform.parent.gameObject.SetActive(false);
+		sellItemDialog = GameObject.Find("SellItemDialog").GetComponent<QuestionDialog>();
+		sellItemDialog.gameObject.SetActive(false);
 
 
 
@@ -249,7 +273,7 @@ public class Character : NetworkBehaviour
 		EquipmentPanel.OnDropEvent += Drop;
 		dropItemArea.OnDropEvent += DropItemOutsideUI;
 
-		//sellItemArea.OnDropEvent += DropItemSellArea;
+		sellItemArea.OnDropEvent += DropItemSellArea;
 	}
 	private void Awake()
 	{
