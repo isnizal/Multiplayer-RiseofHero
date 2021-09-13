@@ -16,28 +16,11 @@ public class SwitchMusicTrigger : MonoBehaviour
 	{
 		if (!other.CompareTag("Player"))
 			return;
-
-		//Debug.Log(other.gameObject.GetComponent<NetworkIdentity>().connectionToClient);
 		if ( other.CompareTag("Player"))
 		{
-			//for (int i = 0; i < registerPlayerForMusic.Length; i++)
-			//{
-			//	if (registerPlayerForMusic[i] == null)
-			//		registerPlayerForMusic[i] = other.gameObject;
-			//	else if(registerPlayerForMusic[i] == other.gameObject)
-			//		break;
-			//}
-			//for (int a = 0; a < registerPlayerForMusic.Length; a++)
-			//{
-			//	Debug.Log(registerPlayerForMusic[a].GetComponent<NetworkIdentity>().connectionToClient);
-			//	Debug.Log(other.gameObject.GetComponent<NetworkIdentity>().connectionToClient);
-			//
-			//	if (registerPlayerForMusic[a].GetComponent<NetworkIdentity>().connectionToClient
-			//		!= other.gameObject.GetComponent<NetworkIdentity>().connectionToClient)
-			//	{
-			//		break;
-			//	}
-			//}
+			if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
+				return;
+
 			if (newTrack != null)
 				if (gameManager == null)
 				{

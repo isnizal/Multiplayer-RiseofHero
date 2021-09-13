@@ -7,10 +7,6 @@ public class ItemTooltip : MonoBehaviour
 	[SerializeField] TextMeshProUGUI ItemTypeText;
 	[SerializeField] TextMeshProUGUI ItemDescriptionText;
 
-	private void Awake()
-	{
-		//gameObject.SetActive(false);
-	}
 
 	public void ShowTooltip(Item item)
 	{

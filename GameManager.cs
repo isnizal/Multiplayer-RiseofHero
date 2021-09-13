@@ -6,8 +6,9 @@ using TMPro;
 using Mirror;
 using System;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 
-public class GameManager : NetworkBehaviour
+public class GameManager :MonoBehaviour
 {
 	public static GameManager instance;
 	public static GameManager GameManagerInstance
@@ -21,10 +22,6 @@ public class GameManager : NetworkBehaviour
 			return instance;
 		}
 
-	}
-	private void OnValidate()
-	{
-		player = GameObject.FindGameObjectWithTag("Player");
 	}
 
 	[Header("Dialog")]
@@ -74,14 +71,15 @@ public class GameManager : NetworkBehaviour
 
 	public IEnumerator saveTimer;
 
-	public void InitializeVariable()
+    public void InitializeVariable()
 	{
-		player = FindObjectOfType<PlayerMovement>().gameObject;
-		Debug.Log(player);
-		if (player is null)
-			player = FindObjectOfType<Character>().gameObject;
+		//respawn click
 
-		Debug.Log(player);
+		yesRespawnBtn.onClick.AddListener(ClickYesRespawn);
+		noRespawnBtn.onClick.AddListener(ClickNoRespawn);
+
+		player = FindObjectOfType<Character>().gameObject;
+
 		joystickCanvas = GameObject.Find("JoystickCanvas");
 		//player hud
 		dialogText = GameObject.Find("DialogText").GetComponent<TextMeshProUGUI>();
@@ -107,16 +105,6 @@ public class GameManager : NetworkBehaviour
 		saveTimer = StartSaveTimer();
 		StartCoroutine(saveTimer);
 
-
-	}
-
-    public override void OnStartAuthority()
-    {
-        base.OnStartAuthority();
-    }
-    public override void OnStartClient()
-    {
-        base.OnStartClient();
 
 	}
     private void Update()
@@ -201,6 +189,8 @@ public class GameManager : NetworkBehaviour
 		StartCoroutine(saveTimer);
 		Debug.Log("Respawn step 3");
 	}
+
+	[SerializeField]private Button yesRespawnBtn, noRespawnBtn;
 	public void ClickYesRespawn()
 	{
 		PlayerCombat.CombatInstance.respawnWindow.SetActive(false);

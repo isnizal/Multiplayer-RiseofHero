@@ -105,8 +105,7 @@ public class PlayerMovement : NetworkBehaviour
 
 
 	}
-	[Command(requiresAuthority = false)]
-	public void CmdCheckValueClothes()
+	public void CheckValueClothes()
 	{
 		if (helmetValue == -1)
 			helmetAvatar.SetActive(false);
@@ -177,18 +176,17 @@ public class PlayerMovement : NetworkBehaviour
     public override void OnStartLocalPlayer()
     {
         base.OnStartLocalPlayer();
-		GameManager gameManager = FindObjectOfType<GameManager>();
-		if (gameManager is null)
-			gameManager = FindObjectOfType<GameManager>();
-		if (gameManager)
-			gameManager.InitializeVariable();
+		//GameManager gameManager = FindObjectOfType<GameManager>();
+		//if (gameManager is null)
+		//	gameManager = FindObjectOfType<GameManager>();
+		//if (gameManager)
+		//	gameManager.InitializeVariable();
 
 
 	}
 	public override void OnStartClient()
 	{
 		base.OnStartClient();
-		Debug.Log("player start client" + connectionToClient);
 
 
 		helmetValue = 0;
@@ -204,7 +202,7 @@ public class PlayerMovement : NetworkBehaviour
 		SetSpriteFront();
 
 
-		netRigidbody2D.target.simulated = base.hasAuthority;
+
 		
 	}
 	public override void OnStartAuthority()
@@ -217,15 +215,19 @@ public class PlayerMovement : NetworkBehaviour
 	}
 	public void ObjectInitialize()
 	{
-		GetComponent<Character>().FindObjects();
-		GetComponent<PlayerCombat>().FindRespawnWindow();
-		netAnim = GetComponent<NetworkAnimator>();
-		netRigidbody2D = GetComponent<NetworkRigidbody2D>();
-		instance = this;
-		fixedJoystick = FindObjectOfType<FixedJoystick>();
-		actionText = GameObject.Find("ActionText").GetComponent<TextMeshProUGUI>();
-		gameClothes = FindObjectOfType<GameClothes>();
-		playerClothes = GetComponent<PlayerClothes>();
+		if (isLocalPlayer)
+		{
+			GetComponent<Character>().FindObjects();
+			GetComponent<PlayerCombat>().FindRespawnWindow();
+			netAnim = GetComponent<NetworkAnimator>();
+			netRigidbody2D = GetComponent<NetworkRigidbody2D>();
+			netRigidbody2D.target.simulated = base.hasAuthority;
+			instance = this;
+			fixedJoystick = FindObjectOfType<FixedJoystick>();
+			//actionText = GameObject.Find("ActionText").GetComponent<TextMeshProUGUI>();
+			gameClothes = FindObjectOfType<GameClothes>();
+			playerClothes = GetComponent<PlayerClothes>();
+		}
 
 	}
 
@@ -510,6 +512,10 @@ public class PlayerMovement : NetworkBehaviour
 	[ClientRpc]
 	public void RpcSetSpriteFront()
 	{
+		if (playerClothes is null)
+			playerClothes = GetComponent<PlayerClothes>();
+		if (playerClothes is null)
+			return;
 		if (helmetAvatar.activeInHierarchy)
 			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[0];
 		if (torsoAvatar.activeInHierarchy)
@@ -532,6 +538,10 @@ public class PlayerMovement : NetworkBehaviour
 
 	private void SetSpriteFront()
 	{
+		if (playerClothes is null)
+			playerClothes = GetComponent<PlayerClothes>();
+		if (playerClothes is null)
+			return;
 
 		if (helmetAvatar.activeInHierarchy)
 			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[0];
@@ -595,6 +605,10 @@ public class PlayerMovement : NetworkBehaviour
 	[ClientRpc]
 	private void RpcSetSpriteLeft()
 	{
+		if (playerClothes is null)
+			playerClothes = GetComponent<PlayerClothes>();
+		if (playerClothes is null)
+			return;
 		if (helmetAvatar.activeInHierarchy)
 			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[1];
 		if (torsoAvatar.activeInHierarchy)
@@ -616,6 +630,10 @@ public class PlayerMovement : NetworkBehaviour
 	}
 	private void SetSpriteLeft()
 	{
+		if (playerClothes is null)
+			playerClothes = GetComponent<PlayerClothes>();
+		if (playerClothes is null)
+			return;
 		if (helmetAvatar.activeInHierarchy)
 			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[1];
 		if (torsoAvatar.activeInHierarchy)
@@ -677,6 +695,10 @@ public class PlayerMovement : NetworkBehaviour
 	[ClientRpc]
 	private void RpcSetSpriteRight()
 	{
+		if (playerClothes is null)
+			playerClothes = GetComponent<PlayerClothes>();
+		if (playerClothes is null)
+			return;
 		if (helmetAvatar.activeInHierarchy)
 			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[2];
 		if (torsoAvatar.activeInHierarchy)
@@ -699,6 +721,10 @@ public class PlayerMovement : NetworkBehaviour
 	
 	private void SetSpriteRight()
 	{
+		if (playerClothes is null)
+			playerClothes = GetComponent<PlayerClothes>();
+		if (playerClothes is null)
+			return;
 		if (helmetAvatar.activeInHierarchy)
 			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[2];
 		if (torsoAvatar.activeInHierarchy)
@@ -759,6 +785,10 @@ public class PlayerMovement : NetworkBehaviour
 	[ClientRpc]
 	private void RpcSetSpriteBack()
 	{
+		if (playerClothes is null)
+			playerClothes = GetComponent<PlayerClothes>();
+		if (playerClothes is null)
+			return;
 		if (helmetAvatar.activeInHierarchy)
 			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[3];
 		if (torsoAvatar.activeInHierarchy)
@@ -780,6 +810,10 @@ public class PlayerMovement : NetworkBehaviour
 	}
 	private void SetSpriteBack()
 	{
+		if (playerClothes is null)
+			playerClothes = GetComponent<PlayerClothes>();
+		if (playerClothes is null)
+			return;
 		if (helmetAvatar.activeInHierarchy)
 			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[3];
 		if (torsoAvatar.activeInHierarchy)
@@ -887,7 +921,7 @@ public class PlayerMovement : NetworkBehaviour
 		}
 		else
 		{
-			netRigidbody2D.target.velocity = Vector3.zero;
+			//netRigidbody2D.target.velocity = Vector3.zero;
 			if (!PlayerCombat.CombatInstance.playerDied)
 			{
 				if (rightPos == 1)
@@ -971,11 +1005,4 @@ public class PlayerMovement : NetworkBehaviour
 		GameManager.GameManagerInstance.DialogBox(message);
 	}
 
-    public void OnTriggerEnter2D(Collider2D collision)
-    {
-		if (collision.CompareTag("Player"))
-		{
-			Debug.Log(collision.GetComponent<NetworkIdentity>().connectionToClient);
-		}
-    }
 }

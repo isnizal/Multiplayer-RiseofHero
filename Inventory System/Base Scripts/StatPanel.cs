@@ -26,8 +26,14 @@ public class StatPanel : MonoBehaviour
 
 	private void Update()
 	{
+		if (thePlayer is null)
+			return;
+
+		if (thePlayer.hasAuthority)
+		{
 			UpdateStatValues();
 			UpdateStatNames();
+		}
 
 	}
 

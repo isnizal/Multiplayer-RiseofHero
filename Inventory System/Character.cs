@@ -86,7 +86,7 @@ public class Character : NetworkBehaviour
 		PlayerCombat.CombatInstance.EnableSelfRegenHp();
 		PlayerCombat.CombatInstance.EnableSelfRegenMana();
 
-		playerMovement.CmdCheckValueClothes();
+		playerMovement.CheckValueClothes();
 		playerMovement.Initialize();
 		LoadPlayerAchievement(loadedStatsAchievement);
 	}
@@ -180,33 +180,6 @@ public class Character : NetworkBehaviour
 		if (itemTooltip == null)
 			itemTooltip = FindObjectOfType<ItemTooltip>();
 	}
-	//spawn player canvas
-	[Command(requiresAuthority =false)]
-	public void CmdSpawnPlayerHUDCanvas()
-	{
-		var playerHUD = Instantiate(playerHUDPrefab);
-		NetworkServer.Spawn(playerHUD, connectionToClient);
-	}
-	//spawn player inventory and equipment
-	[Command(requiresAuthority =false)]
-	public void CmdSpawnPlayerInventory()
-	{
-		var playerCanvPref = Instantiate(playerInventoryCanvPrefab);
-
-
-
-		if (dropItemDialog.gameObject.activeInHierarchy)
-			dropItemDialog.gameObject.SetActive(false);
-
-		NetworkServer.Spawn(playerCanvPref, connectionToClient);
-	}
-	//player skill canvas
-	[Command(requiresAuthority = false)]
-	public void CmdSpawnPlayerSkillCanvas()
-	{
-		var playerSkillCanv = Instantiate(playerSkillCanvPrefab);
-		NetworkServer.Spawn(playerSkillCanv, connectionToClient);
-	}
 
 	public void FindObjects()
 	{
@@ -217,6 +190,7 @@ public class Character : NetworkBehaviour
 		EquipmentPanel = FindObjectOfType<EquipmentPanel>();
 		statPanel = FindObjectOfType<StatPanel>();
 		itemTooltip = FindObjectOfType<ItemTooltip>();
+		itemTooltip.gameObject.SetActive(false);
 		dropItemArea = FindObjectOfType<DropItemArea>();
 		dropItemDialog = GameObject.Find("DropItemDialog").GetComponent<QuestionDialog>();
 		dropItemDialog.gameObject.SetActive(false);
@@ -236,7 +210,10 @@ public class Character : NetworkBehaviour
 		sellItemArea.gameObject.transform.parent.gameObject.SetActive(false);
 		sellItemDialog = GameObject.Find("SellItemDialog").GetComponent<QuestionDialog>();
 		sellItemDialog.gameObject.SetActive(false);
-
+		if (isLocalPlayer)
+		{
+			FindObjectOfType<UIManager>().InitializeAwake(this);
+		}
 
 
 		SetupEvents();
@@ -254,11 +231,11 @@ public class Character : NetworkBehaviour
 		// Pointer Enter
 		Inventory.OnPointerEnterEvent += ShowTooltip;
 		EquipmentPanel.OnPointerEnterEvent += ShowTooltip;
-		//craftingWindow.OnPointerEnterEvent += ShowTooltip;
+		craftingWindow.OnPointerEnterEvent += ShowTooltip;
 		// Pointer Exit
 		Inventory.OnPointerExitEvent += HideTooltip;
 		EquipmentPanel.OnPointerExitEvent += HideTooltip;
-		//craftingWindow.OnPointerExitEvent += HideTooltip;
+		craftingWindow.OnPointerExitEvent += HideTooltip;
 		// Begin Drag
 		Inventory.OnBeginDragEvent += BeginDrag;
 		EquipmentPanel.OnBeginDragEvent += BeginDrag;
@@ -275,11 +252,6 @@ public class Character : NetworkBehaviour
 
 		sellItemArea.OnDropEvent += DropItemSellArea;
 	}
-	private void Awake()
-	{
-
-	}
-
 	private void Start()
 	{
 		if (isClientOnly)
@@ -486,8 +458,6 @@ public class Character : NetworkBehaviour
 
 	private void ShowTooltip(BaseItemSlot itemSlot)
 	{
-		Debug.Log("item slot" + itemSlot);
-		Debug.Log("show" + itemTooltip);
 		if (itemSlot.Item != null)
 		{
 			itemTooltip.ShowTooltip(itemSlot.Item);
@@ -496,7 +466,6 @@ public class Character : NetworkBehaviour
 
 	private void HideTooltip(BaseItemSlot itemSlot)
 	{
-		Debug.Log(itemTooltip + "hide item tool tip");
 		if (itemTooltip.gameObject.activeSelf)
 		{
 			itemTooltip.HideTooltip();

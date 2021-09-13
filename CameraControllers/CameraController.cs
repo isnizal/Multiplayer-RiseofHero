@@ -10,7 +10,6 @@ public class CameraController : MonoBehaviour
 
     public void EnterArea(GameObject player)
     {
-        Debug.Log("entering area");
         thePlayer = player;
         vcam = GetComponent<CinemachineVirtualCamera>();
         if (thePlayer != null)
@@ -21,7 +20,6 @@ public class CameraController : MonoBehaviour
     }
     public void LeaveArea(GameObject player)
     {
-        Debug.Log("leaving area");
         thePlayer = player;
         vcam = GetComponent<CinemachineVirtualCamera>();
         if (thePlayer != null)

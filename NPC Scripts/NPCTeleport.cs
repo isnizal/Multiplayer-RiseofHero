@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Mirror.Experimental;
+using Mirror;
 
 public class NPCTeleport : MonoBehaviour
 {
@@ -21,13 +22,12 @@ public class NPCTeleport : MonoBehaviour
 
 	private void OnValidate()
 	{
+		if (inventory == null)
+			inventory = FindObjectOfType<Inventory>();
 	}
 
 	private void Start()
 	{
-		if (inventory == null)
-			inventory = FindObjectOfType<Inventory>();
-
 		instance = this;
 		transition = GameObject.Find("CrossFade").GetComponent<Animator>();
 		toLocation = GameObject.Find("Efos StartPoint");
@@ -52,6 +52,8 @@ public class NPCTeleport : MonoBehaviour
 	{
 		if(other.gameObject.CompareTag("Player") && !other.isTrigger)
 		{
+			if (!other.GetComponent<NetworkIdentity>().isLocalPlayer)
+				return;
 			player = other.gameObject;
 			inRange = true;
 			if (GameManager.GameManagerInstance.isHandheld)
@@ -66,6 +68,8 @@ public class NPCTeleport : MonoBehaviour
 	{
 		if(other.gameObject.CompareTag("Player"))
 		{
+			if (!other.GetComponent<NetworkIdentity>().isLocalPlayer)
+				return;
 			inRange = false;
 			if (GameManager.GameManagerInstance.isHandheld)
 			{

@@ -55,8 +55,13 @@ public class StatsModifier : MonoBehaviour
     private int tempVitPointHolder;
 
     public bool canUpgrade;
+    private Character c;
+    private void Awake()
+    {
+        c = FindObjectOfType<Character>();
+    }
 
-	private void Update()
+    private void Update()
 	{
         if (Character.MyInstance is null)
             return;
@@ -102,8 +107,10 @@ public class StatsModifier : MonoBehaviour
         currentVit = (int)Character.MyInstance.Vitality.Value;
     }
 
-    public void AddStrStat(Character c)
+    public void AddStrStat()
     {
+        if (c is null)
+            c = FindObjectOfType<Character>();
         if (c.statPoints > 0)
         {
             tempStrPointHolder++;
@@ -116,8 +123,10 @@ public class StatsModifier : MonoBehaviour
         }
     }
 
-    public void RemoveStrStat(Character c)
+    public void RemoveStrStat()
     {
+        if (c is null)
+            c = FindObjectOfType<Character>();
         if (tempStrPointHolder > 0)
         {
             tempStrPointHolder--;
@@ -130,8 +139,10 @@ public class StatsModifier : MonoBehaviour
         }
     }
 
-    public void AddDefStat(Character c)
+    public void AddDefStat()
     {
+        if (c is null)
+            c = FindObjectOfType<Character>();
         if (c.statPoints > 0)
         {
             tempDefPointHolder++;
@@ -144,8 +155,10 @@ public class StatsModifier : MonoBehaviour
         }
     }
 
-    public void RemoveDefStat(Character c)
+    public void RemoveDefStat()
     {
+        if (c is null)
+            c = FindObjectOfType<Character>();
         if (tempDefPointHolder > 0)
         {
             tempDefPointHolder--;
@@ -158,8 +171,10 @@ public class StatsModifier : MonoBehaviour
         }
     }
 
-    public void AddIntStat(Character c)
+    public void AddIntStat()
     {
+        if (c is null)
+            c = FindObjectOfType<Character>();
         if (c.statPoints > 0)
         {
             tempIntPointHolder++;
@@ -172,8 +187,10 @@ public class StatsModifier : MonoBehaviour
         }
     }
 
-    public void RemoveIntStat(Character c)
+    public void RemoveIntStat()
     {
+        if (c is null)
+            c = FindObjectOfType<Character>();
         if (tempIntPointHolder > 0)
         {
             tempIntPointHolder--;
@@ -186,8 +203,10 @@ public class StatsModifier : MonoBehaviour
         }
     }
 
-    public void AddVitStat(Character c)
+    public void AddVitStat()
     {
+        if (c is null)
+            c = FindObjectOfType<Character>();
         if (c.statPoints > 0)
         {
             tempVitPointHolder++;
@@ -200,8 +219,10 @@ public class StatsModifier : MonoBehaviour
         }
     }
 
-    public void RemoveVitStat(Character c)
+    public void RemoveVitStat()
     {
+        if (c is null)
+            c = FindObjectOfType<Character>();
         if (tempVitPointHolder > 0)
         {
             tempVitPointHolder--;
@@ -214,9 +235,11 @@ public class StatsModifier : MonoBehaviour
         }
     }
 
-    public void ConfirmSelection(Character c)
+    public void ConfirmSelection()
     {
-		if (canUpgrade)
+        if (c is null)
+            c = FindObjectOfType<Character>();
+        if (canUpgrade)
 		{
 
 			c.Strength.BaseValue += tempStrPointHolder;

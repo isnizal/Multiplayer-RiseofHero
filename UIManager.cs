@@ -5,7 +5,7 @@ using TMPro;
 using Mirror;
 using UnityEngine.Serialization;
 
-public class UIManager : NetworkBehaviour
+public class UIManager : MonoBehaviour
 {
     [Header("---> Level Values <---")]
     [FormerlySerializedAs("levelText")]
@@ -48,8 +48,11 @@ public class UIManager : NetworkBehaviour
         }
 
     }
-    private void InitializeVariable()
+    private Character Player;
+    public void InitializeVariable(Character player)
     {
+        Player = player;
+
         levelValue = GameObject.Find("LevelValue").GetComponent<TextMeshProUGUI>();
         premiumValue = GameObject.Find("PremiumValue").GetComponent<TextMeshProUGUI>();
         copperValue = GameObject.Find("CopperValue").GetComponent<TextMeshProUGUI>();
@@ -60,17 +63,18 @@ public class UIManager : NetworkBehaviour
         xpSlider = GameObject.Find("XPSlider").GetComponent<Slider>();
         xpValue = GameObject.Find("XPValue").GetComponent<TextMeshProUGUI>();
     }
-    public override void OnStartAuthority()
+    public void InitializeAwake(Character player)
     {
-        base.OnStartAuthority();
-        Debug.Log("local authority");
-        base.OnStartLocalPlayer();
-        //InitializeVariable();
+        InitializeVariable(player);
+        GetComponent<GameManager>().InitializeVariable();
     }
-    
+
     void Update()
     {
-        if (hasAuthority)
+        
+        if (Player is null)
+            return;
+        if (Player.isLocalPlayer)
         {
             UpdateHealth();
             UpdateMP();
@@ -86,6 +90,8 @@ public class UIManager : NetworkBehaviour
     }
     public void UpdateHealth()
     {
+        if (Character.MyInstance is null)
+            return;
         hpSlider.maxValue = Character.MyInstance.MaxHealth;
         hpSlider.value = Character.MyInstance.Health;
         hpValue.text = "" + Character.MyInstance.Health + "/" + Character.MyInstance.MaxHealth;
@@ -93,6 +99,8 @@ public class UIManager : NetworkBehaviour
 
     public void UpdateMP()
 	{
+        if (Character.MyInstance is null)
+            return;
         mpSlider.maxValue = Character.MyInstance.MaxMP;
         mpSlider.value = Character.MyInstance.Mana;
         mpValue.text = "" + Character.MyInstance.Mana + "/" + Character.MyInstance.MaxMP;

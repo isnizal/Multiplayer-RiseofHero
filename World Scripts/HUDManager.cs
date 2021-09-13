@@ -1,11 +1,14 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class HUDManager : MonoBehaviour
 {
 	public static HUDManager instance;
 
-	[SerializeField] GameObject equipmentPanelWindow;
-	[SerializeField] GameObject skillWindow;
+	[FormerlySerializedAs("equipmentPanelWindow")]
+	[SerializeField] GameObject characterPanel;
+	[FormerlySerializedAs("playerSkillCanvas")]
+	[SerializeField] GameObject skillPanelWindow;
 	[SerializeField] GameObject achievementWindow;
 
 	private void Start()
@@ -16,13 +19,13 @@ public class HUDManager : MonoBehaviour
 	{
 		if (canvas.alpha == 0)
 		{
-			skillWindow.GetComponent<CanvasGroup>().alpha = 1;
-			skillWindow.GetComponent<CanvasGroup>().blocksRaycasts = true;
+			skillPanelWindow.GetComponent<CanvasGroup>().alpha = 1;
+			skillPanelWindow.GetComponent<CanvasGroup>().blocksRaycasts = true;
 		}
 		else
 		{
-			skillWindow.GetComponent<CanvasGroup>().alpha = 0;
-			skillWindow.GetComponent<CanvasGroup>().blocksRaycasts = false;
+			skillPanelWindow.GetComponent<CanvasGroup>().alpha = 0;
+			skillPanelWindow.GetComponent<CanvasGroup>().blocksRaycasts = false;
 			CanvasManager.CanvasInstance.attributesWindow.GetComponent<CanvasGroup>().alpha = 0;
 			CanvasManager.CanvasInstance.spellWindow.GetComponent<CanvasGroup>().alpha = 0;
 			CanvasManager.CanvasInstance.attributesWindow.GetComponent<CanvasGroup>().blocksRaycasts = false;
@@ -35,13 +38,13 @@ public class HUDManager : MonoBehaviour
 	{
 		if (canvas.alpha == 0)
 		{
-			equipmentPanelWindow.GetComponent<CanvasGroup>().alpha = 1;
-			equipmentPanelWindow.GetComponent<CanvasGroup>().blocksRaycasts = true;
+			characterPanel.GetComponent<CanvasGroup>().alpha = 1;
+			characterPanel.GetComponent<CanvasGroup>().blocksRaycasts = true;
 		}
 		else
 		{
-			equipmentPanelWindow.GetComponent<CanvasGroup>().alpha = 0;
-			equipmentPanelWindow.GetComponent<CanvasGroup>().blocksRaycasts = false;
+			characterPanel.GetComponent<CanvasGroup>().alpha = 0;
+			characterPanel.GetComponent<CanvasGroup>().blocksRaycasts = false;
 		}
 	}
 

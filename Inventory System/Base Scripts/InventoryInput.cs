@@ -2,7 +2,7 @@ using UnityEngine;
 using Mirror;
 
 
-public class InventoryInput : NetworkBehaviour
+public class InventoryInput : MonoBehaviour
 {
 	public CanvasGroup _characterPanelObject;
 	public CanvasGroup _skillWindowGameObject;
@@ -11,13 +11,12 @@ public class InventoryInput : NetworkBehaviour
 	[SerializeField] KeyCode[] toggleSkillWindowKeys;
 	[SerializeField] KeyCode[] toggleSettingsWindowKeys;
 
-    public override void OnStartClient()
+    public void Start()
     {
-        base.OnStartClient();
-		//_characterPanelObject = GameObject.Find("Character Panel").GetComponent<CanvasGroup>();
-		//_skillWindowGameObject = GameObject.Find("SkillPanelWindow").GetComponent<CanvasGroup>();
-		//_settingsWindowGameObject = GameObject.Find("SettingsPanel");
-		//_settingsWindowGameObject.SetActive(false);
+		_characterPanelObject = GameObject.Find("Character Panel").GetComponent<CanvasGroup>();
+		_skillWindowGameObject = GameObject.Find("SkillPanelWindow").GetComponent<CanvasGroup>();
+		_settingsWindowGameObject = GameObject.Find("SettingsPanel");
+		_settingsWindowGameObject.SetActive(false);
 	}
     private void Update()
 	{

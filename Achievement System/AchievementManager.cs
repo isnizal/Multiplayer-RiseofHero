@@ -7,7 +7,7 @@ using EasyUI.Toast;
 using Mirror;
 using UnityEngine.Serialization;
 
-public class AchievementManager : NetworkBehaviour
+public class AchievementManager : MonoBehaviour
 {
 	public static AchievementManager instance;
 	public static AchievementManager AchievementInstance
@@ -31,9 +31,11 @@ public class AchievementManager : NetworkBehaviour
 	public Sprite achDoneImage;
 	public Sprite achNotDoneImage;
 
-    public override void OnStartClient()
+	private Character player;
+
+    public void Awake()
     {
-        base.OnStartClient();
+		player = FindObjectOfType<Character>();
 		achivementNotice = GameObject.Find("AchivementNotice");
 		achNoticeTitle = GameObject.Find("AchNoticeTitle").GetComponent<TextMeshProUGUI>();
 		achNoticeDesc = GameObject.Find("AchNoticeDesc").GetComponent<TextMeshProUGUI>();
@@ -111,10 +113,10 @@ public class AchievementManager : NetworkBehaviour
 		//}
 
 		//disable after initialize
-		//for (int f = 0; f < achievementSlot.Length; f++)
-		//{
-		//	achievementSlot[f].SetActive(false);
-		//}
+		for (int f = 0; f < achievementSlot.Length; f++)
+		{
+			achievementSlot[f].SetActive(false);
+		}
 	}
 	private void OnValidate()
 	{
@@ -140,9 +142,11 @@ public class AchievementManager : NetworkBehaviour
 
 	private void Update()
 	{
-		if (hasAuthority)
+		if (player is null)
+			return;
+		if (player.hasAuthority)
 		{
-			Debug.Log("achievement local player");
+			CheckAchCompletionUIUpdate();
 			ActiveAch();
 			CheckRequirements();
 		}
@@ -186,7 +190,7 @@ public class AchievementManager : NetworkBehaviour
 
 	private void Start()
 	{
-		CheckAchCompletionUIUpdate();
+		
 	}
 
 	public void CheckAchCompletionUIUpdate()

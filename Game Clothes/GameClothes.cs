@@ -24,7 +24,7 @@ public class GameClothes : MonoBehaviour
     {
         playerMovement = FindObjectOfType<PlayerMovement>();
         playerMovement.SetClothesValue();
-        playerMovement.CmdCheckValueClothes();
+        playerMovement.CheckValueClothes();
         playerMovement.Initialize();
         
     }
