@@ -33,9 +33,9 @@ public class AchievementManager : MonoBehaviour
 
 	private Character player;
 
-    public void Awake()
+    public void AchievementManagerLoad(Character player)
     {
-		player = FindObjectOfType<Character>();
+		this.player = player;
 		achivementNotice = GameObject.Find("AchivementNotice");
 		achNoticeTitle = GameObject.Find("AchNoticeTitle").GetComponent<TextMeshProUGUI>();
 		achNoticeDesc = GameObject.Find("AchNoticeDesc").GetComponent<TextMeshProUGUI>();
@@ -144,7 +144,7 @@ public class AchievementManager : MonoBehaviour
 	{
 		if (player is null)
 			return;
-		if (player.hasAuthority)
+		if (player.isLocalPlayer)
 		{
 			CheckAchCompletionUIUpdate();
 			ActiveAch();

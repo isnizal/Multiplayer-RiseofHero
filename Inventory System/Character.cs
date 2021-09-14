@@ -20,6 +20,34 @@ public class Character : NetworkBehaviour
 		}
 
 	}
+	public GameObject dialogObject;
+	public GameObject nameObject;
+	public bool onDialog = false;
+	public IEnumerator DialogDisable;
+
+	public void OnText(string value)
+	{
+		EnableDialog(value);
+	}
+	public void EnableDialog(string Message)
+	{
+		onDialog = true;
+		dialogObject.SetActive(true);
+		nameObject.SetActive(false);
+		dialogObject.GetComponentInChildren<TextMeshProUGUI>().text = Message.ToString();
+		DialogDisable = StartDisableDialog(5f);
+		StartCoroutine(DialogDisable);
+	}
+	private IEnumerator StartDisableDialog(float value)
+	{
+		while (onDialog)
+		{
+			yield return new WaitForSeconds(value);
+			onDialog = false;
+			dialogObject.SetActive(false);
+			nameObject.SetActive(true);
+		}
+	}
 
 	public void Save()
 	{

@@ -288,36 +288,6 @@ public class PlayerMovement : NetworkBehaviour
 	[SerializeField] private GameObject rightBootAvatar;
 	[SerializeField] private GameObject swordAvatar;
 
-	private GameObject _hairPlayer, _helmetPlayer, _torsoPlayer, _shieldPlayer,
-		_leftarmPlayer, _rightarmPlayer, _leftbootPlayer, _rightbootPlayer, 
-		_swordPlayer;
-	[Command]
-	private void CmdInitializePlayerClothes()
-	{
-		_hairPlayer = hairAvatar;
-		_helmetPlayer = helmetAvatar;
-		_torsoPlayer = torsoAvatar;
-		_shieldPlayer = shieldAvatar;
-		_leftarmPlayer = leftarmAvatar;
-		_rightarmPlayer = rightarmAvatar;
-		_leftbootPlayer = leftBootAvatar;
-		_rightbootPlayer = rightBootAvatar;
-		_swordPlayer = swordAvatar;
-		RpcInitializePlayerClothes();
-	}
-	[ClientRpc]
-	private void RpcInitializePlayerClothes()
-	{
-		_hairPlayer = hairAvatar;
-		_helmetPlayer = helmetAvatar;
-		_torsoPlayer = torsoAvatar;
-		_shieldPlayer = shieldAvatar;
-		_leftarmPlayer = leftarmAvatar;
-		_rightarmPlayer = rightarmAvatar;
-		_leftbootPlayer = leftBootAvatar;
-		_rightbootPlayer = rightBootAvatar;
-		_swordPlayer = swordAvatar;
-	}
 	private void CheckMovePos()
 	{
 			if (change.x == 1)
@@ -848,28 +818,24 @@ public class PlayerMovement : NetworkBehaviour
 		{
 			netAnim.animator.SetBool("DeadRight", true);
 			netAnim.animator.SetBool("IdleRight", false);
-			//CmdSetSpriteRight();
 			SetSpriteRight();
 		}
 		else if (rightPos == -1)
 		{
 			netAnim.animator.SetBool("DeadLeft", true);
 			netAnim.animator.SetBool("IdleLeft", false);
-			//CmdSetSpriteLeft();
 			SetSpriteLeft();
 		}
 		else if (frontPos == -1)
 		{
 			netAnim.animator.SetBool("DeadFront", true);
 			netAnim.animator.SetBool("IdleFront", false);
-			//CmdSetSpriteFront();
 			SetSpriteFront();
 		}
 		else if (frontPos == 1)
 		{
 			netAnim.animator.SetBool("DeadBack", true);
 			netAnim.animator.SetBool("IdleBack", false);
-			//CmdSetSpriteBack();
 			SetSpriteBack();
 		}
 	}
@@ -926,7 +892,6 @@ public class PlayerMovement : NetworkBehaviour
 			{
 				if (rightPos == 1)
 				{
-					//CmdSetSpriteRight();
 					SetSpriteRight();
 					netAnim.animator.SetBool("IdleRight", true);
 
@@ -937,7 +902,6 @@ public class PlayerMovement : NetworkBehaviour
 				}
 				else if (rightPos == -1)
 				{
-					//CmdSetSpriteLeft();
 					SetSpriteLeft();
 					netAnim.animator.SetBool("IdleLeft", true);
 
@@ -948,7 +912,6 @@ public class PlayerMovement : NetworkBehaviour
 				}
 				else if (frontPos == -1)
 				{
-					//CmdSetSpriteFront();
 					SetSpriteFront();
 					netAnim.animator.SetBool("IdleFront", true);
 
@@ -959,7 +922,6 @@ public class PlayerMovement : NetworkBehaviour
 				}
 				else if (frontPos == 1)
 				{
-					//CmdSetSpriteBack();
 					SetSpriteBack();
 					netAnim.animator.SetBool("IdleBack", true);
 

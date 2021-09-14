@@ -22,7 +22,10 @@ public class GameClothes : MonoBehaviour
      * */
     public void LoadClothesOnStart()
     {
+        
         playerMovement = FindObjectOfType<PlayerMovement>();
+        if (playerMovement is null)
+            return;
         playerMovement.SetClothesValue();
         playerMovement.CheckValueClothes();
         playerMovement.Initialize();

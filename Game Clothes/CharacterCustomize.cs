@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
+using Mirror;
 
 public class CharacterCustomize : MonoBehaviour
 {
@@ -476,10 +477,17 @@ public class CharacterCustomize : MonoBehaviour
     [SerializeField] private GameObject addServer;
     private string currentName;
 
-
+    private void Awake()
+    {
+        inputName.onValueChanged.AddListener(InputName);
+        currentName = string.Empty;
+    }
     public void InputName(string value)
     {
+        Debug.Log(value);
         currentName = value;
+        Debug.Log(currentName);
+        FindObjectOfType<GameObserver>().LocalPlayerName = currentName;
         inputName.targetGraphic.color = Color.white;
     }
     public void SelectServer()
@@ -508,8 +516,7 @@ public class CharacterCustomize : MonoBehaviour
     public void EnterWorld()
     {
         addServer.SetActive(false);
-        FindObjectOfType<NewNetworkManager>().OnStartClient();
-        //FindObjectOfType<MainMenu>().LoadNewGame("RiseofHeros");
+        NetworkManager.singleton.StartClient();
     }
 
     public void SavePlayerClothes()

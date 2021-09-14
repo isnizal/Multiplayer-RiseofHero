@@ -36,6 +36,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI xpValue;
 
     private static UIManager instance;
+    private TMP_InputField chatInput;
     public static UIManager Instance
     {
         get
@@ -51,8 +52,10 @@ public class UIManager : MonoBehaviour
     private Character Player;
     public void InitializeVariable(Character player)
     {
+        GetComponent<AchievementManager>().AchievementManagerLoad(player);
         Player = player;
-
+        if (Player is null)
+            return;
         levelValue = GameObject.Find("LevelValue").GetComponent<TextMeshProUGUI>();
         premiumValue = GameObject.Find("PremiumValue").GetComponent<TextMeshProUGUI>();
         copperValue = GameObject.Find("CopperValue").GetComponent<TextMeshProUGUI>();
@@ -62,6 +65,8 @@ public class UIManager : MonoBehaviour
         mpValue = GameObject.Find("MPValue").GetComponent<TextMeshProUGUI>();
         xpSlider = GameObject.Find("XPSlider").GetComponent<Slider>();
         xpValue = GameObject.Find("XPValue").GetComponent<TextMeshProUGUI>();
+        chatInput = GameObject.Find("ChatText").GetComponentInChildren<TMP_InputField>();
+        chatInput.onValueChanged.AddListener(Player.OnText);
     }
     public void InitializeAwake(Character player)
     {
@@ -76,6 +81,8 @@ public class UIManager : MonoBehaviour
             return;
         if (Player.isLocalPlayer)
         {
+            if (LevelSystem.LevelInstance is null)
+                return;
             UpdateHealth();
             UpdateMP();
             xpSlider.maxValue = LevelSystem.LevelInstance.toLevelUp[LevelSystem.LevelInstance.currentLevel];

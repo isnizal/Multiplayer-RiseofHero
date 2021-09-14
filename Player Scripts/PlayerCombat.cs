@@ -20,6 +20,7 @@ public class PlayerCombat : MonoBehaviour
 		}
 
 	}
+	public TextMeshProUGUI nameText;
 	public GameObject respawnWindow;
 	[Header("---> Damage Numbers <---")]
 	public GameObject damageNumbers;
@@ -48,9 +49,11 @@ public class PlayerCombat : MonoBehaviour
 	public int arcticMPCost;
 
 	private PlayerMovement playerMovement;
+	private string _getPlayerName;
 	public bool playerDied;
 	public void FindRespawnWindow()
 	{
+		_getPlayerName = FindObjectOfType<GameObserver>().LocalPlayerName;
 		respawnWindow = GameObject.Find("RespawnWindow");
 		respawnWindow.SetActive(false);
 		playerMovement = GetComponent<PlayerMovement>();
@@ -149,6 +152,11 @@ public class PlayerCombat : MonoBehaviour
 		{
 			CheckSpellCost();
 		}
+
+		if (_getPlayerName is null)
+			return;
+		if (nameText != null)
+			nameText.text = _getPlayerName.ToString();
 	}
 	public void MeleeAttack(Collider2D other)
 	{

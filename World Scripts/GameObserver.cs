@@ -4,9 +4,10 @@ using UnityEngine;
 using EasyUI.Toast;
 using Mirror;
 
-public class GameObserver : NetworkBehaviour
+public class GameObserver : MonoBehaviour
 {
     public static GameObserver instance;
+    public string LocalPlayerName;
     public static GameObserver MyGameObserver
     {
         get
@@ -20,7 +21,6 @@ public class GameObserver : NetworkBehaviour
     }
 	private void Awake()
 	{
-        if(isClientOnly)
             DontDestroyOnLoad(this.gameObject);
 	}
 

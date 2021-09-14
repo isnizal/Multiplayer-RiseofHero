@@ -29,18 +29,17 @@ public class MainMenu : MonoBehaviour
 		characterCustomize.SetActive(true);
 		//menuCanvas.SetActive(false);
 	}
-	public void LoadNewGame(string levelName)
+	public void LoadNewGame(AsyncOperation newOperation)
 	{
 		progressPanel.SetActive(true);
-		StartCoroutine(NewCharacterAsync(levelName));
+		StartCoroutine(NewCharacterAsync(newOperation));
 		//GameObserver.MyGameObserver.newCharacter = true;
 	}
 
-	private IEnumerator NewCharacterAsync(string levelName)
+	private IEnumerator NewCharacterAsync(AsyncOperation newOperation)
 	{
 		characterCustomize.SetActive(false);
-		AsyncOperation operation = SceneManager.LoadSceneAsync(levelName);
-
+		AsyncOperation operation = newOperation;
 		while (!operation.isDone)
 		{
 			float progress = Mathf.Clamp01(operation.progress);
