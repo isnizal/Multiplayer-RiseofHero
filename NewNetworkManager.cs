@@ -6,13 +6,11 @@ using System;
 
 public class NewNetworkManager : NetworkManager
 {
-    
     public override void OnServerAddPlayer(NetworkConnection conn)
     {
        // Debug.Log("add player");
         base.OnServerAddPlayer(conn);
         Debug.Log("server" + conn.identity);
-        
 
     }
     public override void OnServerChangeScene(string newSceneName)
@@ -34,6 +32,9 @@ public class NewNetworkManager : NetworkManager
         // it will be re-enabled in FinishLoadScene.
         NetworkServer.isLoadingScene = true;
         loadingSceneAsync = SceneManager.LoadSceneAsync(newSceneName);
+        if (FindObjectOfType<MainMenu>() is null)
+            return;
+
         FindObjectOfType<MainMenu>().LoadNewGame(loadingSceneAsync);
 
         // ServerChangeScene can be called when stopping the server
@@ -125,7 +126,6 @@ public class NewNetworkManager : NetworkManager
                 }
                 break;
         }
-
         // don't change the client's current networkSceneName when loading additive scene content
         if (sceneOperation == SceneOperation.Normal)
             networkSceneName = newSceneName;

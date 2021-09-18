@@ -32,13 +32,16 @@ public class ItemStash : ItemContainer
 	{
 		if (isInRange && Input.GetKeyDown(openKeyCode))
 		{
-			isOpen = !isOpen;
-			itemsParent.gameObject.SetActive(isOpen);
+			if (!_character.onInput)
+			{
+				isOpen = !isOpen;
+				itemsParent.gameObject.SetActive(isOpen);
 
-			if (isOpen)
-				character.OpenItemContainer(this);
-			else
-				character.CloseItemContainer(this);
+				if (isOpen)
+					character.OpenItemContainer(this);
+				else
+					character.CloseItemContainer(this);
+			}
 		}
 	}
 
@@ -52,10 +55,14 @@ public class ItemStash : ItemContainer
 		CheckCollision(collision.gameObject, false);
 	}
 
+	private Character _character;
 	private void CheckCollision(GameObject gameObject, bool state)
 	{
 		if (gameObject.CompareTag("Player"))
 		{
+			if (!gameObject.GetComponent<Character>().isLocalPlayer)
+				return;
+			_character = gameObject.GetComponent<Character>();
 			isInRange = state;
 			spriteRenderer.enabled = state;
 

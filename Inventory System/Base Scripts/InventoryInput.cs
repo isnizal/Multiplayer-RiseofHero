@@ -11,29 +11,38 @@ public class InventoryInput : MonoBehaviour
 	[SerializeField] KeyCode[] toggleSkillWindowKeys;
 	[SerializeField] KeyCode[] toggleSettingsWindowKeys;
 
-    public void Start()
+	private Character _character;
+
+    public void LoadInventoryInput(Character character)
     {
 		_characterPanelObject = GameObject.Find("Character Panel").GetComponent<CanvasGroup>();
 		_skillWindowGameObject = GameObject.Find("SkillPanelWindow").GetComponent<CanvasGroup>();
 		_settingsWindowGameObject = GameObject.Find("SettingsPanel");
 		_settingsWindowGameObject.SetActive(false);
+		_character = character;
 	}
     private void Update()
 	{
-		for (int i = 0; i < toggleInventoryKeys.Length; i++)
+		if (_character is null)
+			return;
+
+		if (!_character.onInput)
 		{
-			if(Input.GetKeyDown(toggleInventoryKeys[i]))
+			for (int i = 0; i < toggleInventoryKeys.Length; i++)
 			{
-				HUDManager.instance.ToggleEquipmentWindow(_characterPanelObject);
-				break;
-			}
-			if(Input.GetKeyDown(toggleSkillWindowKeys[i]))
-			{
-				HUDManager.instance.ToggleSkillWindow(_skillWindowGameObject);
-			}
-			if(Input.GetKeyDown(toggleSettingsWindowKeys[i]))
-			{
-				HUDManager.instance.ToggleSettingsWindow(_settingsWindowGameObject);
+				if (Input.GetKeyDown(toggleInventoryKeys[i]))
+				{
+					HUDManager.instance.ToggleEquipmentWindow(_characterPanelObject);
+					break;
+				}
+				if (Input.GetKeyDown(toggleSkillWindowKeys[i]))
+				{
+					HUDManager.instance.ToggleSkillWindow(_skillWindowGameObject);
+				}
+				if (Input.GetKeyDown(toggleSettingsWindowKeys[i]))
+				{
+					HUDManager.instance.ToggleSettingsWindow(_settingsWindowGameObject);
+				}
 			}
 		}
 	}

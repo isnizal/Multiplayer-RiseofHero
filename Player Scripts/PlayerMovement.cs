@@ -7,7 +7,7 @@ using Mirror.Experimental;
 
 public class PlayerMovement : NetworkBehaviour
 {
-	
+
 	public static PlayerMovement instance;
 	public static PlayerMovement PlayerMovementInstance
 	{
@@ -26,12 +26,12 @@ public class PlayerMovement : NetworkBehaviour
 	private NetworkAnimator netAnim;
 	private NetworkRigidbody2D netRigidbody2D;
 	//private Rigidbody2D myRigidbody;
-	private  Vector3 change;
+	private Vector3 change;
 	public float moveSpeed;
 	public bool canMove;
 	[HideInInspector]
 	public float rightPos, frontPos;
-	private int attackRight, attackFront, attackBack, attackLeft;
+	public int attackRight, attackFront, attackBack, attackLeft;
 	public int currePos;
 	public bool attacking;
 
@@ -46,15 +46,22 @@ public class PlayerMovement : NetworkBehaviour
 
 	private GameClothes gameClothes;
 	private PlayerClothes playerClothes;
+	[SyncVar]
+	public int helmetValue = -1;
+	[SyncVar]
+	public int torsoValue = -1;
+	[SyncVar]
+	public int armValue = -1;
+	[SyncVar]
+	public int bootValue = -1;
+	[SyncVar]
+	public int swordValue = -1;
+	[SyncVar]
+	public int shieldValue = -1;
+	[SyncVar]
+	public int hairValue = -1;
 
-	[SyncVar]public int helmetValue;
-	[SyncVar] public int torsoValue;
-	[SyncVar] public int armValue;
-	[SyncVar] public int bootValue;
-	[SyncVar] public int swordValue;
-	[SyncVar] public int shieldValue;
-	[SyncVar] public int hairValue;
-	public void Initialize() 
+	public void Initialize()
 	{
 		attacking = false;
 		waitAttack = true;
@@ -76,7 +83,7 @@ public class PlayerMovement : NetworkBehaviour
 
 			netAnim.animator.SetBool("IdleFront", true);
 			netAnim.animator.Play("Base Layer.FrontIdleAnimation");
-		
+
 		}
 
 
@@ -84,64 +91,17 @@ public class PlayerMovement : NetworkBehaviour
 		canMove = true;
 
 	}
-	public void SetClothesValue()
+	private void Start()
 	{
-		helmetValue = gameClothes.helmetValue;
-		torsoValue = gameClothes.torsoValue;
-		armValue = gameClothes.armValue;
-		bootValue = gameClothes.bootValue;
-		swordValue = gameClothes.swordValue;
-		shieldValue = gameClothes.shieldValue;
-		hairValue = gameClothes.hairValue;
-	}
-    private void Start()
-    {
 
 		//for test only
 
 		//GetComponent<LevelSystem>().currentLevel =10;
 		//GetComponent<Character>().statPoints = 10;
-
-
-
 	}
 	public void CheckValueClothes()
 	{
-		if (helmetValue == -1)
-			helmetAvatar.SetActive(false);
-		else
-			helmetAvatar.SetActive(true);
-
-		if (torsoValue == -1)
-			torsoAvatar.SetActive(false);
-		else
-			torsoAvatar.SetActive(true);
-
-		if (armValue == -1) { leftarmAvatar.SetActive(false); rightarmAvatar.SetActive(false); }
-		else { leftarmAvatar.SetActive(true);rightarmAvatar.SetActive(true); }
-
-		if (bootValue == -1) { leftBootAvatar.gameObject.SetActive(false); rightBootAvatar.gameObject.SetActive(false); }
-		else { leftBootAvatar.SetActive(true);rightBootAvatar.SetActive(true); }
-
-		if (shieldValue == -1)
-			shieldAvatar.SetActive(false);
-		else
-			shieldAvatar.SetActive(true);
-
-		if (swordValue == -1)
-			swordAvatar.SetActive(false);
-		else
-			swordAvatar.SetActive(true);
-
-		if (hairValue == -1)
-			hairAvatar.SetActive(false);
-		else
-			hairAvatar.SetActive(true);
-		RpcCheckValueClothes();
-	}
-	[TargetRpc]
-	public void RpcCheckValueClothes()
-	{
+		Debug.Log("check value clothes");
 		if (helmetValue == -1)
 			helmetAvatar.SetActive(false);
 		else
@@ -172,38 +132,53 @@ public class PlayerMovement : NetworkBehaviour
 			hairAvatar.SetActive(false);
 		else
 			hairAvatar.SetActive(true);
+		//RpcCheckValueClothes();
 	}
-    public override void OnStartLocalPlayer()
-    {
-        base.OnStartLocalPlayer();
-		//GameManager gameManager = FindObjectOfType<GameManager>();
-		//if (gameManager is null)
-		//	gameManager = FindObjectOfType<GameManager>();
-		//if (gameManager)
-		//	gameManager.InitializeVariable();
+	public override void OnStartLocalPlayer()
+	{
+		base.OnStartLocalPlayer();
 
 
 	}
+	//private string findName ;
 	public override void OnStartClient()
 	{
 		base.OnStartClient();
 
 
-		helmetValue = 0;
-		torsoValue = 0;
-		armValue = 0;
-		bootValue = 0;
-		swordValue = 0;
-		shieldValue = 0;
-		hairValue = 0;
+		//helmetValue = 0;
+		//torsoValue = 0;
+		//armValue = 0;
+		//bootValue = 0;
+		//swordValue = 0;
+		//shieldValue = 0;
+		//hairValue = 0;
+		Debug.Log("starting player client");
 
-		ObjectInitialize();
-		Initialize();
-		SetSpriteFront();
+		//CmdSetClothesValue();
+		if (isLocalPlayer)
+		{
+			gameClothes = FindObjectOfType<GameClothes>();
+			CmdSetClothesValue(gameClothes.helmetValue, gameClothes.torsoValue, gameClothes.armValue, gameClothes.swordValue,
+				gameClothes.shieldValue, gameClothes.bootValue, gameClothes.hairValue);
 
-
-
-		
+			CheckValueClothes();
+			InitializeAwake();
+			//start client initialize
+			Initialize();
+			SetSpriteFront();
+		}
+	}
+	[Command(requiresAuthority =false)]
+	private void CmdSetClothesValue(int helmet, int torso, int arm, int sword, int shiedl, int boot, int hair)
+	{
+		helmetValue = helmet;
+		torsoValue = torso;
+		armValue = arm;
+		bootValue = sword;
+		swordValue = shiedl;
+		shieldValue = boot;
+		hairValue = hair;
 	}
 	public override void OnStartAuthority()
 	{
@@ -211,12 +186,79 @@ public class PlayerMovement : NetworkBehaviour
 
 		Debug.Log("player start authority");
 
+		//InstantiateObjectCanvas();
+		string findName = FindObjectOfType<GameObserver>().LocalPlayerName;
+		InvokeCanvasObjects(findName);
 
 	}
-	public void ObjectInitialize()
+
+	[SyncVar(hook = nameof(OnNameChanged))]
+	private string localPlayerName = "M";
+
+	[SyncVar(hook = nameof(OnMessageChanged))]
+	private string localPlayerMessage;
+
+	private void InvokeCanvasObjects(string findName)
+	{
+		CmdSetName(findName);
+	}
+	public void SetMessageForPlayer(string Message)
+	{
+		CmdSentMessage(Message);
+	}
+	[Command(requiresAuthority = false)]
+	public void CmdSetName(string name)
+	{
+		localPlayerName = name;
+	}
+
+	public void OnNameChanged(string oldName, string newName)
+	{
+		TextMeshProUGUI nameText = GetComponentInChildren<NameCanvas>().nameText;
+		nameText.text = localPlayerName;
+	}
+
+	private TextMeshProUGUI dialogText;
+	private GameObject dialogObject;
+	private GameObject nameObject;
+	public void OnMessageChanged(string oldMessage, string newMessage)
+	{
+		dialogText = GetComponentInChildren<NameCanvas>().dialogText;
+		dialogObject = GetComponentInChildren<NameCanvas>().dialogObject;
+		nameObject = GetComponentInChildren<NameCanvas>().nameObject;
+
+		dialogText.text = localPlayerMessage;
+		onDialog = true;
+		dialogObject.SetActive(true);
+		nameObject.SetActive(false);
+		DialogDisable = StartDisableDialog(5f);
+		StartCoroutine(DialogDisable);
+	}
+
+	[Command(requiresAuthority = false)]
+	public void CmdSentMessage(string message)
+	{
+		localPlayerMessage = message;
+
+	}
+	private bool onDialog = false;
+	public IEnumerator DialogDisable;
+	private IEnumerator StartDisableDialog(float value)
+	{
+		while (onDialog)
+		{
+			yield return new WaitForSeconds(value);
+			onDialog = false;
+			dialogObject.SetActive(false);
+			nameObject.SetActive(true);
+		}
+	}
+	private Character character;
+	public void InitializeAwake()
 	{
 		if (isLocalPlayer)
 		{
+			character = GetComponent<Character>();
 			GetComponent<Character>().FindObjects();
 			GetComponent<PlayerCombat>().FindRespawnWindow();
 			netAnim = GetComponent<NetworkAnimator>();
@@ -239,41 +281,45 @@ public class PlayerMovement : NetworkBehaviour
 	}
 	private void Update()
 	{
-
 		if (isLocalPlayer)
 		{
-			if (!PlayerCombat.CombatInstance.playerDied)
+			if (!character.onInput)
 			{
-				if (GameManager.GameManagerInstance.isHandheld)
+				if (!PlayerCombat.CombatInstance.playerDied)
 				{
-					change = Vector3.zero;
-					change.x = fixedJoystick.Horizontal;
-					change.y = fixedJoystick.Vertical;
-					//CombatPos();
-					//if (base.hasAuthority)
-					UpdateAnimation();
-					AttackActionButton();
-				}
-
-				if (GameManager.GameManagerInstance.isDesktop)
-				{
-
-					change = Vector3.zero;
-					if (!attacking)
+					if (GameManager.GameManagerInstance.isHandheld)
 					{
-						change.x = Input.GetAxisRaw("Horizontal");
-						change.y = Input.GetAxisRaw("Vertical");
-					}
-					//CombatPos();
-					if (base.hasAuthority)
-					{
-						//IdleAnimate();
+						change = Vector3.zero;
+						change.x = fixedJoystick.Horizontal;
+						change.y = fixedJoystick.Vertical;
+						//CombatPos();
+						//if (base.hasAuthority)
 						UpdateAnimation();
 						AttackActionButton();
+					}
+
+					if (GameManager.GameManagerInstance.isDesktop)
+					{
+
+						change = Vector3.zero;
+						if (!attacking)
+						{
+							change.x = Input.GetAxisRaw("Horizontal");
+							change.y = Input.GetAxisRaw("Vertical");
+						}
+						//CombatPos();
+						if (base.hasAuthority)
+						{
+							//IdleAnimate();
+							UpdateAnimation();
+							AttackActionButton();
+						}
 					}
 				}
 			}
 		}
+
+
 	}
 	private bool waitAttack = true;
 
@@ -427,6 +473,7 @@ public class PlayerMovement : NetworkBehaviour
 					{
 						waitAttack = false;
 						netAnim.animator.SetTrigger("AttackBack");
+						frontPos = 1;
 						attacking = true;
 					}
 				}
@@ -486,6 +533,7 @@ public class PlayerMovement : NetworkBehaviour
 			playerClothes = GetComponent<PlayerClothes>();
 		if (playerClothes is null)
 			return;
+		Debug.Log("client" + helmetValue);
 		if (helmetAvatar.activeInHierarchy)
 			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[0];
 		if (torsoAvatar.activeInHierarchy)
@@ -513,26 +561,28 @@ public class PlayerMovement : NetworkBehaviour
 		if (playerClothes is null)
 			return;
 
-		if (helmetAvatar.activeInHierarchy)
-			this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[0];
-		if (torsoAvatar.activeInHierarchy)
-			this.torsoAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[0];
-		if (leftarmAvatar.activeInHierarchy)
-			this.leftarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[0];
-		if (rightarmAvatar.activeInHierarchy)
-			this.rightarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[0];
-		if (leftBootAvatar.activeInHierarchy)
-			this.leftBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[0];
-		if (rightBootAvatar.activeInHierarchy)
-			this.rightBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[0];
-		if (swordAvatar.activeInHierarchy)
-			this.swordAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[0];
-		if (shieldAvatar.activeInHierarchy)
-			this.shieldAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[0];
-		if (hairAvatar.activeInHierarchy)
-			this.hairAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[0];
+		//Debug.Log("normal " + helmetValue);
+		//if (helmetAvatar.activeInHierarchy)
+		//	this.helmetAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[helmetValue].helmetSprite[0];
+		//if (torsoAvatar.activeInHierarchy)
+		//	this.torsoAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[torsoValue].torsoSprite[0];
+		//if (leftarmAvatar.activeInHierarchy)
+		//	this.leftarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].leftArmSprite[0];
+		//if (rightarmAvatar.activeInHierarchy)
+		//	this.rightarmAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[armValue].rightArmSprite[0];
+		//if (leftBootAvatar.activeInHierarchy)
+		//	this.leftBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].leftBootSprite[0];
+		//if (rightBootAvatar.activeInHierarchy)
+		//	this.rightBootAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[bootValue].rightBootSprite[0];
+		//if (swordAvatar.activeInHierarchy)
+		//	this.swordAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[swordValue].swordSprite[0];
+		//if (shieldAvatar.activeInHierarchy)
+		//	this.shieldAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[shieldValue].shieldSprite[0];
+		//if (hairAvatar.activeInHierarchy)
+		//	this.hairAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[0];
 		if (isClient)
-			CmdSetSpriteFront();
+			if(NetworkClient.ready)
+				CmdSetSpriteFront();
 		else
 			return;
 
@@ -811,29 +861,33 @@ public class PlayerMovement : NetworkBehaviour
 	}
 
 
-
+	
     public void SetPositionDead()
 	{
 		if (rightPos == 1)
 		{
+			rightPos = 1;
 			netAnim.animator.SetBool("DeadRight", true);
 			netAnim.animator.SetBool("IdleRight", false);
 			SetSpriteRight();
 		}
 		else if (rightPos == -1)
 		{
+			rightPos = -1;
 			netAnim.animator.SetBool("DeadLeft", true);
 			netAnim.animator.SetBool("IdleLeft", false);
 			SetSpriteLeft();
 		}
 		else if (frontPos == -1)
 		{
+			frontPos = -1;
 			netAnim.animator.SetBool("DeadFront", true);
 			netAnim.animator.SetBool("IdleFront", false);
 			SetSpriteFront();
 		}
 		else if (frontPos == 1)
 		{
+			frontPos = 1;
 			netAnim.animator.SetBool("DeadBack", true);
 			netAnim.animator.SetBool("IdleBack", false);
 			SetSpriteBack();
@@ -848,8 +902,10 @@ public class PlayerMovement : NetworkBehaviour
 			netAnim.animator.SetBool("IdleFront", false);
 			netAnim.animator.SetBool("IdleBack", false);
 			netAnim.animator.SetBool("IdleRight", false);
+
 			if (rightPos == 1)
 			{
+				rightPos = 1;
 				netAnim.animator.SetBool("MoveRight", true);
 				netAnim.animator.SetBool("MoveLeft", false);
 				netAnim.animator.SetBool("MoveFront", false);
@@ -859,6 +915,7 @@ public class PlayerMovement : NetworkBehaviour
 			}
 			else if (rightPos == -1)
 			{
+				rightPos = -1;
 				netAnim.animator.SetBool("MoveLeft", true);
 				netAnim.animator.SetBool("MoveFront", false);
 				netAnim.animator.SetBool("MoveBack", false);
@@ -868,6 +925,7 @@ public class PlayerMovement : NetworkBehaviour
 			}
 			else if (frontPos == -1)
 			{
+				frontPos = -1;
 				netAnim.animator.SetBool("MoveFront", true);
 				netAnim.animator.SetBool("MoveBack", false);
 				netAnim.animator.SetBool("MoveRight", false);
@@ -877,7 +935,7 @@ public class PlayerMovement : NetworkBehaviour
 			}
 			else if (frontPos == 1)
 			{
-
+				frontPos = 1;
 				netAnim.animator.SetBool("MoveBack", true);
 				netAnim.animator.SetBool("MoveRight", false);
 				netAnim.animator.SetBool("MoveLeft", false);
@@ -892,6 +950,7 @@ public class PlayerMovement : NetworkBehaviour
 			{
 				if (rightPos == 1)
 				{
+					rightPos = 1;
 					SetSpriteRight();
 					netAnim.animator.SetBool("IdleRight", true);
 
@@ -902,6 +961,7 @@ public class PlayerMovement : NetworkBehaviour
 				}
 				else if (rightPos == -1)
 				{
+					rightPos = -1;
 					SetSpriteLeft();
 					netAnim.animator.SetBool("IdleLeft", true);
 
@@ -912,6 +972,7 @@ public class PlayerMovement : NetworkBehaviour
 				}
 				else if (frontPos == -1)
 				{
+					frontPos = -1;
 					SetSpriteFront();
 					netAnim.animator.SetBool("IdleFront", true);
 
@@ -922,6 +983,7 @@ public class PlayerMovement : NetworkBehaviour
 				}
 				else if (frontPos == 1)
 				{
+					frontPos = 1;
 					SetSpriteBack();
 					netAnim.animator.SetBool("IdleBack", true);
 
@@ -938,9 +1000,11 @@ public class PlayerMovement : NetworkBehaviour
 	{
 		if (!canMove)
 		{
+
 			netRigidbody2D.target.velocity = Vector3.zero;
 			return;
 		}
+
 		change.Normalize();
 		netRigidbody2D.target.MovePosition(transform.position + change * moveSpeed * Time.fixedDeltaTime);
 		netRigidbody2D.target.velocity = Vector3.zero;

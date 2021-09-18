@@ -19,7 +19,7 @@ public class NPCTeleport : MonoBehaviour
 	public Item startItemSO;
 
 	private Inventory inventory;
-
+	private Character _character;
 	private void OnValidate()
 	{
 		if (inventory == null)
@@ -37,8 +37,11 @@ public class NPCTeleport : MonoBehaviour
 	{
 		if(Input.GetKeyDown(KeyCode.Q) && inRange)
 		{
-			npcDialog.SetActive(true);
-			player.GetComponent<NetworkRigidbody2D>().target.constraints = RigidbodyConstraints2D.FreezeAll;
+			if (!_character.onInput)
+			{
+				npcDialog.SetActive(true);
+				player.GetComponent<NetworkRigidbody2D>().target.constraints = RigidbodyConstraints2D.FreezeAll;
+			}
 		}
 	}
 
@@ -54,6 +57,7 @@ public class NPCTeleport : MonoBehaviour
 		{
 			if (!other.GetComponent<NetworkIdentity>().isLocalPlayer)
 				return;
+			_character = other.gameObject.GetComponent<Character>();
 			player = other.gameObject;
 			inRange = true;
 			if (GameManager.GameManagerInstance.isHandheld)

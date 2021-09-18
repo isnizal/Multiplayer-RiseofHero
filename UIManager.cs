@@ -50,9 +50,10 @@ public class UIManager : MonoBehaviour
 
     }
     private Character Player;
-    public void InitializeVariable(Character player)
+    public void InitializeUIVariable(Character player)
     {
         GetComponent<AchievementManager>().AchievementManagerLoad(player);
+        GetComponent<InventoryInput>().LoadInventoryInput(player);
         Player = player;
         if (Player is null)
             return;
@@ -66,12 +67,14 @@ public class UIManager : MonoBehaviour
         xpSlider = GameObject.Find("XPSlider").GetComponent<Slider>();
         xpValue = GameObject.Find("XPValue").GetComponent<TextMeshProUGUI>();
         chatInput = GameObject.Find("ChatText").GetComponentInChildren<TMP_InputField>();
-        chatInput.onValueChanged.AddListener(Player.OnText);
+        PlayerMovement playerMovement = Player.GetComponent<PlayerMovement>();
+        chatInput.onEndEdit.AddListener(playerMovement.SetMessageForPlayer);
+
     }
     public void InitializeAwake(Character player)
     {
-        InitializeVariable(player);
-        GetComponent<GameManager>().InitializeVariable();
+        InitializeUIVariable(player);
+        GetComponent<GameManager>().InitializeGameManagerVariable();
     }
 
     void Update()
@@ -94,6 +97,15 @@ public class UIManager : MonoBehaviour
             premiumValue.text = "" + Character.MyInstance.premiumCurrency;
             copperValue.text = "" + Character.MyInstance.copperCurrency;
         }
+        if (chatInput is null)
+            return;
+        if (chatInput.isFocused)
+        {
+            //disable player keyboard if on desktop
+            Player.GetComponent<Character>().onInput = true;
+        }
+        else
+            Player.GetComponent<Character>().onInput = false;
     }
     public void UpdateHealth()
     {

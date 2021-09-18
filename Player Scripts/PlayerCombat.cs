@@ -4,8 +4,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using EasyUI.Toast;
+using Mirror;
 
-public class PlayerCombat : MonoBehaviour
+public class PlayerCombat : NetworkBehaviour
 {
 	private static PlayerCombat instance;
 	public static PlayerCombat CombatInstance
@@ -49,12 +50,16 @@ public class PlayerCombat : MonoBehaviour
 	public int arcticMPCost;
 
 	private PlayerMovement playerMovement;
-	private string _getPlayerName;
+	private Character _character;
 	public bool playerDied;
+
 	public void FindRespawnWindow()
 	{
-		_getPlayerName = FindObjectOfType<GameObserver>().LocalPlayerName;
+		_character = GetComponent<Character>();
+		GameManager gameManager = FindObjectOfType<GameManager>();
 		respawnWindow = GameObject.Find("RespawnWindow");
+		respawnWindow.transform.GetChild(0).GetChild(1).gameObject.GetComponent<Button>().onClick.AddListener(gameManager.ClickYesRespawn);
+		respawnWindow.transform.GetChild(0).GetChild(2).gameObject.GetComponent<Button>().onClick.AddListener(gameManager.ClickNoRespawn);
 		respawnWindow.SetActive(false);
 		playerMovement = GetComponent<PlayerMovement>();
 	}
@@ -148,15 +153,19 @@ public class PlayerCombat : MonoBehaviour
 
 	private void Update()
 	{
-		if(Input.GetKeyDown(KeyCode.LeftControl) && canCastSpells)
-		{
-			CheckSpellCost();
-		}
-
-		if (_getPlayerName is null)
+		if (_character is null)
 			return;
-		if (nameText != null)
-			nameText.text = _getPlayerName.ToString();
+		if (!_character.onInput)
+		{
+			if (Input.GetKeyDown(KeyCode.LeftControl) && canCastSpells)
+			{
+				CheckSpellCost();
+			}
+		}
+		//if (_getPlayerName == string.Empty)
+		//	return;
+		//if (nameText != null)
+		//	nameText.text = _getPlayerName.ToString();
 	}
 	public void MeleeAttack(Collider2D other)
 	{

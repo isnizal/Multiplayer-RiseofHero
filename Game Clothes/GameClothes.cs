@@ -14,23 +14,17 @@ public class GameClothes : MonoBehaviour
     public int bootValue;
     public int hairValue;
 
-    private PlayerMovement playerMovement;
 
     //load on player load game to load clothe value
     /*
      * for network this will be disable
      * */
-    public void LoadClothesOnStart()
-    {
-        
-        playerMovement = FindObjectOfType<PlayerMovement>();
-        if (playerMovement is null)
-            return;
-        playerMovement.SetClothesValue();
-        playerMovement.CheckValueClothes();
-        playerMovement.Initialize();
-        
-    }
+    //public void LoadClothesOnStart()
+    //{
+    //    playerMovement.SetClothesValue(helmetValue,torsoValue,armValue,swordValue,shieldValue,bootValue,hairValue);
+    //    playerMovement.Initialize();
+    //    
+    //}
     public void CurrentPlayerClothes(int value2)
     {
         torsoValue = value2;

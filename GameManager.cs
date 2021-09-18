@@ -71,7 +71,7 @@ public class GameManager :MonoBehaviour
 
 	public IEnumerator saveTimer;
 
-    public void InitializeVariable()
+    public void InitializeGameManagerVariable()
 	{
 		//respawn click
 
@@ -177,6 +177,7 @@ public class GameManager :MonoBehaviour
 
 		transition.SetBool("Exit", false);
 		PlayerCombat.CombatInstance.playerDied = false;
+		//respawn initialize
 		PlayerMovement.instance.Initialize();
 		player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.None;
 		player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeRotation;

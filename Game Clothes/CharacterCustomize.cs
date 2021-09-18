@@ -484,9 +484,7 @@ public class CharacterCustomize : MonoBehaviour
     }
     public void InputName(string value)
     {
-        Debug.Log(value);
         currentName = value;
-        Debug.Log(currentName);
         FindObjectOfType<GameObserver>().LocalPlayerName = currentName;
         inputName.targetGraphic.color = Color.white;
     }

@@ -153,6 +153,9 @@ public class AchievementManager : MonoBehaviour
 	}
 	public void ActiveAch()
 	{
+		if (LevelSystem.LevelInstance is null)
+			return;
+
 		for (int i = 0; i < achSO.Length; i++)
 		{
 			if (LevelSystem.LevelInstance.currentLevel >= achSO[i].achLevelRequired)

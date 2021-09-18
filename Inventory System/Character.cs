@@ -20,34 +20,6 @@ public class Character : NetworkBehaviour
 		}
 
 	}
-	public GameObject dialogObject;
-	public GameObject nameObject;
-	public bool onDialog = false;
-	public IEnumerator DialogDisable;
-
-	public void OnText(string value)
-	{
-		EnableDialog(value);
-	}
-	public void EnableDialog(string Message)
-	{
-		onDialog = true;
-		dialogObject.SetActive(true);
-		nameObject.SetActive(false);
-		dialogObject.GetComponentInChildren<TextMeshProUGUI>().text = Message.ToString();
-		DialogDisable = StartDisableDialog(5f);
-		StartCoroutine(DialogDisable);
-	}
-	private IEnumerator StartDisableDialog(float value)
-	{
-		while (onDialog)
-		{
-			yield return new WaitForSeconds(value);
-			onDialog = false;
-			dialogObject.SetActive(false);
-			nameObject.SetActive(true);
-		}
-	}
 
 	public void Save()
 	{
@@ -115,6 +87,7 @@ public class Character : NetworkBehaviour
 		PlayerCombat.CombatInstance.EnableSelfRegenMana();
 
 		playerMovement.CheckValueClothes();
+		//load game initialize
 		playerMovement.Initialize();
 		LoadPlayerAchievement(loadedStatsAchievement);
 	}
@@ -246,7 +219,7 @@ public class Character : NetworkBehaviour
 
 		SetupEvents();
 	}
-
+	public bool onInput = false;
 	private void SetupEvents()
 	{
 		statPanel.SetStats(Strength, Defense, Intelligence, Vitality);
@@ -293,10 +266,11 @@ public class Character : NetworkBehaviour
 	{
 		if (isClientOnly)
 		{
-			baseMaxHealth = 50 + Vitality.BaseValue;
-			VitalityMonitor();
-			playerPosX = transform.position.x;
-			playerPosY = transform.position.y;
+			if(!onInput)
+				baseMaxHealth = 50 + Vitality.BaseValue;
+				VitalityMonitor();
+				playerPosX = transform.position.x;
+				playerPosY = transform.position.y;
 		}
 	}
 	public void DisableAllRegen()

@@ -7,7 +7,7 @@ using Mirror;
 public class GameObserver : MonoBehaviour
 {
     public static GameObserver instance;
-    public string LocalPlayerName;
+    public string LocalPlayerName = "H";
     public static GameObserver MyGameObserver
     {
         get
@@ -21,10 +21,14 @@ public class GameObserver : MonoBehaviour
     }
 	private void Awake()
 	{
+        if (instance != this)
+        {
             DontDestroyOnLoad(this.gameObject);
-	}
 
-    public bool newCharacter;
+        }
+        else
+            Destroy(this.gameObject);
+    }
     [HideInInspector]public bool loadCharacter = false;
 	void Start()
     {
@@ -33,23 +37,18 @@ public class GameObserver : MonoBehaviour
 
     void Update()
     {
-
-        if(newCharacter)
-		{
-            newCharacter = false;
-		}
     }
     public void LoadCharacter()
     {
-        if (loadCharacter)
-        {
-            Destroy(GetComponentInChildren<GameClothes>().gameObject);
-            StartCoroutine(LoadCoroutine());
-        }
-        else
-        {
-            GetComponentInChildren<GameClothes>().LoadClothesOnStart();
-        }
+        //if (loadCharacter)
+        //{
+        //    Destroy(GetComponentInChildren<GameClothes>().gameObject);
+        //    StartCoroutine(LoadCoroutine());
+        //}
+        //else
+        //{
+        //    GetComponentInChildren<GameClothes>().LoadClothesOnStart();
+        //}
     }
 
     private IEnumerator LoadCoroutine()

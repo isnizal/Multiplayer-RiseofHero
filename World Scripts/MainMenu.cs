@@ -32,8 +32,8 @@ public class MainMenu : MonoBehaviour
 	public void LoadNewGame(AsyncOperation newOperation)
 	{
 		progressPanel.SetActive(true);
+		FindObjectOfType<GameObserver>().LoadCharacter();
 		StartCoroutine(NewCharacterAsync(newOperation));
-		//GameObserver.MyGameObserver.newCharacter = true;
 	}
 
 	private IEnumerator NewCharacterAsync(AsyncOperation newOperation)
@@ -66,8 +66,9 @@ public class MainMenu : MonoBehaviour
 	}
 	public void LoadCharacter(string levelName)
 	{
+		GameObserver gameObserver = FindObjectOfType<GameObserver>();
 		characterLoad.SetActive(false);
-		FindObjectOfType<GameObserver>().EnableLoad();
+		gameObserver.EnableLoad();
 		progressPanel.SetActive(true);
 		StartCoroutine(LoadCharacterAsync(levelName));
 	}
