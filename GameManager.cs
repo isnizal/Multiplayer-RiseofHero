@@ -51,7 +51,7 @@ public class GameManager :MonoBehaviour
 	public AudioSource BGM;
 
 	[Header("Player Respawn Info")]
-	public GameObject player;
+	public GameObject _player;
 	public GameObject toLocation;
 	public Animator transition;
 	public float teleportDelayTime;
@@ -71,42 +71,51 @@ public class GameManager :MonoBehaviour
 
 	public IEnumerator saveTimer;
 
-    public void InitializeGameManagerVariable()
+    public void InitializeGameManagerVariable(Character player)
 	{
-		//respawn click
-
-		GetComponent<AudioSource>().Play();
-		yesRespawnBtn.onClick.AddListener(ClickYesRespawn);
-		noRespawnBtn.onClick.AddListener(ClickNoRespawn);
-
-		player = FindObjectOfType<Character>().gameObject;
-
-		joystickCanvas = GameObject.Find("JoystickCanvas");
-		//player hud
-		dialogText = GameObject.Find("DialogText").GetComponent<TextMeshProUGUI>();
-		dialogBox = GameObject.Find("DialogBox");
-		dialogBox.SetActive(false);
-		//castle
-		toLocation = GameObject.Find("PlayerStartPoint");
-		//transition
-		transition = GameObject.Find("CrossFade").GetComponent<Animator>();
-
-		if (SystemInfo.deviceType == DeviceType.Handheld)
+		if (player.isLocalPlayer)
 		{
-			joystickCanvas.SetActive(true);
-			isHandheld = true;
+			FindObjectOfType<ShopEquipmentManager>().InitializeShopEquipmentManger(player);
+			FindObjectOfType<ShopItemManager>().InitializeShopItemManager(player);
+			FindObjectOfType<SpellTree>().InitializeSpell(player);
+			FindObjectOfType<StatPanel>().InitializeStatPanel(player);
+			FindObjectOfType<StatsModifier>().InitializeStatModifier(player);
+
+			FindObjectOfType<DialogBox>().InitializeDialogBox(this);
+
+			//respawn click
+			GetComponent<AudioSource>().Play();
+			yesRespawnBtn.onClick.AddListener(ClickYesRespawn);
+			noRespawnBtn.onClick.AddListener(ClickNoRespawn);
+
+			this._player = player.gameObject;
+
+			joystickCanvas = GameObject.Find("JoystickCanvas");
+			//player hud
+			dialogText = GameObject.Find("DialogText").GetComponent<TextMeshProUGUI>();
+			dialogBox = GameObject.Find("DialogBox");
+			dialogBox.SetActive(false);
+			//castle
+			toLocation = GameObject.Find("PlayerStartPoint");
+			//transition
+			transition = GameObject.Find("CrossFade").GetComponent<Animator>();
+
+			if (SystemInfo.deviceType == DeviceType.Handheld)
+			{
+				joystickCanvas.SetActive(true);
+				isHandheld = true;
+			}
+			else
+			{
+				joystickCanvas.SetActive(false);
+				isDesktop = true;
+			}
+
+			autoSave = true;
+			saveTimer = StartSaveTimer();
+			StartCoroutine(saveTimer);
+
 		}
-		else
-		{
-			joystickCanvas.SetActive(false);
-			isDesktop = true;
-		}
-
-		autoSave = true;
-		saveTimer = StartSaveTimer();
-		StartCoroutine(saveTimer);
-
-
 	}
     private void Update()
 	{
@@ -159,11 +168,11 @@ public class GameManager :MonoBehaviour
 
 	IEnumerator RespawnPlayer()
 	{
-		player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeAll;
+		_player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeAll;
 		transition.SetBool("Exit", true);
 		Debug.Log("Respawn step 1");
 		yield return new WaitForSeconds(teleportDelayTime);
-		player.transform.position = new Vector2(toLocation.transform.position.x, toLocation.transform.position.y);
+		_player.transform.position = new Vector2(toLocation.transform.position.x, toLocation.transform.position.y);
 
 		LevelSystem.LevelInstance.currentExp = LevelSystem.LevelInstance.currentExp / 2;
 
@@ -180,8 +189,8 @@ public class GameManager :MonoBehaviour
 		PlayerCombat.CombatInstance.playerDied = false;
 		//respawn initialize
 		PlayerMovement.instance.Initialize();
-		player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.None;
-		player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeRotation;
+		_player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.None;
+		_player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeRotation;
 		PlayerCombat.CombatInstance.GetComponent<BoxCollider2D>().enabled = true;
 		PlayerCombat.CombatInstance.EnableSelfRegenHp();
 		PlayerCombat.CombatInstance.EnableSelfRegenMana();

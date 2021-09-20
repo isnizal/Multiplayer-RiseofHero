@@ -16,20 +16,19 @@ public class StatPanel : MonoBehaviour
 
 
     }
-	private Character thePlayer;
+	private Character _character;
 
-	private void Awake()
+	public void InitializeStatPanel(Character character)
 	{
-		thePlayer = FindObjectOfType<Character>();
+		_character = character;
 		statDisplays = GetComponentsInChildren<StatDisplay>();
 	}
-
 	private void Update()
 	{
-		if (thePlayer is null)
+		if (_character is null)
 			return;
 
-		if (thePlayer.hasAuthority)
+		if (_character.isLocalPlayer)
 		{
 			UpdateStatValues();
 			UpdateStatNames();

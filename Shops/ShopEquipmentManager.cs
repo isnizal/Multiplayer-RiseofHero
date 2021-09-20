@@ -13,15 +13,10 @@ public class ShopEquipmentManager : MonoBehaviour
 	public GameObject[] shopPanelsGO;
 	public Button[] myPurchaseButtons;
 
-	private void Update()
+	private Character _character;
+	public void InitializeShopEquipmentManger(Character character)
 	{
-		if (Character.MyInstance is null)
-			return;
-
-		CheckPurchaseable();
-	}
-	private void Start()
-	{
+		_character = character;
 		if (inventory == null)
 			inventory = FindObjectOfType<Inventory>();
 
@@ -30,7 +25,13 @@ public class ShopEquipmentManager : MonoBehaviour
 			shopPanelsGO[i].SetActive(true);
 		}
 		LoadPanels();
+	}
+	private void Update()
+	{
+		if (_character is null)
+			return;
 
+		CheckPurchaseable();
 	}
 
 	public void LoadPanels()
@@ -53,7 +54,7 @@ public class ShopEquipmentManager : MonoBehaviour
 	{
 		for (int i = 0; i < shopItemSO.Length; i++)
 		{
-			if (Character.MyInstance.copperCurrency >= shopItemSO[i].itemSO.shopCost)
+			if (_character.copperCurrency >= shopItemSO[i].itemSO.shopCost)
 			{
 				myPurchaseButtons[i].interactable = true;
 			}
@@ -66,9 +67,9 @@ public class ShopEquipmentManager : MonoBehaviour
 
 	public void PurchaseItem(int buttonNo)
 	{
-		if (Character.MyInstance.copperCurrency >= shopItemSO[buttonNo].itemSO.shopCost)
+		if (_character.copperCurrency >= shopItemSO[buttonNo].itemSO.shopCost)
 		{
-			Character.MyInstance.copperCurrency = Character.MyInstance.copperCurrency - shopItemSO[buttonNo].itemSO.shopCost;
+			_character.copperCurrency = _character.copperCurrency - shopItemSO[buttonNo].itemSO.shopCost;
 			inventory.AddItem(shopItemSO[buttonNo].itemSO.GetCopy());
 			CheckPurchaseable();
 		}

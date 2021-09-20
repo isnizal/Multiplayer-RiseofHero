@@ -26,8 +26,6 @@ public class NPCTeleport : MonoBehaviour
 		instance = this;
 		transition = GameObject.Find("CrossFade").GetComponent<Animator>();
 		toLocation = GameObject.Find("Efos StartPoint");
-		if (inventory == null)
-			inventory = FindObjectOfType<Inventory>();
 	}
 
     private void Update()
@@ -47,7 +45,8 @@ public class NPCTeleport : MonoBehaviour
 		npcDialog.SetActive(true);
 		player.GetComponent<NetworkRigidbody2D>().target.constraints = RigidbodyConstraints2D.FreezeAll;
 	}
-
+	private GameManager _gameManager;
+	private PlayerMovement _playerMovement;
 	private void OnTriggerEnter2D(Collider2D other)
 	{
 		if(other.gameObject.CompareTag("Player") && !other.isTrigger)
@@ -55,12 +54,14 @@ public class NPCTeleport : MonoBehaviour
 			if (!other.GetComponent<NetworkIdentity>().isLocalPlayer)
 				return;
 			_character = other.gameObject.GetComponent<Character>();
+			_gameManager = FindObjectOfType<GameManager>();
+			_playerMovement = _character.gameObject.GetComponent<PlayerMovement>();
 			player = other.gameObject;
 			inRange = true;
-			if (GameManager.GameManagerInstance.isHandheld)
+			if (_gameManager.isHandheld)
 			{
-				PlayerMovement.PlayerMovementInstance.canTalkNPCTeleport = true;
-				PlayerMovement.PlayerMovementInstance.actionText.text = "Talk";
+				_playerMovement.canTalkNPCTeleport = true;
+				_playerMovement.actionText.text = "Talk";
 			}
 		}
 	}
@@ -72,30 +73,29 @@ public class NPCTeleport : MonoBehaviour
 			if (!other.GetComponent<NetworkIdentity>().isLocalPlayer)
 				return;
 			inRange = false;
-			if (GameManager.GameManagerInstance.isHandheld)
+			if (_gameManager.isHandheld)
 			{
-				PlayerMovement.PlayerMovementInstance.canTalkNPCTeleport = false;
-				PlayerMovement.PlayerMovementInstance.actionText.text = null;
+				_playerMovement.canTalkNPCTeleport = false;
+				_playerMovement.actionText.text = null;
 			}
 		}
 	}
 
 	IEnumerator EnterArea()
 	{
-		GameManager gameManager = FindObjectOfType<GameManager>();
 		player.GetComponent<NetworkRigidbody2D>().target.constraints = RigidbodyConstraints2D.FreezeAll;
 		transition.SetBool("Exit", true);
 		yield return new WaitForSeconds(teleportDelayTime);
 		player.GetComponent<Mirror.NetworkTransform>().transform.position = new Vector2(toLocation.transform.position.x, toLocation.transform.position.y);
 		yield return new WaitForSeconds(fadeDelay);
 		transition.SetBool("Exit", false);
-		if (gameManager.firstTimePlaying == 0)
+		if (_gameManager.firstTimePlaying == 0)
 		{
 			if (inventory is null)
 				inventory = FindObjectOfType<Inventory>();
 			firstTimeDialogBox.SetActive(true);
 			inventory.AddItem(startItemSO.GetCopy());
-			gameManager.firstTimePlaying = 1;
+			_gameManager.firstTimePlaying = 1;
 		}
 		player.GetComponent<NetworkRigidbody2D>().target.constraints = RigidbodyConstraints2D.None;
 		player.GetComponent<NetworkRigidbody2D>().target.constraints = RigidbodyConstraints2D.FreezeRotation;

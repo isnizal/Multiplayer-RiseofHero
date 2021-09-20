@@ -52,24 +52,31 @@ public class PlayerCombat : NetworkBehaviour
 	private PlayerMovement playerMovement;
 	private Character _character;
 	public bool playerDied;
-
-	public void FindRespawnWindow()
+	private GameManager _gameManager;
+	private SpellTree _spellTree;
+	private UIManager _uiManager;
+	public void InitializePlayerCombat()
 	{
-		_character = GetComponent<Character>();
-		//GameManager gameManager = FindObjectOfType<GameManager>();
-		respawnWindow = GameObject.Find("RespawnWindow");
-		respawnWindow.SetActive(false);
-		playerMovement = GetComponent<PlayerMovement>();
+		if (isLocalPlayer)
+		{
+			_character = GetComponent<Character>();
+			_gameManager = FindObjectOfType<GameManager>();
+			_spellTree = FindObjectOfType<SpellTree>();
+			_uiManager = FindObjectOfType<UIManager>();
+			respawnWindow = GameObject.Find("RespawnWindow");
+			respawnWindow.SetActive(false);
+			playerMovement = GetComponent<PlayerMovement>();
+		}
 	}
 	void HealthCheck()
 	{
-		if (Character.MyInstance.Health <= 0)
+		if (_character.Health <= 0)
 		{
-			Character.MyInstance.DisableAllRegen();
+			_character.DisableAllRegen();
 			playerDied = true;
-			GameManager.instance.autoSave = false;
-			StopCoroutine(GameManager.instance.saveTimer);
-			Character.MyInstance.Health = 0;
+			_gameManager.autoSave = false;
+			StopCoroutine(_gameManager.saveTimer);
+			_character.Health = 0;
 			playerMovement.SetPositionDead();
 			GetComponent<BoxCollider2D>().enabled = false;
 			CheckPlayerDeath();
@@ -81,7 +88,7 @@ public class PlayerCombat : NetworkBehaviour
 		{
 			playerMovement.canMove = false;
 			respawnWindow.SetActive(true);
-			GameManager.GameManagerInstance.BGM.Stop();
+			_gameManager.BGM.Stop();
 			SoundManager.PlaySound(SoundManager.Sound.PlayerDie);
 		}
 	}
@@ -90,16 +97,16 @@ public class PlayerCombat : NetworkBehaviour
 	{
 		if (!playerDied)
 		{
-			Character.MyInstance.notInCombat = false;
+			_character.notInCombat = false;
 			DisableSelfRegenHp();
 			DisableSelfRegenMana();
 			//set enemy hit to true
-			Character.MyInstance.enemyHit = true;
+			_character.enemyHit = true;
 			SoundManager.PlaySound(SoundManager.Sound.PlayerHit);
-			Character.MyInstance.Health -= damageToGive;
+			_character.Health -= damageToGive;
 
-			UIManager.Instance.UpdateHealth();
-			UIManager.Instance.UpdateMP();
+			_uiManager.UpdateHealth();
+			_uiManager.UpdateMP();
 
 			HealthCheck();
 		}
@@ -117,60 +124,63 @@ public class PlayerCombat : NetworkBehaviour
 	public void DisableSelfRegenHp()
 	{      
 		//check self regen active to stop 
-		if (Character.MyInstance.ResetSelfRegenHp != null)
-			StopCoroutine(Character.MyInstance.ResetSelfRegenHp);
-		if (Character.MyInstance.RestoreHealth != null)
-			StopCoroutine(Character.MyInstance.RestoreHealth);
+		if (_character.ResetSelfRegenHp != null)
+			StopCoroutine(_character.ResetSelfRegenHp);
+		if (_character.RestoreHealth != null)
+			StopCoroutine(_character.RestoreHealth);
 
-		Character.MyInstance.ResetSelfRegenHp = null;
-		Character.MyInstance.RestoreHealth = null;
+		_character.ResetSelfRegenHp = null;
+		_character.RestoreHealth = null;
 
 		EnableSelfRegenHp();
 	}
 	public void EnableSelfRegenHp()
 	{
-		Character.MyInstance.ResetSelfRegenHp = Character.MyInstance.SetSelfRegenHp();
-		StartCoroutine(Character.MyInstance.ResetSelfRegenHp);
+		_character.ResetSelfRegenHp = _character.SetSelfRegenHp();
+		StartCoroutine(_character.ResetSelfRegenHp);
 	}
 	public void DisableSelfRegenMana()
 	{
-		if (Character.MyInstance.ResetSelfRegenMana != null)
-			StopCoroutine(Character.MyInstance.ResetSelfRegenMana);
-		if (Character.MyInstance.RestoreMana != null)
-			StopCoroutine(Character.MyInstance.RestoreMana);
+		if (_character.ResetSelfRegenMana != null)
+			StopCoroutine(_character.ResetSelfRegenMana);
+		if (_character.RestoreMana != null)
+			StopCoroutine(_character.RestoreMana);
 
-		Character.MyInstance.ResetSelfRegenMana = null;
-		Character.MyInstance.RestoreMana = null;
+		_character.ResetSelfRegenMana = null;
+		_character.RestoreMana = null;
 		EnableSelfRegenMana();
 	}
 	public void EnableSelfRegenMana()
 	{
-		Character.MyInstance.ResetSelfRegenMana = Character.MyInstance.SetSelfRegenMana();
-		StartCoroutine(Character.MyInstance.ResetSelfRegenMana);
+		_character.ResetSelfRegenMana = Character.MyInstance.SetSelfRegenMana();
+		StartCoroutine(_character.ResetSelfRegenMana);
 	}
 
 	private void Update()
 	{
-		if (_character is null)
-			return;
-		if (!_character.onInput)
+		if (isLocalPlayer)
 		{
-			if (Input.GetKeyDown(KeyCode.LeftControl) && canCastSpells)
+			if (_character is null)
+				return;
+			if (!_character.onInput)
 			{
-				CheckSpellCost();
+				if (Input.GetKeyDown(KeyCode.LeftControl) && canCastSpells)
+				{
+					CheckSpellCost();
+				}
 			}
+			//if (_getPlayerName == string.Empty)
+			//	return;
+			//if (nameText != null)
+			//	nameText.text = _getPlayerName.ToString();
 		}
-		//if (_getPlayerName == string.Empty)
-		//	return;
-		//if (nameText != null)
-		//	nameText.text = _getPlayerName.ToString();
 	}
 	public void MeleeAttack(Collider2D other)
 	{
 		float value = GetComponent<Character>().Strength.Value;
 		float playerAttackPower = 0;
 		//if critical intialize
-		bool critical = false;
+		//bool critical = false;
 		float normalAttack;
 		if (other.gameObject.CompareTag("Enemy"))
 		{
@@ -240,7 +250,7 @@ public class PlayerCombat : NetworkBehaviour
 	}
 	public void CastSpell()
 	{
-		if (Character.MyInstance.Intelligence.BaseValue > 0)
+		if (_character.Intelligence.BaseValue > 0)
 		{
 			DisableSelfRegenMana();
 			SoundManager.PlaySound(SoundManager.Sound.SpellCast);
@@ -266,7 +276,7 @@ public class PlayerCombat : NetworkBehaviour
 				obj.GetComponent<Rigidbody2D>().velocity = new Vector2(-3 + -speed * Time.deltaTime, 0);
 			}
 		}
-		else if(Character.MyInstance.Intelligence.BaseValue == 0)
+		else if(_character.Intelligence.BaseValue == 0)
 		{
 			Toast.Show("You need intelligence to use this", 2f, ToastPosition.MiddleCenter);
 		}
@@ -283,16 +293,16 @@ public class PlayerCombat : NetworkBehaviour
 				fireballActive = false;
 				icicleActive = false;
 				arcticBlastActive = false;
-				SpellTree.SpellInstance.fireballSpellImage.color = IconDisabled;
-				SpellTree.SpellInstance.icicleSpellImage.color = IconDisabled;
-				SpellTree.SpellInstance.arcticBlastSpellImage.color = IconDisabled;
+				_spellTree.fireballSpellImage.color = IconDisabled;
+				_spellTree.icicleSpellImage.color = IconDisabled;
+				_spellTree.arcticBlastSpellImage.color = IconDisabled;
 				break;
 			case 1: //Fireball Spell
 				currentProjectile = fireballProjectile;
 				fireballActive = true;
-				SpellTree.SpellInstance.fireballSpellImage.color = IconEnabled;
-				SpellTree.SpellInstance.icicleSpellImage.color = IconDisabled;
-				SpellTree.SpellInstance.arcticBlastSpellImage.color = IconDisabled;
+				_spellTree.fireballSpellImage.color = IconEnabled;
+				_spellTree.icicleSpellImage.color = IconDisabled;
+				_spellTree.arcticBlastSpellImage.color = IconDisabled;
 				icicleActive = false;
 				arcticBlastActive = false;
 				break;
@@ -300,18 +310,18 @@ public class PlayerCombat : NetworkBehaviour
 			case 2: //Icicle Spell
 				currentProjectile = icicleProjectile;
 				icicleActive = true;
-				SpellTree.SpellInstance.icicleSpellImage.color = IconEnabled;
-				SpellTree.SpellInstance.fireballSpellImage.color = IconDisabled;
-				SpellTree.SpellInstance.arcticBlastSpellImage.color = IconDisabled;
+				_spellTree.icicleSpellImage.color = IconEnabled;
+				_spellTree.fireballSpellImage.color = IconDisabled;
+				_spellTree.arcticBlastSpellImage.color = IconDisabled;
 				fireballActive = false;
 				arcticBlastActive = false;
 				break;
 			case 3: //ArcticBlast Spell
 				currentProjectile = arcticBlastProjectile;
 				arcticBlastActive = true;
-				SpellTree.SpellInstance.arcticBlastSpellImage.color = IconEnabled;
-				SpellTree.SpellInstance.icicleSpellImage.color = IconDisabled;
-				SpellTree.SpellInstance.fireballSpellImage.color = IconDisabled;
+				_spellTree.arcticBlastSpellImage.color = IconEnabled;
+				_spellTree.icicleSpellImage.color = IconDisabled;
+				_spellTree.fireballSpellImage.color = IconDisabled;
 				fireballActive = false;
 				icicleActive = false;
 				break;
@@ -332,25 +342,25 @@ public class PlayerCombat : NetworkBehaviour
 
 	public void CheckSpellCost()
 	{
-		if (Character.MyInstance.Intelligence.BaseValue > 0)
+		if (_character.Intelligence.BaseValue > 0)
 		{
 			if (fireballActive && canCastSpells)
 			{
-				if (Character.MyInstance.Mana > fireballMPCost)
+				if (_character.Mana > fireballMPCost)
 				{
-					if (GameManager.GameManagerInstance.fireball1Active)
+					if (_gameManager.fireball1Active)
 					{
 						CastSpell();
-						Character.MyInstance.Mana -= fireballMPCost;
+						_character.Mana -= fireballMPCost;
 					}
-					if (GameManager.GameManagerInstance.fireball2Active)
+					if (_gameManager.fireball2Active)
 					{
 						CastSpell();
-						Character.MyInstance.Mana -= fireballMPCost * 2;
+						_character.Mana -= fireballMPCost * 2;
 					}
 
 				}
-				else if (Character.MyInstance.Mana < fireballMPCost)
+				else if (_character.Mana < fireballMPCost)
 				{
 					Toast.Show("You need more MP", 2f, ToastPosition.MiddleCenter);
 					SetCurrentSpell(0);
@@ -359,12 +369,12 @@ public class PlayerCombat : NetworkBehaviour
 			}
 			if (icicleActive && canCastSpells)
 			{
-				if (Character.MyInstance.Mana > icicleMPCost)
+				if (_character.Mana > icicleMPCost)
 				{
 					CastSpell();
-					Character.MyInstance.Mana -= icicleMPCost;
+					_character.Mana -= icicleMPCost;
 				}
-				else if (Character.MyInstance.Mana < fireballMPCost)
+				else if (_character.Mana < fireballMPCost)
 				{
 					Toast.Show("You need more MP", 2f, ToastPosition.MiddleCenter);
 					SetCurrentSpell(0);
@@ -373,12 +383,12 @@ public class PlayerCombat : NetworkBehaviour
 			}
 			if (arcticBlastActive && canCastSpells)
 			{
-				if (Character.MyInstance.Mana > arcticMPCost)
+				if (_character.Mana > arcticMPCost)
 				{
 					CastSpell();
-					Character.MyInstance.Mana -= arcticMPCost;
+					_character.Mana -= arcticMPCost;
 				}
-				else if (Character.MyInstance.Mana < arcticMPCost)
+				else if (_character.Mana < arcticMPCost)
 				{
 					Toast.Show("You need more MP", 2f, ToastPosition.MiddleCenter);
 					SetCurrentSpell(0);
@@ -386,7 +396,7 @@ public class PlayerCombat : NetworkBehaviour
 				}
 			}
 		}
-		else if(Character.MyInstance.Intelligence.BaseValue == 0)
+		else if(_character.Intelligence.BaseValue == 0)
 		{
 			Toast.Show("You need Intelligence to use this", 2f, ToastPosition.MiddleCenter);
 		}

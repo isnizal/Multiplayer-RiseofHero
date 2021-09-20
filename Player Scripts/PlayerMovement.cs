@@ -62,36 +62,7 @@ public class PlayerMovement : NetworkBehaviour
 	[SyncVar]
 	public int hairValue = -1;
 
-	public void Initialize()
-	{
-		attacking = false;
-		waitAttack = true;
-		rightPos = 0;
-		frontPos = -1;
 
-
-		attackRight = 0;
-		attackFront = 1;
-		attackBack = 0;
-		attackLeft = 0;
-		if (base.hasAuthority)
-		{
-
-			netAnim.animator.SetBool("DeadFront", false);
-			netAnim.animator.SetBool("DeadBack", false);
-			netAnim.animator.SetBool("DeadRight", false);
-			netAnim.animator.SetBool("DeadLeft", false);
-
-			netAnim.animator.SetBool("IdleFront", true);
-			netAnim.animator.Play("Base Layer.FrontIdleAnimation");
-
-		}
-
-
-		currePos = 0;
-		canMove = true;
-
-	}
 	public void CheckValueClothes()
 	{
 		if (helmetValue == -1)
@@ -124,7 +95,6 @@ public class PlayerMovement : NetworkBehaviour
 			hairAvatar.SetActive(false);
 		else
 			hairAvatar.SetActive(true);
-		//RpcCheckValueClothes();
 	}
 	public override void OnStartLocalPlayer()
 	{
@@ -135,25 +105,89 @@ public class PlayerMovement : NetworkBehaviour
 	public override void OnStartClient()
 	{
 		base.OnStartClient();
-
-
-		Debug.Log("starting player client");
-		OwnClientStart();
-
-	}
-	public void OwnClientStart()
-	{
-		gameClothes = FindObjectOfType<GameClothes>();
-		CmdSetClothesValue(gameClothes.helmetValue, gameClothes.torsoValue, gameClothes.armValue, gameClothes.swordValue,
-			gameClothes.shieldValue, gameClothes.bootValue, gameClothes.hairValue);
-
-		CheckValueClothes();
-		InitializeAwake();
 		//start client initialize
-		Initialize();
-		CmdSetSpriteFront();
+		Debug.Log("starting player client");
+		if (isLocalPlayer)
+		{
+			gameClothes = FindObjectOfType<GameClothes>();
+			CmdSetClothesValue(gameClothes.helmetValue, gameClothes.torsoValue, gameClothes.armValue, gameClothes.swordValue,
+				gameClothes.shieldValue, gameClothes.bootValue, gameClothes.hairValue);
+			CheckValueClothes();
+
+
+			InitializeAwake();
+		}
 	}
-	[Command(requiresAuthority =false)]
+	private Character _character;
+	private Button _actionBtn, _spellBtn, _attackBtn;
+	private GameManager _gameManager;
+
+	//npc should be careful if contain more than one
+	private NPCTeleport _npcTeleport;
+	private NPCCrafter _npcCrafter;
+	private NPCGeneralShop _npcGeneralShop;
+	public void InitializeAwake()
+	{
+		if (isLocalPlayer)
+		{
+			_npcTeleport = FindObjectOfType<NPCTeleport>();
+			_npcCrafter = FindObjectOfType<NPCCrafter>();
+			_npcTeleport = FindObjectOfType<NPCTeleport>();
+			_gameManager = FindObjectOfType<GameManager>();
+			_character = GetComponent<Character>();
+			netAnim = GetComponent<NetworkAnimator>();
+			netRigidbody2D = GetComponent<NetworkRigidbody2D>();
+			netRigidbody2D.target.simulated = base.hasAuthority;
+			gameClothes = FindObjectOfType<GameClothes>();
+			playerClothes = GetComponent<PlayerClothes>();
+			Initialize();
+			CmdSetSpriteFront();
+			//Mobile
+			fixedJoystick = FindObjectOfType<FixedJoystick>();
+			actionText = GameObject.Find("ActionText").GetComponent<TextMeshProUGUI>();
+			_actionBtn = GameObject.Find("ActionButton").GetComponent<Button>();
+			_actionBtn.onClick.AddListener(ActionButton);
+			_spellBtn = GameObject.Find("SpellButton").GetComponent<Button>();
+			_spellBtn.onClick.AddListener(this.GetComponent<PlayerCombat>().CastSpell);
+			_attackBtn = GameObject.Find("AttackButton").GetComponent<Button>();
+			_attackBtn.onClick.AddListener(ActionMobileAttack);
+			GetComponent<PlayerCombat>().InitializePlayerCombat();
+			GetComponent<Character>().InitializeCharacter();
+			GetComponent<LevelSystem>().InitializeLevelSystem();
+		}
+
+	}
+	public void Initialize()
+	{
+		if (isLocalPlayer)
+		{
+			attacking = false;
+			waitAttack = true;
+			rightPos = 0;
+			frontPos = -1;
+
+
+			attackRight = 0;
+			attackFront = 1;
+			attackBack = 0;
+			attackLeft = 0;
+			if (base.hasAuthority)
+			{
+				netAnim.animator.SetBool("DeadFront", false);
+				netAnim.animator.SetBool("DeadBack", false);
+				netAnim.animator.SetBool("DeadRight", false);
+				netAnim.animator.SetBool("DeadLeft", false);
+
+				netAnim.animator.SetBool("IdleFront", true);
+				netAnim.animator.Play("Base Layer.FrontIdleAnimation");
+
+			}
+			currePos = 0;
+			canMove = true;
+		}
+	}
+    
+    [Command(requiresAuthority =false)]
 	private void CmdSetClothesValue(int helmet, int torso, int arm, int sword, int shiedl, int boot, int hair)
 	{
 		helmetValue = helmet;
@@ -169,14 +203,13 @@ public class PlayerMovement : NetworkBehaviour
 		base.OnStartAuthority();
 
 		Debug.Log("player start authority");
-
-		//InstantiateObjectCanvas();
 		string findName = FindObjectOfType<GameObserver>().LocalPlayerName;
 		InvokeCanvasObjects(findName);
 
 	}
 
-	[SyncVar(hook = nameof(OnNameChanged))]
+    #region "Message and Chat"
+    [SyncVar(hook = nameof(OnNameChanged))]
 	private string localPlayerName = "M";
 
 	[SyncVar(hook = nameof(OnMessageChanged))]
@@ -239,30 +272,7 @@ public class PlayerMovement : NetworkBehaviour
 			nameObject.SetActive(true);
 		}
 	}
-	private Character _character;
-	private Button _actionBtn,_spellBtn,_attackBtn;
-	public void InitializeAwake()
-	{
-		_character = GetComponent<Character>();
-		GetComponent<PlayerCombat>().FindRespawnWindow();
-		netAnim = GetComponent<NetworkAnimator>();
-		netRigidbody2D = GetComponent<NetworkRigidbody2D>();
-		netRigidbody2D.target.simulated = base.hasAuthority;
-		gameClothes = FindObjectOfType<GameClothes>();
-		playerClothes = GetComponent<PlayerClothes>();
-
-		//Mobile
-		fixedJoystick = FindObjectOfType<FixedJoystick>();
-		actionText = GameObject.Find("ActionText").GetComponent<TextMeshProUGUI>();
-		_actionBtn = GameObject.Find("ActionButton").GetComponent<Button>();
-		_actionBtn.onClick.AddListener(ActionButton);
-		_spellBtn = GameObject.Find("SpellButton").GetComponent<Button>();
-		_spellBtn.onClick.AddListener(this.GetComponent<PlayerCombat>().CastSpell);
-		_attackBtn = GameObject.Find("AttackButton").GetComponent<Button>();
-		_attackBtn.onClick.AddListener(ActionMobileAttack);
-		GetComponent<Character>().FindObjects();
-
-	}
+    #endregion
 
     //call from animation
     public void EnableDamage()
@@ -488,11 +498,10 @@ public class PlayerMovement : NetworkBehaviour
 	}
 
 
-
-	[Command(requiresAuthority = false)]
+    #region "SetPlayerSprite"
+    [Command]
 	private void CmdSetSpriteFront()
 	{
-
 		if (isServer)
 			RpcSetSpriteFront();
 	}
@@ -503,6 +512,7 @@ public class PlayerMovement : NetworkBehaviour
 			playerClothes = GetComponent<PlayerClothes>();
 		if (playerClothes is null)
 			return;
+
 		if (helmetAvatar.activeInHierarchy)
 		{
 			if (helmetValue == -1)
@@ -559,7 +569,7 @@ public class PlayerMovement : NetworkBehaviour
 		}
 	}
 
-	[Command(requiresAuthority = false)]
+	[Command]
 	private void CmdSetSpriteLeft()
 	{	
 
@@ -631,7 +641,7 @@ public class PlayerMovement : NetworkBehaviour
 		}
 	}
 
-	[Command(requiresAuthority = false)]
+	[Command]
 	private void CmdSetSpriteRight()
 	{
 		if (isServer)
@@ -702,7 +712,7 @@ public class PlayerMovement : NetworkBehaviour
 	}
 	
 
-	[Command(requiresAuthority = false)]
+	[Command]
 	private void CmdSetSpriteBack()
 	{
 		if (isServer)
@@ -771,10 +781,10 @@ public class PlayerMovement : NetworkBehaviour
 			this.hairAvatar.GetComponent<SpriteRenderer>().sprite = playerClothes.playerClothes[hairValue].hairSprite[3];
 		}
 	}
+    #endregion
 
 
 
-	
     public void SetPositionDead()
 	{
 		if (rightPos == 1)
@@ -927,11 +937,11 @@ public class PlayerMovement : NetworkBehaviour
 	public void ActionButton()
 	{
 		if (canTalkNPCTeleport)
-			NPCTeleport.instance.OpenTeleportChat();
+			_npcTeleport.OpenTeleportChat();
 		if (canTalkNPCCrafter)
-			NPCCrafter.instance.TalkToNPCCrafter();
+			_npcCrafter.TalkToNPCCrafter();
 		if (canTalkNPCShop)
-			NPCGeneralShop.instance.TalkToNPCShop();
+			_npcGeneralShop.TalkToNPCShop();
 		if (canReadSign)
 		{
 			pressRead = true;
@@ -940,8 +950,8 @@ public class PlayerMovement : NetworkBehaviour
 	public void AllSignRead(string message)
 	{
 		pressRead = false;
-		GameManager.GameManagerInstance.dialogBox.SetActive(true);
-		GameManager.GameManagerInstance.DialogBox(message);
+		_gameManager.dialogBox.SetActive(true);
+		_gameManager.DialogBox(message);
 	}
 
 }

@@ -31,11 +31,13 @@ public class AchievementManager : MonoBehaviour
 	public Sprite achDoneImage;
 	public Sprite achNotDoneImage;
 
-	private Character player;
+	private Character _character;
+	private LevelSystem _levelSystem;
 
     public void AchievementManagerLoad(Character player)
     {
-		this.player = player;
+		this._character = player;
+		_levelSystem = _character.GetComponent<LevelSystem>();
 		achivementNotice = GameObject.Find("AchivementNotice");
 		achNoticeTitle = GameObject.Find("AchNoticeTitle").GetComponent<TextMeshProUGUI>();
 		achNoticeDesc = GameObject.Find("AchNoticeDesc").GetComponent<TextMeshProUGUI>();
@@ -142,9 +144,9 @@ public class AchievementManager : MonoBehaviour
 
 	private void Update()
 	{
-		if (player is null)
+		if (_character is null)
 			return;
-		if (player.isLocalPlayer)
+		if (_character.isLocalPlayer)
 		{
 			CheckAchCompletionUIUpdate();
 			ActiveAch();
@@ -153,12 +155,12 @@ public class AchievementManager : MonoBehaviour
 	}
 	public void ActiveAch()
 	{
-		if (LevelSystem.LevelInstance is null)
+		if (_levelSystem is null)
 			return;
 
 		for (int i = 0; i < achSO.Length; i++)
 		{
-			if (LevelSystem.LevelInstance.currentLevel >= achSO[i].achLevelRequired)
+			if (_levelSystem.currentLevel >= achSO[i].achLevelRequired)
 			{
 				achievementSlot[i].SetActive(true);
 				if (achSO[i].achID == 1)
@@ -190,12 +192,6 @@ public class AchievementManager : MonoBehaviour
 		LoadAchievement();
 		CheckAchCompletion();
 	}
-
-	private void Start()
-	{
-		
-	}
-
 	public void CheckAchCompletionUIUpdate()
 	{
 		if (killSlime1Done == 1 && killSlime1Claimed == 1)

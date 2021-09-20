@@ -55,15 +55,15 @@ public class StatsModifier : MonoBehaviour
     private int tempVitPointHolder;
 
     public bool canUpgrade;
-    private Character c;
-    private void Awake()
-    {
-        c = FindObjectOfType<Character>();
-    }
+    private Character _character;
 
+    public void InitializeStatModifier(Character character)
+    {
+        _character = character;
+    }
     private void Update()
 	{
-        if (Character.MyInstance is null)
+        if (_character is null)
             return;
 
          if (tempStrPointHolder > 0 || tempDefPointHolder > 0 || tempIntPointHolder > 0 || tempVitPointHolder > 0)
@@ -76,47 +76,45 @@ public class StatsModifier : MonoBehaviour
          }
 
 
-         Character.MyInstance.Strength.BaseValue = currentStrValue;
-         Character.MyInstance.Defense.BaseValue = currentDefValue;
-         Character.MyInstance.Intelligence.BaseValue = currentIntValue;
-         Character.MyInstance.Vitality.BaseValue = currentVitValue;
+         _character.Strength.BaseValue = currentStrValue;
+         _character.Defense.BaseValue = currentDefValue;
+         _character.Intelligence.BaseValue = currentIntValue;
+         _character.Vitality.BaseValue = currentVitValue;
 	}
 
 
 	void FixedUpdate()
     {
-        if (Character.MyInstance is null)
+        if (_character is null)
             return;
 
-        statPointsValue.text = Character.MyInstance.statPoints.ToString();
+        statPointsValue.text = _character.statPoints.ToString();
 
-        currentStrAmountValueText.text = "" + Character.MyInstance.Strength.BaseValue.ToString();
+        currentStrAmountValueText.text = "" + _character.Strength.BaseValue.ToString();
         addStrAmountValueText.text = "" + tempStrPointHolder;
-        currentStr = (int)Character.MyInstance.Strength.Value;
+        currentStr = (int)_character.Strength.Value;
 
-        currentDefAmountValueText.text = "" + Character.MyInstance.Defense.BaseValue.ToString();
+        currentDefAmountValueText.text = "" + _character.Defense.BaseValue.ToString();
         addDefAmountValueText.text = "" + tempDefPointHolder;
-        currentDef = (int)Character.MyInstance.Defense.Value;
+        currentDef = (int)_character.Defense.Value;
 
-        currentIntAmountValueText.text = "" + Character.MyInstance.Intelligence.BaseValue.ToString();
+        currentIntAmountValueText.text = "" + _character.Intelligence.BaseValue.ToString();
         addIntAmountValueText.text = "" + tempIntPointHolder;
-        currentInt = (int)Character.MyInstance.Intelligence.Value;
+        currentInt = (int)_character.Intelligence.Value;
 
-        currentVitAmountValueText.text = "" + Character.MyInstance.Vitality.BaseValue.ToString();
+        currentVitAmountValueText.text = "" + _character.Vitality.BaseValue.ToString();
         addVitAmountValueText.text = "" + tempVitPointHolder;
-        currentVit = (int)Character.MyInstance.Vitality.Value;
+        currentVit = (int)_character.Vitality.Value;
     }
 
     public void AddStrStat()
     {
-        if (c is null)
-            c = FindObjectOfType<Character>();
-        if (c.statPoints > 0)
+        if (_character.statPoints > 0)
         {
             tempStrPointHolder++;
-            c.statPoints--;
+            _character.statPoints--;
         }
-        else if (c.statPoints == 0)
+        else if (_character.statPoints == 0)
         {
             print("You dont have enough stat points");
             Toast.Show("You don't have enough stat points!", 2f, ToastPosition.MiddleCenter);
@@ -125,12 +123,10 @@ public class StatsModifier : MonoBehaviour
 
     public void RemoveStrStat()
     {
-        if (c is null)
-            c = FindObjectOfType<Character>();
         if (tempStrPointHolder > 0)
         {
             tempStrPointHolder--;
-            c.statPoints++;
+            _character.statPoints++;
         }
         else if (tempStrPointHolder < 1)
         {
@@ -141,14 +137,12 @@ public class StatsModifier : MonoBehaviour
 
     public void AddDefStat()
     {
-        if (c is null)
-            c = FindObjectOfType<Character>();
-        if (c.statPoints > 0)
+        if (_character.statPoints > 0)
         {
             tempDefPointHolder++;
-            c.statPoints--;
+            _character.statPoints--;
         }
-        else if (c.statPoints < 1)
+        else if (_character.statPoints < 1)
         {
             print("You dont have enough stat points");
             Toast.Show("You don't have enough stat points!", 2f, ToastPosition.MiddleCenter);
@@ -157,12 +151,10 @@ public class StatsModifier : MonoBehaviour
 
     public void RemoveDefStat()
     {
-        if (c is null)
-            c = FindObjectOfType<Character>();
         if (tempDefPointHolder > 0)
         {
             tempDefPointHolder--;
-            c.statPoints++;
+            _character.statPoints++;
         }
         else if (tempDefPointHolder < 1)
         {
@@ -173,14 +165,12 @@ public class StatsModifier : MonoBehaviour
 
     public void AddIntStat()
     {
-        if (c is null)
-            c = FindObjectOfType<Character>();
-        if (c.statPoints > 0)
+        if (_character.statPoints > 0)
         {
             tempIntPointHolder++;
-            c.statPoints--;
+            _character.statPoints--;
         }
-        else if (c.statPoints < 1)
+        else if (_character.statPoints < 1)
         {
             print("You dont have enough stat points");
             Toast.Show("You don't have enough stat points!", 2f, ToastPosition.MiddleCenter);
@@ -189,12 +179,10 @@ public class StatsModifier : MonoBehaviour
 
     public void RemoveIntStat()
     {
-        if (c is null)
-            c = FindObjectOfType<Character>();
         if (tempIntPointHolder > 0)
         {
             tempIntPointHolder--;
-            c.statPoints++;
+            _character.statPoints++;
         }
         else if (tempIntPointHolder < 1)
         {
@@ -205,14 +193,12 @@ public class StatsModifier : MonoBehaviour
 
     public void AddVitStat()
     {
-        if (c is null)
-            c = FindObjectOfType<Character>();
-        if (c.statPoints > 0)
+        if (_character.statPoints > 0)
         {
             tempVitPointHolder++;
-            c.statPoints--;
+            _character.statPoints--;
         }
-        else if (c.statPoints < 1)
+        else if (_character.statPoints < 1)
         {
             print("You dont have enough stat points");
             Toast.Show("You don't have enough stat points!", 2f, ToastPosition.MiddleCenter);
@@ -221,12 +207,10 @@ public class StatsModifier : MonoBehaviour
 
     public void RemoveVitStat()
     {
-        if (c is null)
-            c = FindObjectOfType<Character>();
         if (tempVitPointHolder > 0)
         {
             tempVitPointHolder--;
-            c.statPoints++;
+            _character.statPoints++;
         }
         else if (tempVitPointHolder < 1)
         {
@@ -237,34 +221,32 @@ public class StatsModifier : MonoBehaviour
 
     public void ConfirmSelection()
     {
-        if (c is null)
-            c = FindObjectOfType<Character>();
         if (canUpgrade)
 		{
 
-			c.Strength.BaseValue += tempStrPointHolder;
+			_character.Strength.BaseValue += tempStrPointHolder;
             currentStrValue += tempStrPointHolder;
-            c.statPointsAllocated += tempStrPointHolder;
+            _character.statPointsAllocated += tempStrPointHolder;
             tempStrPointHolder = 0;
 
-            c.Defense.BaseValue += tempDefPointHolder;
+            _character.Defense.BaseValue += tempDefPointHolder;
             currentDefValue += tempDefPointHolder;
-            c.statPointsAllocated += tempDefPointHolder;
+            _character.statPointsAllocated += tempDefPointHolder;
             tempDefPointHolder = 0;
 
-            c.Intelligence.BaseValue += tempIntPointHolder;
+            _character.Intelligence.BaseValue += tempIntPointHolder;
             currentIntValue += tempIntPointHolder;
-            c.statPointsAllocated += tempIntPointHolder;
+            _character.statPointsAllocated += tempIntPointHolder;
             tempIntPointHolder = 0;
 
-            c.Vitality.BaseValue += tempVitPointHolder;
+            _character.Vitality.BaseValue += tempVitPointHolder;
             currentVitValue += tempVitPointHolder;
             var healthIncrease = tempVitPointHolder;
             var newHealth = healthIncrease * 2;
-            c.statPointsAllocated += tempVitPointHolder;
+            _character.statPointsAllocated += tempVitPointHolder;
             tempVitPointHolder = 0;
 
-            Character.MyInstance.MaxHealth += newHealth;
+            _character.MaxHealth += newHealth;
         }
         else if(!canUpgrade)
 		{

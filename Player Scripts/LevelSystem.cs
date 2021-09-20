@@ -26,6 +26,15 @@ public class LevelSystem : MonoBehaviour
 	public float expMultiplier;
 	public int[] toLevelUp;
 
+	private Character _character;
+	private PlayerCombat _playerCombat;
+	private SpellTree _spellTree;
+	public void InitializeLevelSystem()
+	{
+		_character = FindObjectOfType<Character>();
+		_playerCombat = FindObjectOfType<PlayerCombat>();
+		_spellTree = FindObjectOfType<SpellTree>();
+	}
 	private void Update()
 	{
 		expToLevel = toLevelUp[currentLevel];
@@ -36,7 +45,7 @@ public class LevelSystem : MonoBehaviour
 	{
 		if(currentLevel == 1)
 		{
-			Character.MyInstance.statPoints = 0;
+			_character.statPoints = 0;
 			canLevelUp = false;
 		}
 
@@ -80,9 +89,9 @@ public class LevelSystem : MonoBehaviour
 	{
 		if (canLevelUp)
 		{
-			Character.MyInstance.newStatPoints = UnityEngine.Random.Range(1, 5);
-			Character.MyInstance.statPoints += Character.MyInstance.newStatPoints;
-			Character.MyInstance.newStatPoints = 0;
+			_character.newStatPoints = UnityEngine.Random.Range(1, 5);
+			_character.statPoints += _character.newStatPoints;
+			_character.newStatPoints = 0;
 			SpellPoints();
 			ResetPlayerHealthAndMP();
 			canLevelUp = false;
@@ -91,17 +100,17 @@ public class LevelSystem : MonoBehaviour
 
 	void ResetPlayerHealthAndMP()
 	{
-		Character.MyInstance.Health = Character.MyInstance.MaxHealth;
-		Character.MyInstance.Mana = Character.MyInstance.MaxMP;
-		PlayerCombat.CombatInstance.DisableSelfRegenHp();
-		PlayerCombat.CombatInstance.DisableSelfRegenMana();
+		_character.Health = _character.MaxHealth;
+		_character.Mana = _character.MaxMP;
+		_playerCombat.DisableSelfRegenHp();
+		_playerCombat.DisableSelfRegenMana();
 	}	
 
 	void SpellPoints()
 	{
 		if(canLevelUp && currentLevel > 1)
 		{
-			SpellTree.SpellInstance.spellPointsAvailable += 1;
+			_spellTree.spellPointsAvailable += 1;
 		}
 	}
 

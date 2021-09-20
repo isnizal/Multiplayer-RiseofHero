@@ -170,11 +170,9 @@ public class Character : NetworkBehaviour
 	private BaseItemSlot dragItemSlot;
 	private AchievementManager achievement;
 	private GameObject _shopWindow;
+	private UIManager _uiManager;
 
 	public PlayerMovement playerMovement;
-
-	[SerializeField] private GameObject playerHUDPrefab,playerInventoryCanvPrefab,playerSkillCanvPrefab
-		,playerVCamPrefab;
 
 	private void OnValidate()
 	{
@@ -182,42 +180,34 @@ public class Character : NetworkBehaviour
 			itemTooltip = FindObjectOfType<ItemTooltip>();
 	}
 
-	public void FindObjects()
+	public void InitializeCharacter()
 	{
-		//gamemanager
-		achievement = FindObjectOfType<AchievementManager>();
-		//equipment and inventory
-		Inventory = FindObjectOfType<Inventory>();
-		EquipmentPanel = FindObjectOfType<EquipmentPanel>();
-		statPanel = FindObjectOfType<StatPanel>();
-		itemTooltip = FindObjectOfType<ItemTooltip>();
-		itemTooltip.gameObject.SetActive(false);
-		draggableItem = GameObject.Find("Draggable Item").GetComponent<Image>();
-		dropItemArea = FindObjectOfType<DropItemArea>();
-		dropItemDialog = GameObject.Find("DropItemDialog").GetComponent<QuestionDialog>();
-		dropItemDialog.gameObject.SetActive(false);
-
-		//world
-		playerMovement = gameObject.GetComponent<PlayerMovement>();
-		//itemStash = FindObjectOfType<ItemStash>();
-		//itemStash.gameObject.SetActive(false);
-		itemSaveManager = FindObjectOfType<ItemSaveManager>();
-
-
-		//world shop area
-		sellItemArea = FindObjectOfType<DropSellArea>();
-		craftingWindow = FindObjectOfType<CraftingWindow>();
-		craftingWindow.gameObject.SetActive(false);
-		_shopWindow = sellItemArea.gameObject.transform.parent.gameObject;
-		sellItemArea.gameObject.transform.parent.gameObject.SetActive(false);
-		sellItemDialog = GameObject.Find("SellItemDialog").GetComponent<QuestionDialog>();
-		sellItemDialog.gameObject.SetActive(false);
-			
-		FindObjectOfType<UIManager>().InitializeAwake(this);
-
-
-		SetupEvents();
-	}
+		if (isLocalPlayer)
+        {
+			_uiManager = FindObjectOfType<UIManager>();
+            achievement = FindObjectOfType<AchievementManager>();
+            Inventory = FindObjectOfType<Inventory>();
+            EquipmentPanel = FindObjectOfType<EquipmentPanel>();
+            statPanel = FindObjectOfType<StatPanel>();
+            itemTooltip = FindObjectOfType<ItemTooltip>();
+            itemTooltip.gameObject.SetActive(false);
+            draggableItem = GameObject.Find("Draggable Item").GetComponent<Image>();
+            dropItemArea = FindObjectOfType<DropItemArea>();
+            dropItemDialog = GameObject.Find("DropItemDialog").GetComponent<QuestionDialog>();
+            dropItemDialog.gameObject.SetActive(false);
+            playerMovement = gameObject.GetComponent<PlayerMovement>();
+            itemSaveManager = FindObjectOfType<ItemSaveManager>();
+            sellItemArea = FindObjectOfType<DropSellArea>();
+            craftingWindow = FindObjectOfType<CraftingWindow>();
+            craftingWindow.gameObject.SetActive(false);
+            _shopWindow = sellItemArea.gameObject.transform.parent.gameObject;
+            sellItemArea.gameObject.transform.parent.gameObject.SetActive(false);
+            sellItemDialog = GameObject.Find("SellItemDialog").GetComponent<QuestionDialog>();
+            sellItemDialog.gameObject.SetActive(false);
+            FindObjectOfType<UIManager>().InitializeAwake(this);
+            SetupEvents();
+        }
+    }
 	public bool onInput = false;
 	private void SetupEvents()
 	{
@@ -254,7 +244,7 @@ public class Character : NetworkBehaviour
 	}
 	private void Start()
 	{
-		if (isClientOnly)
+		if (isLocalPlayer)
 		{
 			Health = MaxHealth;
 			Mana = MaxMP;
@@ -263,7 +253,7 @@ public class Character : NetworkBehaviour
 
 	private void Update()
 	{
-		if (isClientOnly)
+		if (isLocalPlayer)
 		{
 			if(!onInput)
 				baseMaxHealth = 50 + Vitality.BaseValue;
@@ -409,7 +399,7 @@ public class Character : NetworkBehaviour
 
 			newMana += 1;
 			Mana = newMana;
-			UIManager.Instance.UpdateHealth();
+			_uiManager.UpdateHealth();
 			if (Mana > MaxMP)
 			{
 				Mana = MaxMP;
@@ -794,9 +784,9 @@ public class Character : NetworkBehaviour
 	public void AddCurrency(int amount)
 	{
 		copperCurrency += amount;
-		if (AchievementManager.AchievementInstance.collectCopper1Active == 1)
+		if (achievement.collectCopper1Active == 1)
 		{
-			AchievementManager.AchievementInstance.collectCopperCountAch += amount;
+			achievement.collectCopperCountAch += amount;
 		}
 	}
 

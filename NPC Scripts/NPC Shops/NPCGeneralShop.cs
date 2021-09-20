@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
 public class NPCGeneralShop : MonoBehaviour
 {
@@ -48,18 +49,23 @@ public class NPCGeneralShop : MonoBehaviour
 			}
 		}
 	}
-
+	private GameManager _gameManager;
+	private PlayerMovement _playerMovement;
 	private void OnTriggerEnter2D(Collider2D other)
 	{
 		if(other.gameObject.CompareTag("Player"))
 		{
+			if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
+				return;
+			_gameManager = FindObjectOfType<GameManager>();
+			_playerMovement = other.gameObject.GetComponent<PlayerMovement>();
 			dropItemArea.SetActive(false);
 			CheckContextClue(true);
 			inRange = true;
-			if (GameManager.GameManagerInstance.isHandheld)
+			if (_gameManager.isHandheld)
 			{
-				PlayerMovement.PlayerMovementInstance.canTalkNPCShop = true;
-				PlayerMovement.PlayerMovementInstance.actionText.text = "Talk";
+				_playerMovement.canTalkNPCShop = true;
+				_playerMovement.actionText.text = "Talk";
 			}
 		}
 	}
@@ -68,6 +74,8 @@ public class NPCGeneralShop : MonoBehaviour
 	{
 		if(other.gameObject.CompareTag("Player"))
 		{
+			if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
+				return;
 			CheckContextClue(false);
 			inRange = false;
 			npcShopWelcome.SetActive(false);
@@ -76,10 +84,10 @@ public class NPCGeneralShop : MonoBehaviour
 			characterPanel.GetComponent<CanvasGroup>().alpha = 0;
 			characterPanel.GetComponent<CanvasGroup>().blocksRaycasts = false;
 			dropItemArea.SetActive(true);
-			if (GameManager.GameManagerInstance.isHandheld)
+			if (_gameManager.isHandheld)
 			{
-				PlayerMovement.PlayerMovementInstance.canTalkNPCShop = false;
-				PlayerMovement.PlayerMovementInstance.actionText.text = null;
+				_playerMovement.canTalkNPCShop = false;
+				_playerMovement.actionText.text = null;
 			}
 		}
 	}

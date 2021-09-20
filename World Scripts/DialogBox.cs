@@ -22,23 +22,28 @@ public class DialogBox : MonoBehaviour
 
 	public bool inRange;
 
+	private GameManager _gameManager;
+	public void InitializeDialogBox(GameManager gameManager)
+	{
+		_gameManager = gameManager;
+	}
 	void Update()
 	{
-		if (Input.GetKeyUp(KeyCode.Space) && inRange && !GameManager.GameManagerInstance.isHandheld)
+		if (Input.GetKeyUp(KeyCode.Space) && inRange && !_gameManager.isHandheld)
 		{
-			if (!GameManager.GameManagerInstance.dialogBox.activeInHierarchy)
+			if (!_gameManager.dialogBox.activeInHierarchy)
 			{
 				if (profession == Profession.Patrol)
 				{
 					GetComponent<NPCMovement>().ActivateTalkCondition();
-					GameManager.GameManagerInstance.dialogBox.SetActive(true);
-					GameManager.GameManagerInstance.DialogBox(dialogMessage);
+					_gameManager.dialogBox.SetActive(true);
+					_gameManager.DialogBox(dialogMessage);
 				}
 				if (profession == Profession.Sign)
 				{
 
-					GameManager.GameManagerInstance.dialogBox.SetActive(true);
-					GameManager.GameManagerInstance.DialogBox(dialogMessage);
+					_gameManager.dialogBox.SetActive(true);
+					_gameManager.DialogBox(dialogMessage);
 				}
 			}
 			else
@@ -46,11 +51,11 @@ public class DialogBox : MonoBehaviour
 				if (profession == Profession.Patrol)
 				{
 					GetComponent<NPCMovement>().DeactivateTalkCondition();
-					GameManager.GameManagerInstance.dialogBox.SetActive(false);
+					_gameManager.dialogBox.SetActive(false);
 				}
 				if (profession == Profession.Sign)
 				{
-					GameManager.GameManagerInstance.dialogBox.SetActive(false);
+					_gameManager.dialogBox.SetActive(false);
 				}
 			}
 
@@ -62,7 +67,7 @@ public class DialogBox : MonoBehaviour
 		if (other.gameObject.CompareTag("Player") && !other.isTrigger)
 		{
 			inRange = true;
-			if (GameManager.GameManagerInstance.isHandheld)
+			if (_gameManager.isHandheld)
 			{
 				PlayerMovement playerMovement = other.GetComponent<PlayerMovement>();
 				playerMovement.canReadSign = true;
@@ -80,13 +85,13 @@ public class DialogBox : MonoBehaviour
 		if (other.gameObject.CompareTag("Player") && !other.isTrigger)
 		{
 			inRange = false;
-			if (GameManager.GameManagerInstance.isHandheld)
+			if (_gameManager.isHandheld)
 			{
 				PlayerMovement playerMovement = other.GetComponent<PlayerMovement>();
 				playerMovement.canReadSign = false;
 				playerMovement.actionText.text = null;
 			}
-			GameManager.GameManagerInstance.dialogBox.SetActive(false);
+			_gameManager.dialogBox.SetActive(false);
 		}
 	}
 

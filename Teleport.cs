@@ -37,12 +37,15 @@ public class Teleport : MonoBehaviour
 	{
 		if(other.gameObject.CompareTag("Player") && !other.isTrigger)
 		{
+			if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
+				return;
+
 			player = other.gameObject;
-			if(LevelSystem.LevelInstance.currentLevel < requiredLevel)
+			if(other.gameObject.GetComponent<LevelSystem>().currentLevel < requiredLevel)
 			{
 				Toast.Show("You arent high enough level for this area", 2f, ToastPosition.MiddleCenter);
 			}
-			else if(LevelSystem.LevelInstance.currentLevel >= requiredLevel)
+			else if(other.gameObject.GetComponent<LevelSystem>().currentLevel >= requiredLevel)
 			{
 				StartCoroutine(EnterArea());
 			}

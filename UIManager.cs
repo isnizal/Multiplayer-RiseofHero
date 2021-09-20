@@ -52,30 +52,32 @@ public class UIManager : MonoBehaviour
     private Character _Character;
     public void InitializeUIVariable(Character player)
     {
-        GetComponent<AchievementManager>().AchievementManagerLoad(player);
-        GetComponent<InventoryInput>().LoadInventoryInput(player);
-        _Character = player;
-        if (_Character is null)
-            return;
-        levelValue = GameObject.Find("LevelValue").GetComponent<TextMeshProUGUI>();
-        premiumValue = GameObject.Find("PremiumValue").GetComponent<TextMeshProUGUI>();
-        copperValue = GameObject.Find("CopperValue").GetComponent<TextMeshProUGUI>();
-        hpSlider = GameObject.Find("HPSlider").GetComponent<Slider>();
-        hpValue = GameObject.Find("HPValue").GetComponent<TextMeshProUGUI>();
-        mpSlider = GameObject.Find("MPSlider").GetComponent<Slider>();
-        mpValue = GameObject.Find("MPValue").GetComponent<TextMeshProUGUI>();
-        xpSlider = GameObject.Find("XPSlider").GetComponent<Slider>();
-        xpValue = GameObject.Find("XPValue").GetComponent<TextMeshProUGUI>();
-        chatInput = GameObject.Find("ChatText").GetComponentInChildren<TMP_InputField>();
-        PlayerMovement playerMovement = _Character.gameObject.GetComponent<PlayerMovement>();
-        chatInput.onEndEdit.AddListener(playerMovement.SetMessageForPlayer);
-
+        if (player.isLocalPlayer)
+        {
+            GetComponent<AchievementManager>().AchievementManagerLoad(player);
+            GetComponent<InventoryInput>().LoadInventoryInput(player);
+            _Character = player;
+            if (_Character is null)
+                return;
+            levelValue = GameObject.Find("LevelValue").GetComponent<TextMeshProUGUI>();
+            premiumValue = GameObject.Find("PremiumValue").GetComponent<TextMeshProUGUI>();
+            copperValue = GameObject.Find("CopperValue").GetComponent<TextMeshProUGUI>();
+            hpSlider = GameObject.Find("HPSlider").GetComponent<Slider>();
+            hpValue = GameObject.Find("HPValue").GetComponent<TextMeshProUGUI>();
+            mpSlider = GameObject.Find("MPSlider").GetComponent<Slider>();
+            mpValue = GameObject.Find("MPValue").GetComponent<TextMeshProUGUI>();
+            xpSlider = GameObject.Find("XPSlider").GetComponent<Slider>();
+            xpValue = GameObject.Find("XPValue").GetComponent<TextMeshProUGUI>();
+            chatInput = GameObject.Find("ChatText").GetComponentInChildren<TMP_InputField>();
+            PlayerMovement playerMovement = _Character.gameObject.GetComponent<PlayerMovement>();
+            chatInput.onEndEdit.AddListener(playerMovement.SetMessageForPlayer);
+        }
     }
     public void InitializeAwake(Character player)
     {
         InitializeUIVariable(player);
-        GetComponent<GameManager>().InitializeGameManagerVariable();
-        FindObjectOfType<SpellTree>().InitializeSpell(player);
+        GetComponent<GameManager>().InitializeGameManagerVariable(player);
+
     }
 
     void Update()
