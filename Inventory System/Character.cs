@@ -192,6 +192,7 @@ public class Character : NetworkBehaviour
 		statPanel = FindObjectOfType<StatPanel>();
 		itemTooltip = FindObjectOfType<ItemTooltip>();
 		itemTooltip.gameObject.SetActive(false);
+		draggableItem = GameObject.Find("Draggable Item").GetComponent<Image>();
 		dropItemArea = FindObjectOfType<DropItemArea>();
 		dropItemDialog = GameObject.Find("DropItemDialog").GetComponent<QuestionDialog>();
 		dropItemDialog.gameObject.SetActive(false);
@@ -211,10 +212,8 @@ public class Character : NetworkBehaviour
 		sellItemArea.gameObject.transform.parent.gameObject.SetActive(false);
 		sellItemDialog = GameObject.Find("SellItemDialog").GetComponent<QuestionDialog>();
 		sellItemDialog.gameObject.SetActive(false);
-		if (isLocalPlayer)
-		{
-			FindObjectOfType<UIManager>().InitializeAwake(this);
-		}
+			
+		FindObjectOfType<UIManager>().InitializeAwake(this);
 
 
 		SetupEvents();
@@ -495,6 +494,7 @@ public class Character : NetworkBehaviour
 	{
 		dragItemSlot = null;
 		draggableItem.gameObject.SetActive(false);
+		
 		//Debug.Log("End Drag");
 	}
 

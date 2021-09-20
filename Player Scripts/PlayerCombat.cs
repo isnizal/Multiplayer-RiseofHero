@@ -56,10 +56,8 @@ public class PlayerCombat : NetworkBehaviour
 	public void FindRespawnWindow()
 	{
 		_character = GetComponent<Character>();
-		GameManager gameManager = FindObjectOfType<GameManager>();
+		//GameManager gameManager = FindObjectOfType<GameManager>();
 		respawnWindow = GameObject.Find("RespawnWindow");
-		respawnWindow.transform.GetChild(0).GetChild(1).gameObject.GetComponent<Button>().onClick.AddListener(gameManager.ClickYesRespawn);
-		respawnWindow.transform.GetChild(0).GetChild(2).gameObject.GetComponent<Button>().onClick.AddListener(gameManager.ClickNoRespawn);
 		respawnWindow.SetActive(false);
 		playerMovement = GetComponent<PlayerMovement>();
 	}

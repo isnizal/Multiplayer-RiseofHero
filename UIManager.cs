@@ -49,13 +49,13 @@ public class UIManager : MonoBehaviour
         }
 
     }
-    private Character Player;
+    private Character _Character;
     public void InitializeUIVariable(Character player)
     {
         GetComponent<AchievementManager>().AchievementManagerLoad(player);
         GetComponent<InventoryInput>().LoadInventoryInput(player);
-        Player = player;
-        if (Player is null)
+        _Character = player;
+        if (_Character is null)
             return;
         levelValue = GameObject.Find("LevelValue").GetComponent<TextMeshProUGUI>();
         premiumValue = GameObject.Find("PremiumValue").GetComponent<TextMeshProUGUI>();
@@ -67,7 +67,7 @@ public class UIManager : MonoBehaviour
         xpSlider = GameObject.Find("XPSlider").GetComponent<Slider>();
         xpValue = GameObject.Find("XPValue").GetComponent<TextMeshProUGUI>();
         chatInput = GameObject.Find("ChatText").GetComponentInChildren<TMP_InputField>();
-        PlayerMovement playerMovement = Player.GetComponent<PlayerMovement>();
+        PlayerMovement playerMovement = _Character.gameObject.GetComponent<PlayerMovement>();
         chatInput.onEndEdit.AddListener(playerMovement.SetMessageForPlayer);
 
     }
@@ -75,53 +75,50 @@ public class UIManager : MonoBehaviour
     {
         InitializeUIVariable(player);
         GetComponent<GameManager>().InitializeGameManagerVariable();
+        FindObjectOfType<SpellTree>().InitializeSpell(player);
     }
 
     void Update()
     {
         
-        if (Player is null)
+        if (_Character is null)
             return;
-        if (Player.isLocalPlayer)
+        if (_Character.isLocalPlayer)
         {
-            if (LevelSystem.LevelInstance is null)
+            if (hpSlider is null)
                 return;
             UpdateHealth();
             UpdateMP();
-            xpSlider.maxValue = LevelSystem.LevelInstance.toLevelUp[LevelSystem.LevelInstance.currentLevel];
-            xpSlider.value = LevelSystem.LevelInstance.currentExp;
-            xpValue.text = "" + LevelSystem.LevelInstance.currentExp + "/" + LevelSystem.LevelInstance.expToLevel;
+            xpSlider.maxValue = _Character.gameObject.GetComponent<LevelSystem>().toLevelUp[_Character.gameObject.GetComponent<LevelSystem>().currentLevel];
+            xpSlider.value = _Character.gameObject.GetComponent<LevelSystem>().currentExp;
+            xpValue.text = "" + _Character.gameObject.GetComponent<LevelSystem>().currentExp + "/" + _Character.gameObject.GetComponent<LevelSystem>().expToLevel;
 
-            levelValue.text = "" + LevelSystem.LevelInstance.currentLevel;
+            levelValue.text = "" + _Character.GetComponent<LevelSystem>().currentLevel;
 
-            premiumValue.text = "" + Character.MyInstance.premiumCurrency;
-            copperValue.text = "" + Character.MyInstance.copperCurrency;
+            premiumValue.text = "" + _Character.premiumCurrency;
+            copperValue.text = "" + _Character.copperCurrency;
         }
         if (chatInput is null)
             return;
         if (chatInput.isFocused)
         {
             //disable player keyboard if on desktop
-            Player.GetComponent<Character>().onInput = true;
+            _Character.onInput = true;
         }
         else
-            Player.GetComponent<Character>().onInput = false;
+            _Character.onInput = false;
     }
     public void UpdateHealth()
     {
-        if (Character.MyInstance is null)
-            return;
-        hpSlider.maxValue = Character.MyInstance.MaxHealth;
-        hpSlider.value = Character.MyInstance.Health;
-        hpValue.text = "" + Character.MyInstance.Health + "/" + Character.MyInstance.MaxHealth;
+        hpSlider.maxValue = _Character.MaxHealth;
+        hpSlider.value = _Character.Health;
+        hpValue.text = "" + _Character.Health + "/" + _Character.MaxHealth;
     }
 
     public void UpdateMP()
 	{
-        if (Character.MyInstance is null)
-            return;
-        mpSlider.maxValue = Character.MyInstance.MaxMP;
-        mpSlider.value = Character.MyInstance.Mana;
-        mpValue.text = "" + Character.MyInstance.Mana + "/" + Character.MyInstance.MaxMP;
+        mpSlider.maxValue = _Character.MaxMP;
+        mpSlider.value = _Character.Mana;
+        mpValue.text = "" + _Character.Mana + "/" + _Character.MaxMP;
 	}
 }

@@ -34,6 +34,7 @@ public class MainMenu : MonoBehaviour
 		progressPanel.SetActive(true);
 		FindObjectOfType<GameObserver>().LoadCharacter();
 		StartCoroutine(NewCharacterAsync(newOperation));
+	
 	}
 
 	private IEnumerator NewCharacterAsync(AsyncOperation newOperation)

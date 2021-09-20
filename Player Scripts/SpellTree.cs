@@ -29,7 +29,7 @@ public class SpellTree : MonoBehaviour
     [Space]
 
     [Header("---> Fireball Spell <---")]
-    public GameObject fireballHotbarSlot;
+    public GameObject fireballSpell;
     public GameObject fireball1SkillSlot;
     public GameObject fireball2SkillSlot;
     public int fireball1LevelReq;
@@ -46,7 +46,7 @@ public class SpellTree : MonoBehaviour
     [SerializeField] private Sprite fireball3Image;
     [Space]
     [Header("---> Icicle Spell <---")]
-    public GameObject icicleHotbarSlot;
+    public GameObject icicleBallSpell;
     public GameObject icicle1SkillSlot;
     public GameObject icicle2SkillSlot;
     public int icicle1LevelReq;
@@ -63,7 +63,7 @@ public class SpellTree : MonoBehaviour
     [SerializeField] private Sprite icicle3Image;
     [Space]
     [Header("---> Arctic Blast <---")]
-    public GameObject arcticBlastHotbarSlot;
+    public GameObject arcticBallSpell;
     public GameObject arcticBlast1SkillSlot;
     public GameObject arcticBlast2SkillSlot;
     public int arcticBlast1LevelReq;
@@ -79,9 +79,30 @@ public class SpellTree : MonoBehaviour
     [SerializeField] private Sprite arcticBlast2Image;
     [SerializeField] private Sprite arcticBlast3Image;
 
+    private Character _character;
+    private PlayerCombat _playerCombat;
+    private LevelSystem _levelSystem;
+    public void InitializeSpell(Character character)
+    {
+        _character = character;
+        _playerCombat = _character.gameObject.GetComponent<PlayerCombat>();
+        _levelSystem = _character.gameObject.GetComponent<LevelSystem>();
+        fireballSpell.SetActive(true);
+        fireballSpell.GetComponentInChildren<Button>().onClick.AddListener(_playerCombat.ActivateFireball);
+        fireballSpell.SetActive(false);
+        icicleBallSpell.SetActive(true);
+        icicleBallSpell.GetComponentInChildren<Button>().onClick.AddListener(_playerCombat.ActivateIcicle);
+        icicleBallSpell.SetActive(false);
+        arcticBallSpell.SetActive(true);
+        arcticBallSpell.GetComponentInChildren<Button>().onClick.AddListener(_playerCombat.ActivateArcticBlast);
+        arcticBallSpell.SetActive(false);
+    }
 	void Update()
     {
-        if (PlayerCombat.CombatInstance is null)
+        if (_character is null)
+            return;
+
+        if (!_character.isLocalPlayer)
             return;
 
         spellPointsValue.text = "" + spellPointsAvailable;
@@ -125,47 +146,47 @@ public class SpellTree : MonoBehaviour
 	{
         if(fireball1Level >= 1)
 		{
-            PlayerCombat.CombatInstance.canCastSpells = true;
-            fireballHotbarSlot.SetActive(true);
+            _playerCombat.canCastSpells = true;
+            fireballSpell.SetActive(true);
             fireballSpellImage.sprite = fireball1Image;
-            if(!PlayerCombat.CombatInstance.fireballActive)
+            if(!_playerCombat.fireballActive)
                 fireballSpellImage.color = new Color(1, 1, 1, .5f);
 		}
         if(fireball2Level >= 1)
 		{
-            PlayerCombat.CombatInstance.canCastSpells = true;
+            _playerCombat.canCastSpells = true;
             fireballSpellImage.sprite = fireball2Image;
-            if (!PlayerCombat.CombatInstance.fireballActive)
+            if (!_playerCombat.fireballActive)
                 fireballSpellImage.color = new Color(1, 1, 1, .5f);
 		}
         if(icicle1Level >= 1)
 		{
-            PlayerCombat.CombatInstance.canCastSpells = true;
-            icicleHotbarSlot.SetActive(true);
+            _playerCombat.canCastSpells = true;
+            icicleBallSpell.SetActive(true);
             icicleSpellImage.sprite = icicle1Image;
-            if(!PlayerCombat.CombatInstance.icicleActive)
+            if(!_playerCombat.icicleActive)
                 icicleSpellImage.color = new Color(1, 1, 1, .5f);
 		}
         if(icicle2Level >= 1)
 		{
-            PlayerCombat.CombatInstance.canCastSpells = true;
+            _playerCombat.canCastSpells = true;
             icicleSpellImage.sprite = icicle2Image;
-            if (!PlayerCombat.CombatInstance.icicleActive)
+            if (!_playerCombat.icicleActive)
                 icicleSpellImage.color = new Color(1, 1, 1, .5f);
         }
         if(arcticBlast1Level >= 1)
 		{
-            PlayerCombat.CombatInstance.canCastSpells = true;
-            arcticBlastHotbarSlot.SetActive(true);
+            _playerCombat.canCastSpells = true;
+            arcticBallSpell.SetActive(true);
             arcticBlastSpellImage.sprite = arcticBlast1Image;
-            if (!PlayerCombat.CombatInstance.arcticBlastActive)
+            if (!_playerCombat.arcticBlastActive)
                 arcticBlastSpellImage.color = new Color(1, 1, 1, .5f);
 		}
         if(arcticBlast2Level >= 1)
 		{
-            PlayerCombat.CombatInstance.canCastSpells = true;
+            _playerCombat.canCastSpells = true;
             arcticBlastSpellImage.sprite = arcticBlast2Image;
-            if (!PlayerCombat.CombatInstance.arcticBlastActive)
+            if (!_playerCombat.arcticBlastActive)
                 arcticBlastSpellImage.color = new Color(1, 1, 1, .5f);
         }
 	}
@@ -265,27 +286,27 @@ public class SpellTree : MonoBehaviour
 
     void LevelSpellCheck()
 	{
-        if(fireball1LevelReq <= LevelSystem.LevelInstance.currentLevel)
+        if(fireball1LevelReq <= _levelSystem.currentLevel)
 		{
             fireball1SkillSlot.SetActive(true);
         }
-        if(fireball1Level == fireball1LevelMax && fireball2LevelReq <= LevelSystem.LevelInstance.currentLevel)
+        if(fireball1Level == fireball1LevelMax && fireball2LevelReq <= _levelSystem.currentLevel)
 		{
             fireball2SkillSlot.SetActive(true);
 		}
-        if(icicle1LevelReq <= LevelSystem.LevelInstance.currentLevel)
+        if(icicle1LevelReq <= _levelSystem.currentLevel)
 		{
             icicle1SkillSlot.SetActive(true);
 		}
-        if(icicle1Level == icicle1LevelMax && icicle2LevelReq <= LevelSystem.LevelInstance.currentLevel)
+        if(icicle1Level == icicle1LevelMax && icicle2LevelReq <= _levelSystem.currentLevel)
 		{
             icicle2SkillSlot.SetActive(true);
 		}
-        if (arcticBlast1LevelReq <= LevelSystem.LevelInstance.currentLevel)
+        if (arcticBlast1LevelReq <= _levelSystem.currentLevel)
 		{
             arcticBlast1SkillSlot.SetActive(true);
 		}
-        if(arcticBlast1Level == arcticBlast1LevelMax && arcticBlast2LevelReq <= LevelSystem.LevelInstance.currentLevel)
+        if(arcticBlast1Level == arcticBlast1LevelMax && arcticBlast2LevelReq <= _levelSystem.currentLevel)
 		{
             arcticBlast2SkillSlot.SetActive(true);
 		}

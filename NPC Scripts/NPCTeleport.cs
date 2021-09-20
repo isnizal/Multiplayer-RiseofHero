@@ -20,17 +20,14 @@ public class NPCTeleport : MonoBehaviour
 
 	private Inventory inventory;
 	private Character _character;
-	private void OnValidate()
-	{
-		if (inventory == null)
-			inventory = FindObjectOfType<Inventory>();
-	}
 
 	private void Start()
 	{
 		instance = this;
 		transition = GameObject.Find("CrossFade").GetComponent<Animator>();
 		toLocation = GameObject.Find("Efos StartPoint");
+		if (inventory == null)
+			inventory = FindObjectOfType<Inventory>();
 	}
 
     private void Update()
@@ -85,17 +82,20 @@ public class NPCTeleport : MonoBehaviour
 
 	IEnumerator EnterArea()
 	{
+		GameManager gameManager = FindObjectOfType<GameManager>();
 		player.GetComponent<NetworkRigidbody2D>().target.constraints = RigidbodyConstraints2D.FreezeAll;
 		transition.SetBool("Exit", true);
 		yield return new WaitForSeconds(teleportDelayTime);
-		player.transform.position = new Vector2(toLocation.transform.position.x, toLocation.transform.position.y);
+		player.GetComponent<Mirror.NetworkTransform>().transform.position = new Vector2(toLocation.transform.position.x, toLocation.transform.position.y);
 		yield return new WaitForSeconds(fadeDelay);
 		transition.SetBool("Exit", false);
-		if (GameManager.GameManagerInstance.firstTimePlaying == 0)
+		if (gameManager.firstTimePlaying == 0)
 		{
+			if (inventory is null)
+				inventory = FindObjectOfType<Inventory>();
 			firstTimeDialogBox.SetActive(true);
 			inventory.AddItem(startItemSO.GetCopy());
-			GameManager.GameManagerInstance.firstTimePlaying = 1;
+			gameManager.firstTimePlaying = 1;
 		}
 		player.GetComponent<NetworkRigidbody2D>().target.constraints = RigidbodyConstraints2D.None;
 		player.GetComponent<NetworkRigidbody2D>().target.constraints = RigidbodyConstraints2D.FreezeRotation;

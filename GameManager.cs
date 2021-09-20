@@ -75,6 +75,7 @@ public class GameManager :MonoBehaviour
 	{
 		//respawn click
 
+		GetComponent<AudioSource>().Play();
 		yesRespawnBtn.onClick.AddListener(ClickYesRespawn);
 		noRespawnBtn.onClick.AddListener(ClickNoRespawn);
 
