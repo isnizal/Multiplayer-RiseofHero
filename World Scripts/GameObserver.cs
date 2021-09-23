@@ -50,7 +50,7 @@ public class GameObserver : MonoBehaviour
         //    GetComponentInChildren<GameClothes>().LoadClothesOnStart();
         //}
     }
-
+    #region"LoadGame"
     private IEnumerator LoadCoroutine()
 	{
         LoadGame();
@@ -66,6 +66,7 @@ public class GameObserver : MonoBehaviour
     {
         loadCharacter = true;
     }
+    #endregion
 
 
 }

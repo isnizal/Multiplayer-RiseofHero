@@ -1,8 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
-public class BossStats : MonoBehaviour
+[RequireComponent(typeof(NetworkIdentity))]
+public class BossStats : NetworkBehaviour
 {
     public static BossStats instance;
     public static BossStats BossStatsInstance
@@ -19,6 +21,7 @@ public class BossStats : MonoBehaviour
     }
     [Header("Enemy Stats")]
     public string enemyName;
+    [SyncVar]
     public int enemyCurrentHP;
     public int enemyMaxHP;
     public int enemyAttackPower;
@@ -37,20 +40,24 @@ public class BossStats : MonoBehaviour
 
     void FixedUpdate()
     {
-        EHealthCheck();
+        if (base.hasAuthority)
+        {
+            EHealthCheck();
+        }
     }
-
-    public void ETakeDamage(int eDamageToGive)
+    private LevelSystem _levelSystem;
+    public void ETakeDamage(int eDamageToGive,GameObject other)
     {
         enemyCurrentHP -= eDamageToGive;
+        _levelSystem = other.GetComponent<LevelSystem>();
     }
 
     void EHealthCheck()
     {
         if(enemyCurrentHP < enemyMaxHP / 2)
 		{
-            BossAI.BossInstance.speed = 10;
-            BossAI.BossInstance.startWaitTime = 1;
+            GetComponent<BossAI>().speed = 10;
+            GetComponent<BossAI>().startWaitTime = 1;
         }
         if (enemyCurrentHP <= 0)
             Death();
@@ -60,23 +67,49 @@ public class BossStats : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Player"))
         {
+            if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
+                return;
             int enemyDamage = GetComponent<BossStats>().enemyAttackPower;
-            int calcTotalDefense = Mathf.RoundToInt(Character.MyInstance.Defense.Value + Character.MyInstance.Defense.BaseValue);
+            int calcTotalDefense = Mathf.RoundToInt(other.gameObject.GetComponent<Character>().Defense.Value
+                + other.gameObject.GetComponent<Character>().Defense.BaseValue);
             int calcDefense = Mathf.RoundToInt(calcTotalDefense * .5f);
             int totalDamage = enemyDamage - calcDefense;
             if (totalDamage <= 0)
             {
                 totalDamage = 0;
-                var missclone = Instantiate(damageNumbers, Character.MyInstance.transform.position, Quaternion.Euler(Vector3.zero));
-                missclone.GetComponent<DamageNumbers>().damageNumber = totalDamage;
+                CmdNoDamage(totalDamage,other.gameObject.GetComponent<Character>());
+
             }
             else if (totalDamage > 0)
             {
-                other.gameObject.GetComponent<PlayerCombat>().TakeDamage(totalDamage);
-                var clone = Instantiate(damageNumbers, Character.MyInstance.transform.position, Quaternion.Euler(Vector3.zero));
-                clone.GetComponent<DamageNumbers>().damageNumber = totalDamage;
+                CmdNormalDamage(totalDamage, other.gameObject.GetComponent<Character>());
             }
         }
+    }
+    [Command]
+    public void CmdNoDamage(int totalDamage, Character other)
+    {
+        var missclone = Instantiate(damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
+        NetworkServer.Spawn(missclone);
+        RpcNoDamage(missclone, totalDamage);
+    }
+    [ClientRpc]
+    public void RpcNoDamage(GameObject missclone,int totalDamage)
+    {
+        missclone.GetComponent<DamageNumbers>().damageNumber = totalDamage;
+    }
+    [Command(requiresAuthority = false)]
+    public void CmdNormalDamage(int totalDamage, Character other)
+    {
+        other.gameObject.GetComponent<PlayerCombat>().TakeDamage(totalDamage);
+        var clone = Instantiate(damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
+        NetworkServer.Spawn(clone);
+        RpcNormalDamage(clone, totalDamage);
+    }
+    [ClientRpc]
+    public void RpcNormalDamage(GameObject clone, int totalDamage)
+    {
+        clone.GetComponent<DamageNumbers>().damageNumber = totalDamage;
     }
 
 
@@ -88,17 +121,23 @@ public class BossStats : MonoBehaviour
             GameObject current = lootTables.LootItems();
             if (current != null)
             {
-                Instantiate(current.gameObject, transform.position, Quaternion.identity);
+                CmdDropLoot(current);
             }
         }
     }
-
+    [Command(requiresAuthority = false)]
+    public void CmdDropLoot(GameObject current)
+    {
+        var loot = Instantiate(current.gameObject, transform.position, Quaternion.identity);
+        NetworkServer.Spawn(loot);
+    }
     public void Death()
     {
-        LevelSystem.LevelInstance.AddExp(expToGive);
+        _levelSystem.gameObject.GetComponent<LevelSystem>().AddExp(expToGive);
         DropLoot();
         GameManager.GameManagerInstance.devilQueenDefeated = 1;
         //GameManager.GameManagerInstance.devilQueenSpawned = false;
-        Destroy(this.gameObject);
+        _levelSystem.gameObject.GetComponent<PlayerCombat>().CmdDestroyObjects(this.gameObject);
     }
+
 }

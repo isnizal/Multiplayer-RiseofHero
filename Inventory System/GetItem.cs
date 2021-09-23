@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEditor;
+using Mirror;
 
 public class GetItem : MonoBehaviour, ISerializationCallbackReceiver
 {
@@ -28,17 +29,6 @@ public class GetItem : MonoBehaviour, ISerializationCallbackReceiver
 		instance = this;
 	}
 
-	private void OnValidate()
-	{
-		if (inventory == null)
-			inventory = FindObjectOfType<Inventory>();
-	}
-	private void Update()
-	{
-		if (inventory == null)
-			inventory = FindObjectOfType<Inventory>();
-
-	}
 
 	public void PickupItem()
 	{
@@ -46,24 +36,35 @@ public class GetItem : MonoBehaviour, ISerializationCallbackReceiver
 		{
 			SoundManager.PlaySound(SoundManager.Sound.PickupItem);
 			inventory.AddItem(itemToPickUp.GetCopy());
-			PlayerCombat.CombatInstance.DisplayInformation(itemToPickUp.GetCopy());
-			Destroy(this.gameObject);
+			_playerCombat.DisplayInformation(itemToPickUp.GetCopy());
+			_playerCombat.CmdDestroyObjects(this.gameObject);
 		}
 	}
-
+	public void RpcDestroyItem()
+	{
+		
+	}
+	private PlayerCombat _playerCombat;
 	private void OnTriggerEnter2D(Collider2D other)
 	{
 		if (other.CompareTag("Player"))
 		{
+			if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
+				return;
+			_playerCombat = other.gameObject.GetComponent<PlayerCombat>();
+			inRange = true;
+			inventory = other.gameObject.GetComponent<Character>().Inventory;
 			PickupItem();
 		}
 		
-		inRange = true;
+
 	}
 	private void OnTriggerExit2D(Collider2D other)
 	{
 		if (other.CompareTag("Player"))
 		{
+			if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
+				return;
 			inRange = false;
 		}
 	}

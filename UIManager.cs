@@ -76,7 +76,7 @@ public class UIManager : MonoBehaviour
     public void InitializeAwake(Character player)
     {
         InitializeUIVariable(player);
-        GetComponent<GameManager>().InitializeGameManagerVariable(player);
+        GetComponent<GameManager>().InitializeGameManagerVariable(player,this);
 
     }
 

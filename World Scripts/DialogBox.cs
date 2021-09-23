@@ -1,5 +1,5 @@
 using UnityEngine;
-
+using Mirror;
 public class DialogBox : MonoBehaviour
 {
 	public static DialogBox instance;
@@ -23,10 +23,11 @@ public class DialogBox : MonoBehaviour
 	public bool inRange;
 
 	private GameManager _gameManager;
-	public void InitializeDialogBox(GameManager gameManager)
-	{
-		_gameManager = gameManager;
+    private void Awake()
+    {
+		_gameManager = FindObjectOfType<GameManager>();
 	}
+
 	void Update()
 	{
 		if (Input.GetKeyUp(KeyCode.Space) && inRange && !_gameManager.isHandheld)
@@ -66,6 +67,8 @@ public class DialogBox : MonoBehaviour
 	{
 		if (other.gameObject.CompareTag("Player") && !other.isTrigger)
 		{
+			if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
+				return;
 			inRange = true;
 			if (_gameManager.isHandheld)
 			{
@@ -84,6 +87,8 @@ public class DialogBox : MonoBehaviour
 	{
 		if (other.gameObject.CompareTag("Player") && !other.isTrigger)
 		{
+			if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
+				return;
 			inRange = false;
 			if (_gameManager.isHandheld)
 			{

@@ -26,14 +26,14 @@ public class FireballDamage : MonoBehaviour
 	{
 		if(other.CompareTag("Enemy"))
 		{
-			other.GetComponent<EnemyStats>().ETakeDamage((int)totalFireballDamage);
+			other.GetComponent<EnemyStats>().ETakeDamage((int)totalFireballDamage, other.gameObject);
 			var clone = (GameObject)Instantiate(PlayerCombat.CombatInstance.damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
 			clone.GetComponent<DamageNumbers>().damageNumber = (int)totalFireballDamage;
 			Destroy(this.gameObject);
 		}
 		if(other.CompareTag("Boss"))
 		{
-			other.GetComponent<BossStats>().ETakeDamage((int)totalFireballDamage);
+			other.GetComponent<BossStats>().ETakeDamage((int)totalFireballDamage,other.gameObject);
 			var clone = (GameObject)Instantiate(PlayerCombat.CombatInstance.damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
 			clone.GetComponent<DamageNumbers>().damageNumber = (int)totalFireballDamage;
 			Destroy(this.gameObject);

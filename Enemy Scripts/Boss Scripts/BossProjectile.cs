@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
 public class BossProjectile : MonoBehaviour
 {
@@ -22,6 +23,8 @@ public class BossProjectile : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Player"))
         {
+            if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
+                return;
             other.gameObject.GetComponent<PlayerCombat>().TakeDamage(projectileDamage);
             int calcTotalDefense = Mathf.RoundToInt(Character.MyInstance.Defense.Value + Character.MyInstance.Defense.BaseValue);
             int calcDefense = Mathf.RoundToInt(calcTotalDefense * .5f);

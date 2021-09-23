@@ -117,8 +117,12 @@ public class Character : NetworkBehaviour
 		achievement.kill500AchClaimed = loadedStats[20];
 		achievement.kill500AchDone = loadedStats[21];
 	}
-
+	public void OnHealthChanged(int oldHealth, int newHealth)
+	{
+		Health = newHealth;
+	}
 	[Header("------> Variable Stats <------")]
+	[SyncVar(hook = nameof(OnHealthChanged))]
 	public int Health;
 	public int MaxHealth;
 	public float hpRegenTime;
@@ -170,7 +174,7 @@ public class Character : NetworkBehaviour
 	private BaseItemSlot dragItemSlot;
 	private AchievementManager achievement;
 	private GameObject _shopWindow;
-	private UIManager _uiManager;
+	[HideInInspector]public UIManager uiManager;
 
 	public PlayerMovement playerMovement;
 
@@ -184,7 +188,10 @@ public class Character : NetworkBehaviour
 	{
 		if (isLocalPlayer)
         {
-			_uiManager = FindObjectOfType<UIManager>();
+			Health = MaxHealth;
+			Mana = MaxMP;
+
+			uiManager = FindObjectOfType<UIManager>();
             achievement = FindObjectOfType<AchievementManager>();
             Inventory = FindObjectOfType<Inventory>();
             EquipmentPanel = FindObjectOfType<EquipmentPanel>();
@@ -200,8 +207,8 @@ public class Character : NetworkBehaviour
             sellItemArea = FindObjectOfType<DropSellArea>();
             craftingWindow = FindObjectOfType<CraftingWindow>();
             craftingWindow.gameObject.SetActive(false);
-            _shopWindow = sellItemArea.gameObject.transform.parent.gameObject;
-            sellItemArea.gameObject.transform.parent.gameObject.SetActive(false);
+            //_shopWindow = sellItemArea.gameObject.transform.parent.gameObject;
+            //sellItemArea.gameObject.transform.parent.gameObject.SetActive(false);
             sellItemDialog = GameObject.Find("SellItemDialog").GetComponent<QuestionDialog>();
             sellItemDialog.gameObject.SetActive(false);
             FindObjectOfType<UIManager>().InitializeAwake(this);
@@ -241,14 +248,6 @@ public class Character : NetworkBehaviour
 		dropItemArea.OnDropEvent += DropItemOutsideUI;
 
 		sellItemArea.OnDropEvent += DropItemSellArea;
-	}
-	private void Start()
-	{
-		if (isLocalPlayer)
-		{
-			Health = MaxHealth;
-			Mana = MaxMP;
-		}
 	}
 
 	private void Update()
@@ -399,7 +398,7 @@ public class Character : NetworkBehaviour
 
 			newMana += 1;
 			Mana = newMana;
-			_uiManager.UpdateHealth();
+			uiManager.UpdateHealth();
 			if (Mana > MaxMP)
 			{
 				Mana = MaxMP;

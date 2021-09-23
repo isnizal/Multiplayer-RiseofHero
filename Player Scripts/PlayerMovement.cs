@@ -221,7 +221,10 @@ public class PlayerMovement : NetworkBehaviour
 	}
 	public void SetMessageForPlayer(string Message)
 	{
-		CmdSentMessage(Message);
+		if (NetworkClient.active)
+			CmdSentMessage(Message);
+		else
+			Debug.LogWarning("no client found");
 	}
 	[Command(requiresAuthority = false)]
 	public void CmdSetName(string name)

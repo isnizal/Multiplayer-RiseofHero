@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
 public class CurrencyManager : MonoBehaviour
 {
@@ -11,7 +12,6 @@ public class CurrencyManager : MonoBehaviour
 
     void Start()
     {
-        thePlayer = FindObjectOfType<Character>();
         amount = Random.Range(minAmount, maxAmount);
     }
 
@@ -19,10 +19,14 @@ public class CurrencyManager : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Player"))
         {
+            if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
+                return;
+            thePlayer = other.gameObject.GetComponent<Character>();
             thePlayer.AddCurrency(amount);
             SoundManager.PlaySound(SoundManager.Sound.PickupCurrency);
-            PlayerCombat.CombatInstance.DisplayCoin(amount);
-            Destroy(this.gameObject);
+            thePlayer.GetComponent<PlayerCombat>().DisplayCoin(amount);
+            thePlayer.GetComponent<PlayerCombat>().CmdDestroyObjects(this.gameObject); 
         }
     }
+
 }

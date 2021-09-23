@@ -1,8 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
+using Mirror.Experimental;
 
-public class EnemyStats : MonoBehaviour
+[RequireComponent(typeof(NetworkAnimator))]
+[RequireComponent(typeof(NetworkRigidbody2D))]
+public class EnemyStats : NetworkBehaviour
 {
     public static EnemyStats instance;
     public static EnemyStats EnemyInstance
@@ -21,6 +25,7 @@ public class EnemyStats : MonoBehaviour
     [Header("Enemy Stats")]
     public int areaSpawnNumber;
     public string enemyName;
+    [SyncVar(hook = nameof(OnEnemyHpChanged))]
     public int enemyCurrentHP;
     public int enemyMaxHP;
     public int enemyAttackPower;
@@ -33,22 +38,42 @@ public class EnemyStats : MonoBehaviour
     [Space]
     public LootTables lootTables;
 
-    void Start()
+    private Spawner _spawner;
+
+    public void InitializeEnemyStats()
     {
+        _spawner = FindObjectOfType<Spawner>();
         enemyCurrentHP = enemyMaxHP;
     }
 
     void FixedUpdate()
     {
-        EHealthCheck();
+        if (isClient)
+        {
+            EHealthCheck();
+        }
     }
-
-    public void ETakeDamage(int eDamageToGive)
+    private LevelSystem _levelSystem;
+    public void OnEnemyHpChanged(int oldHp, int newHp)
+    {
+        this.enemyCurrentHP = newHp;
+    }
+    public void ETakeDamage(int eDamageToGive,GameObject player)
 	{
-        enemyCurrentHP -= eDamageToGive;
+        _levelSystem = player.GetComponent<LevelSystem>();
+        if (isClient)
+        {
+            CmdETakeDamage(eDamageToGive);
+        }
         SoundManager.PlaySound(SoundManager.Sound.EnemyHit);
     }
+    [Command(requiresAuthority = false)]
+    public void CmdETakeDamage(int eDamageToGive)
+    {
+        enemyCurrentHP -= eDamageToGive;
+    }
 
+    [Client]
     void EHealthCheck()
 	{
         if (enemyCurrentHP <= 0)
@@ -60,106 +85,148 @@ public class EnemyStats : MonoBehaviour
 	{
 		if(other.gameObject.CompareTag("Player"))
 		{
+            if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
+                return;
             isAttack = true;
             EnemyAttackTimeCorou = EnemyAttack(other);
             StartCoroutine(EnemyAttackTimeCorou);
         }
  	}
+    #region"playerattack"
+    private Character _character;
+    private AchievementManager _achievementManager;
     private IEnumerator EnemyAttack(Collision2D other)
     {
         GameObject player = other.gameObject;
+        _character = player.GetComponent<Character>();
+        _achievementManager = _character.uiManager.gameObject.GetComponent<AchievementManager>();
         while (isAttack)
         {
             int enemyDamage = GetComponent<EnemyStats>().enemyAttackPower;
-            int calcTotalDefense = Mathf.RoundToInt(Character.MyInstance.Defense.Value + Character.MyInstance.Defense.BaseValue);
+            int calcTotalDefense = Mathf.RoundToInt(_character.Defense.Value + _character.Defense.BaseValue);
             int calcDefense = Mathf.RoundToInt(calcTotalDefense * .125f);
             int totalDamage = Random.Range(enemyDamage - calcDefense, enemyDamage * 2 - calcDefense);
-            var missclone = Instantiate(damageNumbers, Character.MyInstance.transform.position, Quaternion.Euler(Vector3.zero));
+
             if (totalDamage <= 0)
             {
-                missclone.GetComponent<DamageNumbers>().isMiss = true;
-                missclone.GetComponent<DamageNumbers>().damageNumber = totalDamage;
+                CmdPlayerNoDamage(_character, totalDamage);
             }
             else if (totalDamage > 0)
             {
-                player.GetComponent<PlayerCombat>().TakeDamage(totalDamage);
-                missclone.GetComponent<DamageNumbers>().damageNumber = totalDamage;
+                CmdPlayerTakeDamage(player, totalDamage,_character);
+
             }
             yield return new WaitForSeconds(attackCoolDownTime);
         }
     }
+    [Command(requiresAuthority = false)]
+    public void CmdPlayerNoDamage(Character _character, int totalDamage)
+    {
+        var missclone = Instantiate(damageNumbers, _character.transform.position, Quaternion.Euler(Vector3.zero));
+        NetworkServer.Spawn(missclone);
+        RpcPlayerNoDamage(missclone,totalDamage);
+    }
+    [TargetRpc]
+    public void RpcPlayerNoDamage(GameObject missclone,int totalDamage)
+    {
+        missclone.GetComponent<DamageNumbers>().isMiss = true;
+        missclone.GetComponent<DamageNumbers>().damageNumber = totalDamage;
+    }
+    [Command(requiresAuthority = false)]
+    public void CmdPlayerTakeDamage(GameObject player, int totalDamage,Character _character)
+    {
+        var missclone = Instantiate(damageNumbers, _character.transform.position, Quaternion.Euler(Vector3.zero));
+        NetworkServer.Spawn(missclone);
+        RpcPlayerTakeDamage(player.GetComponent<NetworkIdentity>().connectionToClient, totalDamage,missclone);
+    }
+    [TargetRpc]
+    public void  RpcPlayerTakeDamage(NetworkConnection player, int totalDamage,GameObject missclone)
+    {
+        player.identity.gameObject.GetComponent<PlayerCombat>().TakeDamage(totalDamage);
+        missclone.GetComponent<DamageNumbers>().damageNumber = totalDamage;
+    }
+    #endregion
+
     private void OnCollisionExit2D(Collision2D other)
     {
         if (other.gameObject.CompareTag("Player"))
         {
+            if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
+                return;
             isAttack = false;
             StopCoroutine(EnemyAttackTimeCorou);
         }
     }
 
 
-
+    protected GameObject lootItem;
     public void DropLoot()
 	{
         if(lootTables != null)
 		{
-            GameObject current = lootTables.LootItems();
-            if(current != null)
-			{
-                Instantiate(current.gameObject, transform.position, Quaternion.identity);
-			}
+            CmdSpawnLootTables();
 		}
 	}
-
+    [Command(requiresAuthority = false)]
+    public void CmdSpawnLootTables()
+    {
+        GameObject current = lootTables.LootItems();
+        if (current is null)
+            return;
+        var objectSpawn = Instantiate(current, transform.position, Quaternion.identity);
+        NetworkServer.Spawn(objectSpawn);
+        NetworkServer.Destroy(this.gameObject);
+    }
     public void Death()
 	{
         SoundManager.PlaySound(SoundManager.Sound.EnemyDie);
-        LevelSystem.LevelInstance.AddExp(expToGive);
-        DropLoot();
+        _levelSystem.AddExp(expToGive);
         CheckAchDeath();
         if(areaSpawnNumber == 1)//Asea Area
 		{
-            Spawner.MySpawner.aseaEnemyCounter -= 1;
+            _spawner.aseaEnemyCounter -= 1;
 		}
         if(areaSpawnNumber == 2)//Efos Area
 		{
-            Spawner.MySpawner.efosEnemyCounter -= 1;
+            _spawner.efosEnemyCounter -= 1;
 		}
         if(areaSpawnNumber == 3)//Newlow Caves
 		{
-            Spawner.MySpawner.newlowCaveEnemyCounter -= 1;
+            _spawner.newlowCaveEnemyCounter -= 1;
 		}
         if(areaSpawnNumber == 4)//Diregarde Castle
 		{
-            Spawner.MySpawner.diregardeCastleEnemyCounter -= 1;
+            _spawner.diregardeCastleEnemyCounter -= 1;
 		}
         if(areaSpawnNumber == 5)//Efos Pass
 		{
-            Spawner.MySpawner.efosPassEnemyCounter -= 1;
+            _spawner.efosPassEnemyCounter -= 1;
 		}
         if(areaSpawnNumber == 6)//Astad Area
 		{
-            Spawner.MySpawner.astadEnemyCounter -= 1;
+            _spawner.astadEnemyCounter -= 1;
 		}
         if(areaSpawnNumber == 7)//Diregarde Area
 		{
-            Spawner.MySpawner.diregardeEnemyCounter -= 1;
+            _spawner.diregardeEnemyCounter -= 1;
 		}
-        Destroy(this.gameObject);
-	}
+        DropLoot();
+    }
 
     public void CheckAchDeath()
 	{
-        if (AchievementManager.AchievementInstance.killSlime1Active == 1)
+        if (_achievementManager is null)
+            return;
+        if (_achievementManager.killSlime1Active == 1)
         {
             if (enemyName == "Red Slime")
-                AchievementManager.AchievementInstance.killSlimeCountAch++;
+                _achievementManager.killSlimeCountAch++;
         }
-        if(AchievementManager.AchievementInstance.kill50AchActive == 1)
+        if(_achievementManager.kill50AchActive == 1)
 		{
             if(gameObject.CompareTag("Enemy"))
 			{
-                AchievementManager.AchievementInstance.kill50CountAch++;
+                _achievementManager.kill50CountAch++;
 			}
 		}
     }

@@ -1,8 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
-public class Spawner : MonoBehaviour
+[RequireComponent(typeof(NetworkIdentity))]
+public class Spawner : NetworkBehaviour
 {
     public static Spawner instance;
     public static Spawner MySpawner
@@ -38,26 +40,55 @@ public class Spawner : MonoBehaviour
     private GameObject newEnemyClone;
     [Space]
     public float timeBetweenSpawn, spawnDelay;
+    [SyncVar]
     public int aseaEnemyCounter, aseaMaxEnemyCounter;
+    [SyncVar]
     public int efosEnemyCounter, efosMaxEnemyCounter;
+    [SyncVar]
     public int newlowCaveEnemyCounter, newlowCaveMaxEnemyCounter;
+    [SyncVar]
     public int diregardeCastleEnemyCounter, diregardeCastleMaxEnemyCounter;
+    [SyncVar]
     public int efosPassEnemyCounter, maxEfosPassEnemyCounter;
+    [SyncVar]
     public int astadEnemyCounter, astadMaxEnemyCounter;
+    [SyncVar]
     public int diregardeEnemyCounter, diregardeMaxEnemyCounter;
 
-    void Start()
+    private void Awake()
     {
-        InvokeRepeating(nameof(AseaEnemySpawn), timeBetweenSpawn, spawnDelay);
-        InvokeRepeating(nameof(EfosEnemySpawn), timeBetweenSpawn, spawnDelay);
-        InvokeRepeating(nameof(NewlowCaveEnemySpawn), timeBetweenSpawn, spawnDelay);
-        InvokeRepeating(nameof(DiregardeCastleEnemySpawn), timeBetweenSpawn, spawnDelay);
-        InvokeRepeating(nameof(EfosPassEnemySpawn), timeBetweenSpawn, spawnDelay);
-        InvokeRepeating(nameof(AstadEnemySpawn), timeBetweenSpawn, spawnDelay);
 
+
+        //InvokeRepeating(nameof(EfosEnemySpawn), timeBetweenSpawn, spawnDelay);
+        //InvokeRepeating(nameof(NewlowCaveEnemySpawn), timeBetweenSpawn, spawnDelay);
+        //InvokeRepeating(nameof(DiregardeCastleEnemySpawn), timeBetweenSpawn, spawnDelay);
+        //InvokeRepeating(nameof(EfosPassEnemySpawn), timeBetweenSpawn, spawnDelay);
+        //InvokeRepeating(nameof(AstadEnemySpawn), timeBetweenSpawn, spawnDelay);
+    }
+    public override void OnStartServer()
+    {
+        DontDestroyOnLoad(gameObject);
+        base.OnStartServer();
+        Debug.Log("spawner start sserver");
+        if (isServer)
+        {
+            InvokeRepeating(nameof(AseaEnemySpawn), timeBetweenSpawn, spawnDelay);
+            //Invoke(nameof(AseaEnemySpawn), spawnDelay);
+        }
 
     }
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+        Debug.Log("spawner start client");
 
+    }
+    public override void OnStartAuthority()
+    {
+        base.OnStartAuthority();
+        Debug.Log("spawner start authority");
+    }
+    [Server]
     void AseaEnemySpawn()
     {
         if (aseaEnemyCounter == aseaMaxEnemyCounter)
@@ -66,12 +97,23 @@ public class Spawner : MonoBehaviour
         {
             var spawnEnemy = Random.Range(0, aseaEnemyPrefab.Length);
             var spawnLocation = Random.Range(0, aseaSpawnPoints.Length);
-            newEnemyClone = Instantiate(aseaEnemyPrefab[spawnEnemy], aseaSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
-            newEnemyClone.transform.parent = enemyHolder;
-            aseaEnemyCounter++;
+             RpcAseaEnemySpawn(spawnEnemy, spawnLocation);
         }
     }
-
+    [Command(requiresAuthority = false)]
+    public void CmdAseaEnemySpawn(int spawnEnemy, int spawnLocation)
+    {
+       //RpcAseaEnemySpawn(spawnEnemy, spawnLocation);
+    }
+    [Server]
+    public void RpcAseaEnemySpawn(int spawnEnemy,int spawnLocation)
+    {
+        newEnemyClone = Instantiate(aseaEnemyPrefab[spawnEnemy], aseaSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
+        NetworkServer.Spawn(newEnemyClone);
+        Debug.Log("spawning");
+        //newEnemyClone.transform.parent = enemyHolder;
+        aseaEnemyCounter++;
+    }
     void EfosEnemySpawn()
     {
         if (efosEnemyCounter == efosMaxEnemyCounter)
@@ -80,10 +122,15 @@ public class Spawner : MonoBehaviour
         {
             var spawnEnemy = Random.Range(0, efosEnemyPrefab.Length);
             var spawnLocation = Random.Range(0, efosSpawnPoints.Length);
-            newEnemyClone = Instantiate(efosEnemyPrefab[spawnEnemy], efosSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
-            newEnemyClone.transform.parent = enemyHolder;
-            efosEnemyCounter++;
+            CmdEfosEnemySpawn(spawnEnemy, spawnLocation);
         }
+    }
+    [ClientRpc]
+    public void CmdEfosEnemySpawn(int spawnEnemy, int spawnLocation)
+    {
+        newEnemyClone = Instantiate(efosEnemyPrefab[spawnEnemy], efosSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
+        newEnemyClone.transform.parent = enemyHolder;
+        efosEnemyCounter++;
     }
 
     void NewlowCaveEnemySpawn()
@@ -94,10 +141,15 @@ public class Spawner : MonoBehaviour
         {
             var spawnEnemy = Random.Range(0, newlowCaveEnemyPrefab.Length);
             var spawnLocation = Random.Range(0, newlowCaveSpawnPoints.Length);
-            newEnemyClone = Instantiate(newlowCaveEnemyPrefab[spawnEnemy], newlowCaveSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
-            newEnemyClone.transform.parent = enemyHolder;
-            newlowCaveEnemyCounter++;
+            CmdNewLowCaveEnemySpawn(spawnEnemy, spawnLocation);
         }
+    }
+    [ClientRpc]
+    public void CmdNewLowCaveEnemySpawn(int spawnEnemy, int spawnLocation)
+    {
+        newEnemyClone = Instantiate(newlowCaveEnemyPrefab[spawnEnemy], newlowCaveSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
+        newEnemyClone.transform.parent = enemyHolder;
+        newlowCaveEnemyCounter++;
     }
 
     void DiregardeCastleEnemySpawn()
@@ -108,10 +160,15 @@ public class Spawner : MonoBehaviour
         {
             var spawnEnemy = Random.Range(0, diregardeCastleEnemyPrefab.Length);
             var spawnLocation = Random.Range(0, diregardeCastleSpawnPoints.Length);
-            newEnemyClone = Instantiate(diregardeCastleEnemyPrefab[spawnEnemy], diregardeCastleSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
-            newEnemyClone.transform.parent = enemyHolder;
-            diregardeCastleEnemyCounter++;
+            CmdDiregardeCastleEnemySpawn(spawnEnemy, spawnLocation);
         }
+    }
+    [ClientRpc]
+    public void CmdDiregardeCastleEnemySpawn(int spawnEnemy, int spawnLocation)
+    {
+        newEnemyClone = Instantiate(diregardeCastleEnemyPrefab[spawnEnemy], diregardeCastleSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
+        newEnemyClone.transform.parent = enemyHolder;
+        diregardeCastleEnemyCounter++;
     }
     void EfosPassEnemySpawn()
     {
@@ -121,10 +178,15 @@ public class Spawner : MonoBehaviour
         {
             var spawnEnemy = Random.Range(0, efosPassEnemyPrefab.Length);
             var spawnLocation = Random.Range(0, efosPassSpawnPoints.Length);
-            newEnemyClone = Instantiate(efosPassEnemyPrefab[spawnEnemy], efosPassSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
-            newEnemyClone.transform.parent = enemyHolder;
-            efosPassEnemyCounter++;
+            CmdEfosPassEnemySpawn(spawnEnemy, spawnLocation);
         }
+    }
+    [ClientRpc]
+    public void CmdEfosPassEnemySpawn(int spawnEnemy, int spawnLocation)
+    {
+        newEnemyClone = Instantiate(efosPassEnemyPrefab[spawnEnemy], efosPassSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
+        newEnemyClone.transform.parent = enemyHolder;
+        efosPassEnemyCounter++;
     }
     void AstadEnemySpawn()
     {
@@ -134,10 +196,15 @@ public class Spawner : MonoBehaviour
         {
             var spawnEnemy = Random.Range(0, astadEnemyPrefab.Length);
             var spawnLocation = Random.Range(0, astadSpawnPoints.Length);
-            newEnemyClone = Instantiate(astadEnemyPrefab[spawnEnemy], astadSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
-            newEnemyClone.transform.parent = enemyHolder;
-            astadEnemyCounter++;
+            CmdAstadEnemySpawn(spawnEnemy, spawnLocation);
         }
+    }
+    [ClientRpc]
+    public void CmdAstadEnemySpawn(int spawnEnemy, int spawnLocation)
+    {
+        newEnemyClone = Instantiate(astadEnemyPrefab[spawnEnemy], astadSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
+        newEnemyClone.transform.parent = enemyHolder;
+        astadEnemyCounter++;
     }
     void DiregardeEnemySpawn()
     {
@@ -147,9 +214,14 @@ public class Spawner : MonoBehaviour
         {
             var spawnEnemy = Random.Range(0, diregardeEnemyPrefab.Length);
             var spawnLocation = Random.Range(0, diregardeSpawnPoints.Length);
-            newEnemyClone = Instantiate(diregardeEnemyPrefab[spawnEnemy], diregardeSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
-            newEnemyClone.transform.parent = enemyHolder;
-            diregardeEnemyCounter++;
+            CmdDiregardEnemySpawn(spawnEnemy, spawnLocation);
         }
+    }
+    [ClientRpc]
+    public void CmdDiregardEnemySpawn(int spawnEnemy,int spawnLocation)
+    {
+        newEnemyClone = Instantiate(diregardeEnemyPrefab[spawnEnemy], diregardeSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
+        newEnemyClone.transform.parent = enemyHolder;
+        diregardeEnemyCounter++;
     }
 }

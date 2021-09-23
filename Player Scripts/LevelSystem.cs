@@ -31,12 +31,14 @@ public class LevelSystem : MonoBehaviour
 	private SpellTree _spellTree;
 	public void InitializeLevelSystem()
 	{
-		_character = FindObjectOfType<Character>();
-		_playerCombat = FindObjectOfType<PlayerCombat>();
+		_character = GetComponent<Character>();
+		_playerCombat = GetComponent<PlayerCombat>();
 		_spellTree = FindObjectOfType<SpellTree>();
 	}
 	private void Update()
 	{
+		if (_character is null)
+			return;
 		expToLevel = toLevelUp[currentLevel];
 		CheckLevel();
 	}

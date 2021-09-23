@@ -175,14 +175,86 @@ public class PlayerCombat : NetworkBehaviour
 			//	nameText.text = _getPlayerName.ToString();
 		}
 	}
-	public void MeleeAttack(Collider2D other)
+	[Command(requiresAuthority = false)]
+	public void CmdCriticalAttack(GameObject enemy, float normalAttack)
 	{
+		var clone = (GameObject)Instantiate(damageNumbers, enemy.transform.position, Quaternion.Euler(Vector3.zero));
+		NetworkServer.Spawn(clone);
+		RpcCriticalAttack(clone,normalAttack,enemy);
+	}
+	[ClientRpc]
+	public void RpcCriticalAttack(GameObject clone,float normalAttack,GameObject enemy)
+	{
+		clone.GetComponent<DamageNumbers>().damageNumber = (int)normalAttack;
+		clone.GetComponent<DamageNumbers>().isRedAttack = true;
+		enemy.GetComponent<EnemyStats>().ETakeDamage((int)normalAttack, this.gameObject);
+	}
+	[Command(requiresAuthority = false)]
+	public void CmdNormalAttack(GameObject enemy, float normalAttack)
+	{
+		var clone = (GameObject)Instantiate(damageNumbers, enemy.transform.position, Quaternion.Euler(Vector3.zero));
+		NetworkServer.Spawn(clone);
+		RpcNormalAttack(clone, normalAttack,enemy);
+	}
+	[ClientRpc]
+	public void RpcNormalAttack(GameObject clone, float normalAttack,GameObject enemy)
+	{
+		clone.GetComponent<DamageNumbers>().damageNumber = (int)normalAttack;
+		enemy.GetComponent<EnemyStats>().ETakeDamage((int)normalAttack, this.gameObject);
+	}
+
+
+
+	[Command(requiresAuthority = false)]
+	public void CmdBossCriticalAttack(GameObject enemy, float normalAttack)
+	{
+		var clone = (GameObject)Instantiate(damageNumbers, enemy.transform.position, Quaternion.Euler(Vector3.zero));
+		NetworkServer.Spawn(clone);
+		RpcBossCriticalAttack(clone, normalAttack,enemy);
+	}
+	[ClientRpc]
+	public void RpcBossCriticalAttack(GameObject clone, float normalAttack,GameObject enemy)
+	{
+		clone.GetComponent<DamageNumbers>().damageNumber = (int)normalAttack;
+		clone.GetComponent<DamageNumbers>().isRedAttack = true;
+		enemy.gameObject.GetComponent<BossStats>().ETakeDamage((int)normalAttack, this.gameObject);
+	}
+	[Command(requiresAuthority = false)]
+	public void CmdBossNormalAttack(GameObject enemy, float normalAttack)
+	{
+
+		var clone = (GameObject)Instantiate(damageNumbers, enemy.transform.position, Quaternion.Euler(Vector3.zero));
+		NetworkServer.Spawn(clone);
+		RpcBossNormalAttack(clone, normalAttack,enemy);
+	}
+	[ClientRpc]
+	public void RpcBossNormalAttack(GameObject clone, float normalAttack,GameObject enemy)
+	{
+		clone.GetComponent<DamageNumbers>().damageNumber = (int)normalAttack;
+		clone.GetComponent<DamageNumbers>().isRedAttack = true;
+		enemy.gameObject.GetComponent<BossStats>().ETakeDamage((int)normalAttack, this.gameObject);
+	}
+	[Command(requiresAuthority = false)]
+	public void CmdDestroyObjects(GameObject item)
+	{
+		NetworkServer.Destroy(item);
+		//RpcDestroyObject(item);
+	}
+	[ClientRpc]
+	public void RpcDestroyObject(GameObject item)
+	{
+		Destroy(item.gameObject);
+	}
+
+	public void MeleeAttack(Collider2D enemy)
+	{
+		if (isServer) return;
 		float value = GetComponent<Character>().Strength.Value;
 		float playerAttackPower = 0;
 		//if critical intialize
 		//bool critical = false;
 		float normalAttack;
-		if (other.gameObject.CompareTag("Enemy"))
+		if (enemy.gameObject.CompareTag("Enemy"))
 		{
 			//int randomDamageRange = Random.Range(GetComponent<Character>().Strength.Value,)
 			//check current attack
@@ -193,28 +265,22 @@ public class PlayerCombat : NetworkBehaviour
 			}
 			else 
 			{
-
 				normalAttack = 0;
-
 			}
 			//float playerAttackPower = Random.Range(GetComponent<Character>().Strength.Value / 5f, GetComponent<Character>().Strength.Value * 1.5f);
+			//critical attack
 			//attack more than base attack to show red color
 			if (normalAttack > value)
 			{
-				other.gameObject.GetComponent<EnemyStats>().ETakeDamage((int)normalAttack);
-				var clone = (GameObject)Instantiate(damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
-				clone.GetComponent<DamageNumbers>().damageNumber = (int)normalAttack;
-				clone.GetComponent<DamageNumbers>().isRedAttack = true;
+				CmdCriticalAttack(enemy.gameObject, normalAttack);
 				//DamageNumbers.DamageInstance.displayNumber.text = "<color=red><b>" + normalAttack.ToString() + "</color>";
 			}
 			else
 			{
-				other.gameObject.GetComponent<EnemyStats>().ETakeDamage((int)normalAttack);
-				var clone = (GameObject)Instantiate(damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
-				clone.GetComponent<DamageNumbers>().damageNumber = (int)normalAttack;
+				CmdNormalAttack(enemy.gameObject, normalAttack);
 			}
 		}
-		else if (other.gameObject.CompareTag("Boss"))
+		else if (enemy.gameObject.CompareTag("Boss"))
 		{
 			//int randomDamageRange = Random.Range(GetComponent<Character>().Strength.Value,)
 			//check current attack
@@ -233,17 +299,12 @@ public class PlayerCombat : NetworkBehaviour
 			//attack more than base attack to show red color
 			if (normalAttack > value)
 			{
-				other.gameObject.GetComponent<BossStats>().ETakeDamage((int)normalAttack);
-				var clone = (GameObject)Instantiate(damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
-				clone.GetComponent<DamageNumbers>().damageNumber = (int)normalAttack;
-				clone.GetComponent<DamageNumbers>().isRedAttack = true;
 				//DamageNumbers.DamageInstance.displayNumber.text = "<color=red><b>" + normalAttack.ToString() + "</color>";
+				CmdBossCriticalAttack(enemy.gameObject, normalAttack);
 			}
 			else
 			{
-				other.gameObject.GetComponent<BossStats>().ETakeDamage((int)normalAttack);
-				var clone = (GameObject)Instantiate(damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
-				clone.GetComponent<DamageNumbers>().damageNumber = (int)normalAttack;
+				CmdBossNormalAttack(enemy.gameObject, normalAttack);
 			}
 		}
 		SoundManager.PlaySound(SoundManager.Sound.PlayerAttack);
@@ -257,29 +318,53 @@ public class PlayerCombat : NetworkBehaviour
 
 			if (playerMovement.currePos == 0)
 			{
-				var obj = Instantiate(currentProjectile, castPoint.position, Quaternion.Euler(0, 0, -90));
-				obj.GetComponent<Rigidbody2D>().velocity = new Vector2(0, -3 + -speed * Time.deltaTime);
+				CmdSpawnSpellDown();
 			}
 			else if (playerMovement.currePos == 1)
 			{
-				var obj = Instantiate(currentProjectile, castPoint.position, Quaternion.identity);
-				obj.GetComponent<Rigidbody2D>().velocity = new Vector2(3 + speed * Time.deltaTime, 0);
+				CmdSpawnSpellRight();
 			}
 			else if (playerMovement.currePos == 2)
 			{
-				var obj = Instantiate(currentProjectile, castPoint.position, Quaternion.Euler(0, 0, 90));
-				obj.GetComponent<Rigidbody2D>().velocity = new Vector2(0, 3 + speed * Time.deltaTime);
+				CmdSpawnSpellUp();
 			}
 			else if (playerMovement.currePos == 3)
 			{
-				var obj = Instantiate(currentProjectile, castPoint.position, Quaternion.Euler(0, 0, -180));
-				obj.GetComponent<Rigidbody2D>().velocity = new Vector2(-3 + -speed * Time.deltaTime, 0);
+				CmdSpawnSpellLeft();
 			}
 		}
 		else if(_character.Intelligence.BaseValue == 0)
 		{
 			Toast.Show("You need intelligence to use this", 2f, ToastPosition.MiddleCenter);
 		}
+	}
+	[Command(requiresAuthority = false)]
+	public void CmdSpawnSpellDown()
+	{
+		var obj = Instantiate(currentProjectile, castPoint.position, Quaternion.Euler(0, 0, -90));
+		NetworkServer.Spawn(obj);
+		obj.GetComponent<Mirror.Experimental.NetworkRigidbody2D>().target.velocity = new Vector2(0, -3 + -speed * Time.deltaTime);
+	}
+	[Command(requiresAuthority = false)]
+	public void CmdSpawnSpellRight()
+	{
+		var obj = Instantiate(currentProjectile, castPoint.position, Quaternion.identity);
+		NetworkServer.Spawn(obj);
+		obj.GetComponent<Mirror.Experimental.NetworkRigidbody2D>().target.velocity = new Vector2(3 + speed * Time.deltaTime, 0);
+	}
+	[Command(requiresAuthority = false)]
+	public void CmdSpawnSpellUp()
+	{
+		var obj = Instantiate(currentProjectile, castPoint.position, Quaternion.Euler(0, 0, 90));
+		NetworkServer.Spawn(obj);
+		obj.GetComponent<Rigidbody2D>().velocity = new Vector2(0, 3 + speed * Time.deltaTime);
+	}
+	[Command(requiresAuthority = false)]
+	public void CmdSpawnSpellLeft()
+	{
+		var obj = Instantiate(currentProjectile, castPoint.position, Quaternion.Euler(0, 0, -180));
+		NetworkServer.Spawn(obj);
+		obj.GetComponent<Rigidbody2D>().velocity = new Vector2(-3 + -speed * Time.deltaTime, 0);
 	}
 
 	public void SetCurrentSpell(int spellID)

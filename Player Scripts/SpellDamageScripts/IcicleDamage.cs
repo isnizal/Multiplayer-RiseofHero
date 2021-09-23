@@ -35,7 +35,7 @@ public class IcicleDamage : MonoBehaviour
 			enemyAI.gameObject.GetComponent<SpriteRenderer>().color = Color.blue;
 			enemyAI.freezing = true;
 			enemyAI.StartFreeze(2f);
-			other.GetComponent<EnemyStats>().ETakeDamage((int)totalIcicleDamage);
+			other.GetComponent<EnemyStats>().ETakeDamage((int)totalIcicleDamage,other.gameObject);
 			var clone = (GameObject)Instantiate(PlayerCombat.CombatInstance.damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
 			clone.GetComponent<DamageNumbers>().damageNumber = (int)totalIcicleDamage;
 			Destroy(this.gameObject);
@@ -46,7 +46,7 @@ public class IcicleDamage : MonoBehaviour
 			enemyAI.gameObject.GetComponent<SpriteRenderer>().color = Color.blue;
 			enemyAI.freezing = true;
 			enemyAI.StartFreeze(1f);
-			other.GetComponent<BossStats>().ETakeDamage((int)totalIcicleDamage);
+			other.GetComponent<BossStats>().ETakeDamage((int)totalIcicleDamage,other.gameObject);
 			var clone = (GameObject)Instantiate(PlayerCombat.CombatInstance.damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
 			clone.GetComponent<DamageNumbers>().damageNumber = (int)totalIcicleDamage;
 			Destroy(this.gameObject);

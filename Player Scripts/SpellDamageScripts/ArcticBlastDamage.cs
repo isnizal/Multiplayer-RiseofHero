@@ -70,14 +70,14 @@ public class ArcticBlastDamage : MonoBehaviour
 	{
 		if (other.CompareTag("Enemy"))
 		{
-			other.GetComponent<EnemyStats>().ETakeDamage((int)totalArcticDamage);
+			other.GetComponent<EnemyStats>().ETakeDamage((int)totalArcticDamage, other.gameObject);
 			var clone = (GameObject)Instantiate(PlayerCombat.CombatInstance.damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
 			clone.GetComponent<DamageNumbers>().damageNumber = (int)totalArcticDamage;
 			Destroy(this.gameObject);
 		}
 		if(other.CompareTag("Boss"))
 		{
-			other.GetComponent<BossStats>().ETakeDamage((int)totalArcticDamage);
+			other.GetComponent<BossStats>().ETakeDamage((int)totalArcticDamage,other.gameObject);
 			var clone = (GameObject)Instantiate(PlayerCombat.CombatInstance.damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
 			clone.GetComponent<DamageNumbers>().damageNumber = (int)totalArcticDamage;
 			Destroy(this.gameObject);

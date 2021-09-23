@@ -71,18 +71,33 @@ public class GameManager :MonoBehaviour
 
 	public IEnumerator saveTimer;
 
-    public void InitializeGameManagerVariable(Character player)
+	private PlayerCombat _playerCombat;
+	private Character _character;
+	private PlayerMovement _playerMovement;
+	private LevelSystem _levelSystem;
+	private UIManager _uiManager;
+    public void InitializeGameManagerVariable(Character player, UIManager uiManager)
 	{
 		if (player.isLocalPlayer)
 		{
-			FindObjectOfType<ShopEquipmentManager>().InitializeShopEquipmentManger(player);
-			FindObjectOfType<ShopItemManager>().InitializeShopItemManager(player);
+			_playerCombat = player.gameObject.GetComponent<PlayerCombat>();
+			_character = player;
+			_playerMovement = player.gameObject.GetComponent<PlayerMovement>();
+			_levelSystem = player.gameObject.GetComponent<LevelSystem>();
+			_uiManager = uiManager;
+
+			var shopEquip = FindObjectOfType<ShopEquipmentManager>();
+			shopEquip.InitializeShopEquipmentManger(player);
+			var shopItem = FindObjectOfType<ShopItemManager>();
+			shopItem.InitializeShopItemManager(player);
+			shopItem.gameObject.SetActive(false);
+			shopItem.transform.parent.gameObject.SetActive(false);
 			FindObjectOfType<SpellTree>().InitializeSpell(player);
 			FindObjectOfType<StatPanel>().InitializeStatPanel(player);
 			FindObjectOfType<StatsModifier>().InitializeStatModifier(player);
 
-			FindObjectOfType<DialogBox>().InitializeDialogBox(this);
 
+			_spellTree = FindObjectOfType<SpellTree>();
 			//respawn click
 			GetComponent<AudioSource>().Play();
 			yesRespawnBtn.onClick.AddListener(ClickYesRespawn);
@@ -117,9 +132,10 @@ public class GameManager :MonoBehaviour
 
 		}
 	}
+	private SpellTree _spellTree;
     private void Update()
 	{
-		if (SpellTree.SpellInstance is null)
+		if (_spellTree  is null)
 			return;
 
 		CheckFireballSpellActive();
@@ -129,11 +145,11 @@ public class GameManager :MonoBehaviour
 
 	void CheckFireballSpellActive()
 	{
-		if (SpellTree.SpellInstance.fireball1Level < SpellTree.SpellInstance.fireball1LevelMax && SpellTree.SpellInstance.fireball1Level >= SpellTree.SpellInstance.fireball1LevelReq)
+		if (_spellTree.fireball1Level < _spellTree.fireball1LevelMax && _spellTree.fireball1Level >= _spellTree.fireball1LevelReq)
 		{
 			fireball1Active = true;
 		}
-		else if (SpellTree.SpellInstance.fireball1Level == SpellTree.SpellInstance.fireball1LevelMax && SpellTree.SpellInstance.fireball2Level < SpellTree.SpellInstance.fireball2LevelMax)
+		else if (_spellTree.fireball1Level == _spellTree.fireball1LevelMax && _spellTree.fireball2Level < _spellTree.fireball2LevelMax)
 		{
 			fireball1Active = false;
 			fireball2Active = true;
@@ -142,11 +158,11 @@ public class GameManager :MonoBehaviour
 
 	void CheckIcicleSpellActive()
 	{
-		if(SpellTree.SpellInstance.icicle1Level < SpellTree.SpellInstance.icicle1LevelMax && SpellTree.SpellInstance.icicle1Level >= SpellTree.SpellInstance.icicle1LevelReq)
+		if(_spellTree.icicle1Level < _spellTree.icicle1LevelMax && _spellTree.icicle1Level >= _spellTree.icicle1LevelReq)
 		{
 			icicle1Active = true;
 		}
-		else if (SpellTree.SpellInstance.icicle1Level == SpellTree.SpellInstance.icicle1LevelMax && SpellTree.SpellInstance.icicle2Level < SpellTree.SpellInstance.icicle2LevelMax)
+		else if (_spellTree.icicle1Level == _spellTree.icicle1LevelMax && _spellTree.icicle2Level < _spellTree.icicle2LevelMax)
 		{
 			icicle1Active = false;
 			icicle2Active = true;
@@ -155,11 +171,11 @@ public class GameManager :MonoBehaviour
 
 	void CheckArcticBlastSpellActive()
 	{
-		if(SpellTree.SpellInstance.arcticBlast1Level < SpellTree.SpellInstance.arcticBlast1LevelMax && SpellTree.SpellInstance.arcticBlast1Level >= SpellTree.SpellInstance.arcticBlast1LevelReq)
+		if(_spellTree.arcticBlast1Level < _spellTree.arcticBlast1LevelMax && _spellTree.arcticBlast1Level >= _spellTree.arcticBlast1LevelReq)
 		{
 			arcticBlast1Active = true;
 		}
-		else if(SpellTree.SpellInstance.arcticBlast1Level == SpellTree.SpellInstance.arcticBlast1LevelMax && SpellTree.SpellInstance.arcticBlast2Level < SpellTree.SpellInstance.arcticBlast2LevelMax)
+		else if(_spellTree.arcticBlast1Level == _spellTree.arcticBlast1LevelMax && _spellTree.arcticBlast2Level < _spellTree.arcticBlast2LevelMax)
 		{
 			arcticBlast1Active = false;
 			arcticBlast2Active = true;
@@ -170,41 +186,38 @@ public class GameManager :MonoBehaviour
 	{
 		_player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeAll;
 		transition.SetBool("Exit", true);
-		Debug.Log("Respawn step 1");
 		yield return new WaitForSeconds(teleportDelayTime);
-		_player.transform.position = new Vector2(toLocation.transform.position.x, toLocation.transform.position.y);
+		_player.GetComponent<NetworkTransform>().transform.position = new Vector2(toLocation.transform.position.x, toLocation.transform.position.y);
 
-		LevelSystem.LevelInstance.currentExp = LevelSystem.LevelInstance.currentExp / 2;
+		_levelSystem.currentExp = LevelSystem.LevelInstance.currentExp / 2;
 
-		Debug.Log("Respawn step 2");
 		yield return new WaitForSeconds(fadeDelay);
-		Character.MyInstance.newHealth = Character.MyInstance.MaxHealth;
-		Character.MyInstance.Health = Character.MyInstance.newHealth;
-		Character.MyInstance.newMana = Character.MyInstance.MaxMP;
-		Character.MyInstance.Mana = Character.MyInstance.newMana;
+		_character.newHealth = _character.MaxHealth;
+		_character.Health = _character.newHealth;
+		_character.newMana = _character.MaxMP;
+		_character.Mana = _character.newMana;
 
-		UIManager.Instance.UpdateHealth();
+		_uiManager.UpdateHealth();
 
 		transition.SetBool("Exit", false);
-		PlayerCombat.CombatInstance.playerDied = false;
+		_playerCombat.playerDied = false;
 		//respawn initialize
-		PlayerMovement.instance.Initialize();
+		_playerMovement.Initialize();
 		_player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.None;
 		_player.GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeRotation;
-		PlayerCombat.CombatInstance.GetComponent<BoxCollider2D>().enabled = true;
-		PlayerCombat.CombatInstance.EnableSelfRegenHp();
-		PlayerCombat.CombatInstance.EnableSelfRegenMana();
+		_player.GetComponent<BoxCollider2D>().enabled = true;
+		_playerCombat.EnableSelfRegenHp();
+		_playerCombat.EnableSelfRegenMana();
 
 		autoSave = true;
 		saveTimer = StartSaveTimer();
 		StartCoroutine(saveTimer);
-		Debug.Log("Respawn step 3");
 	}
 
 	[SerializeField]private Button yesRespawnBtn, noRespawnBtn;
 	public void ClickYesRespawn()
 	{
-		PlayerCombat.CombatInstance.respawnWindow.SetActive(false);
+		_playerCombat.respawnWindow.SetActive(false);
 		StartCoroutine(RespawnPlayer());
 	}
 	public void ClickNoRespawn()
@@ -230,9 +243,9 @@ public class GameManager :MonoBehaviour
 		do
 		{
 			yield return new WaitForSeconds(30f);
-			if (!PlayerCombat.CombatInstance.playerDied)
+			if (!_playerCombat.playerDied)
 			{
-				Character.MyInstance.Save();
+				_character.Save();
 				Debug.LogWarning("Game Save");
 			}
 		}
@@ -248,7 +261,7 @@ public class GameManager :MonoBehaviour
 	public void SaveGame()
 	{
 		Toast.Show("Game has been saved!", 2f, ToastPosition.MiddleCenter);
-		Character.MyInstance.Save();
+		_character.Save();
 	}
 	public void QuitGame()
 	{

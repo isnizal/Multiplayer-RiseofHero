@@ -6,12 +6,19 @@ using System;
 
 public class NewNetworkManager : NetworkManager
 {
+    private GameObject _spawner;
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
+        _spawner = Instantiate(spawnPrefabs[0]);
+        NetworkServer.Spawn(_spawner);
+    }
     public override void OnServerAddPlayer(NetworkConnection conn)
     {
        // Debug.Log("add player");
         base.OnServerAddPlayer(conn);
+        //_spawner.gameObject.GetComponent<NetworkIdentity>().AssignClientAuthority(conn);
         Debug.Log("server" + conn.identity);
-
     }
     public override void OnServerChangeScene(string newSceneName)
     {
