@@ -25,7 +25,7 @@ public class CurrencyManager : MonoBehaviour
             thePlayer.AddCurrency(amount);
             SoundManager.PlaySound(SoundManager.Sound.PickupCurrency);
             thePlayer.GetComponent<PlayerCombat>().DisplayCoin(amount);
-            thePlayer.GetComponent<PlayerCombat>().CmdDestroyObjects(this.gameObject); 
+            thePlayer.GetComponent<PlayerCombat>().CmdDestroyObjects(this.gameObject);
         }
     }
 

@@ -63,7 +63,7 @@ public class StatsModifier : MonoBehaviour
     }
     private void Update()
 	{
-        if (_character is null)
+        if (_character == null)
             return;
 
          if (tempStrPointHolder > 0 || tempDefPointHolder > 0 || tempIntPointHolder > 0 || tempVitPointHolder > 0)
@@ -85,7 +85,7 @@ public class StatsModifier : MonoBehaviour
 
 	void FixedUpdate()
     {
-        if (_character is null)
+        if (_character == null)
             return;
 
         statPointsValue.text = _character.statPoints.ToString();

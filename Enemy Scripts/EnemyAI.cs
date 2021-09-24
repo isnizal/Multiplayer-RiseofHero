@@ -22,7 +22,7 @@ public class EnemyAI : NetworkBehaviour
         }
 
     }
-    public Transform target;
+    public Transform target = null;
     public float moveSpeed;
     public float chaseRadius;
     public float attackRadius;
@@ -41,7 +41,8 @@ public class EnemyAI : NetworkBehaviour
 
     //private Animator _animator;
 
-    private NetworkRigidbody2D _netRigidbody2D;
+    public NetworkRigidbody2D _netRigidbody2D;
+    public Mirror.NetworkTransform _netTransform;
     private NetworkAnimator _netAnimator;
     //private GameObject thePlayer;
 
@@ -51,6 +52,7 @@ public class EnemyAI : NetworkBehaviour
         _netRigidbody2D.target = GetComponent<Rigidbody2D>();
         _netAnimator = GetComponent<NetworkAnimator>();
         _netAnimator.animator = GetComponent<Animator>();
+        _netTransform = GetComponent<Mirror.NetworkTransform>();
 
        // thePlayer = GameObject.FindWithTag("Player");
        // if (thePlayer != null)
@@ -71,8 +73,6 @@ public class EnemyAI : NetworkBehaviour
     }   
 
     public bool freezing = false;
-    private Vector2 clientPosition;
-    private Vector2 serverPosition;
     private void Update()
     {
         if (isServer)
@@ -86,7 +86,7 @@ public class EnemyAI : NetworkBehaviour
                     _netAnimator.animator.SetFloat("moveX", _netRigidbody2D.target.velocity.x);
                     _netAnimator.animator.SetFloat("moveY", _netRigidbody2D.target.velocity.y);
                     _netAnimator.animator.SetBool("moving", true);
-    
+
                 }
                 else
                 {
@@ -96,32 +96,14 @@ public class EnemyAI : NetworkBehaviour
                 //Debug.Log(serverPosition + "server");
             }
         }
-        //if(isClient)
-        //{
-        //    if (!freezing)
-        //    {
-        //
-        //        EnemyFollow();
-        //        if (_netRigidbody2D.target.velocity != Vector2.zero)
-        //        {
-        //            _netAnimator.animator.SetFloat("moveX", _netRigidbody2D.target.velocity.x);
-        //            _netAnimator.animator.SetFloat("moveY", _netRigidbody2D.target.velocity.y);
-        //            _netAnimator.animator.SetBool("moving", true);
-        //
-        //        }
-        //        else
-        //        {
-        //            _netAnimator.animator.SetBool("moving", false);
-        //        }
-        //        clientPosition = this.transform.position;
-        //        //Debug.Log(clientPosition + "client");
-        //    }
-        //}
-        //if (isServer)
-        //{
-        //    if (clientPosition != serverPosition)
-        //        clientPosition = serverPosition;
-        //}
+        else if (isClient)
+        {
+            if (newMove)
+            {
+               target.gameObject.GetComponent<PlayerCombat>().CmdMoveToThis(this.gameObject,moveSpeed);
+                
+            }
+        }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -131,7 +113,17 @@ public class EnemyAI : NetworkBehaviour
             if (!collision.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
                 return;
 
+            collision.gameObject.GetComponent<PlayerCombat>().CmdEnemyRigidbody2D(this.gameObject,this.transform.position);
             target = collision.gameObject.transform;
+        }
+    }
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            if (!collision.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
+                return;
+            collision.gameObject.GetComponent<PlayerCombat>().CmdUnEnemyRigidbody2D(this.gameObject,this.transform.position);
         }
     }
     IEnumerator FreezeCooldown(float value)
@@ -149,46 +141,32 @@ public class EnemyAI : NetworkBehaviour
     [Server]
     void EnemyFollow()
     {
-        if (target == null)
+        if (!target)
+        {
             FreeRoam();
-        //else
-        //{
-        //    if (Vector3.Distance(target.position, transform.position) <= chaseRadius && Vector3.Distance(target.position, transform.position) > attackRadius)
-        //    {
-        //        transform.position = Vector3.MoveTowards(transform.position, target.position, moveSpeed * Time.deltaTime);
-        //    }
-        //    if (Vector3.Distance(target.position, transform.position) > chaseRadius)
-        //    {
-        //        FreeRoam();
-        //    }
-        //}
-    }
+        }
+        else
+        {
+            Mirror.NetworkTransform targetTransform = target.GetComponent<Mirror.NetworkTransform>();
+            Mirror.NetworkTransform currentTransform = this.GetComponent<Mirror.NetworkTransform>();
+            if (Vector3.Distance(targetTransform.transform.position, currentTransform.transform.position) <= chaseRadius && Vector3.Distance(targetTransform
+                .transform.position, currentTransform.transform.position) > attackRadius)
+            {
 
-    [Command(requiresAuthority = false)]
-    public void CmdEnemyMoving(Vector3 _moveDirection,Vector2 newPos)
-    {
-        _netRigidbody2D.target.velocity = _moveDirection;
-        this.transform.position = newPos;
-        RpcEnemyMoving(_moveDirection,newPos);
+                newMove = true;
+
+            }
+            else
+                newMove = false;
+            if (Vector3.Distance(targetTransform.transform.position, currentTransform.transform.position) > chaseRadius)
+            {
+                target = null;
+            }
+        }
     }
-    [ClientRpc]
-    public void RpcEnemyMoving(Vector3 _moveDirection,Vector2 newPos)
-    {
-        this.transform.position = newPos;
-        _netRigidbody2D.target.velocity = _moveDirection;
-    
-    }
-    [Command(requiresAuthority = false)]
-    public void CmdEnemyNotMoving()
-    {
-        _netRigidbody2D.target.velocity = Vector2.zero;
-        RpcEnemyNotMoving();
-    }
-    [ClientRpc]
-    public void RpcEnemyNotMoving()
-    {
-        _netRigidbody2D.target.velocity = Vector2.zero;
-    }
+    [SyncVar]
+    public bool newMove = false;
+
     [Server]
     void FreeRoam()
     {
@@ -196,8 +174,6 @@ public class EnemyAI : NetworkBehaviour
         {
             if (moving)
             {
-                if (isClient)
-                    return;
                 timeToMoveCounter -= Time.deltaTime;
                 _netRigidbody2D.target.velocity = moveDirection;
                 if (timeToMoveCounter < 0f)
@@ -209,9 +185,6 @@ public class EnemyAI : NetworkBehaviour
             }
             else
             {
-                if (isClient)
-                    return;
-                Debug.Log("move into new direction");
                 timeBetweenMoveCounter -= Time.deltaTime;
                 _netRigidbody2D.target.velocity = Vector2.zero;
                 if (timeBetweenMoveCounter < 0f)
@@ -222,59 +195,6 @@ public class EnemyAI : NetworkBehaviour
                 }
 
             }
-        }
-    }
-
-
-    [Command(requiresAuthority = false)]
-    public void CmdMoving()
-    {
-        timeToMoveCounter -= Time.deltaTime;
-        _netRigidbody2D.target.velocity = moveDirection;
-        serverPosition = this.transform.position;
-        if (timeToMoveCounter < 0f)
-        {
-            moving = false;
-            timeBetweenMoveCounter = Random.Range(timeBetweenMove * 0.75f, timeBetweenMove * 1.25f);
-            RpcMoving(timeBetweenMoveCounter,serverPosition);
-        }
-    }
-    [ClientRpc]
-    public void RpcMoving(float timeBetweenCounter,Vector2 serverPos)
-    {
-        timeToMoveCounter -= Time.deltaTime;
-        _netRigidbody2D.target.velocity = moveDirection;
-        this.transform.position = serverPos;
-        clientPosition = this.transform.position;
-        if (timeToMoveCounter < 0f)
-        {
-            moving = false;
-            timeBetweenMoveCounter = timeBetweenCounter;
-        }
-    }
-    [Command(requiresAuthority = false)]
-    public void CmdNotMoving()
-    {
-        timeBetweenMoveCounter -= Time.deltaTime;
-        _netRigidbody2D.target.velocity = Vector2.zero;
-        if (timeBetweenMoveCounter < 0f)
-        {
-            moving = true;
-            timeToMoveCounter = Random.Range(timeToMove * 0.75f, timeToMove * 1.25f);
-            moveDirection = new Vector3(Random.Range(-1f, 1f) * moveSpeed, Random.Range(-1f, 1f) * moveSpeed, 0f);
-            RpcNotMoving(moveDirection,timeToMoveCounter);
-        }
-    }
-    [ClientRpc]
-    public void RpcNotMoving(Vector3 newDirection, float newMoveCounter)
-    {
-        timeBetweenMoveCounter -= Time.deltaTime;
-        _netRigidbody2D.target.velocity = Vector2.zero;
-        if (timeBetweenMoveCounter < 0f)
-        {
-            moving = true;
-            timeToMoveCounter = newMoveCounter;
-            moveDirection = newDirection;
         }
     }
 	private void OnDrawGizmosSelected()

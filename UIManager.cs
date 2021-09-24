@@ -57,8 +57,6 @@ public class UIManager : MonoBehaviour
             GetComponent<AchievementManager>().AchievementManagerLoad(player);
             GetComponent<InventoryInput>().LoadInventoryInput(player);
             _Character = player;
-            if (_Character is null)
-                return;
             levelValue = GameObject.Find("LevelValue").GetComponent<TextMeshProUGUI>();
             premiumValue = GameObject.Find("PremiumValue").GetComponent<TextMeshProUGUI>();
             copperValue = GameObject.Find("CopperValue").GetComponent<TextMeshProUGUI>();
@@ -83,11 +81,11 @@ public class UIManager : MonoBehaviour
     void Update()
     {
         
-        if (_Character is null)
+        if (_Character == null)
             return;
         if (_Character.isLocalPlayer)
         {
-            if (hpSlider is null)
+            if (hpSlider == null)
                 return;
             UpdateHealth();
             UpdateMP();
@@ -100,7 +98,7 @@ public class UIManager : MonoBehaviour
             premiumValue.text = "" + _Character.premiumCurrency;
             copperValue.text = "" + _Character.copperCurrency;
         }
-        if (chatInput is null)
+        if (chatInput == null)
             return;
         if (chatInput.isFocused)
         {

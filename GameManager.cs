@@ -135,7 +135,7 @@ public class GameManager :MonoBehaviour
 	private SpellTree _spellTree;
     private void Update()
 	{
-		if (_spellTree  is null)
+		if (_spellTree  == null)
 			return;
 
 		CheckFireballSpellActive();

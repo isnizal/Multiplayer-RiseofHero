@@ -73,22 +73,9 @@ public class Spawner : NetworkBehaviour
         if (isServer)
         {
             InvokeRepeating(nameof(AseaEnemySpawn), timeBetweenSpawn, spawnDelay);
-            //Invoke(nameof(AseaEnemySpawn), spawnDelay);
         }
 
     }
-    public override void OnStartClient()
-    {
-        base.OnStartClient();
-        Debug.Log("spawner start client");
-
-    }
-    public override void OnStartAuthority()
-    {
-        base.OnStartAuthority();
-        Debug.Log("spawner start authority");
-    }
-    [Server]
     void AseaEnemySpawn()
     {
         if (aseaEnemyCounter == aseaMaxEnemyCounter)
@@ -97,21 +84,16 @@ public class Spawner : NetworkBehaviour
         {
             var spawnEnemy = Random.Range(0, aseaEnemyPrefab.Length);
             var spawnLocation = Random.Range(0, aseaSpawnPoints.Length);
-             RpcAseaEnemySpawn(spawnEnemy, spawnLocation);
+
+            RpcAseaEnemySpawn(spawnEnemy, spawnLocation);
         }
     }
-    [Command(requiresAuthority = false)]
-    public void CmdAseaEnemySpawn(int spawnEnemy, int spawnLocation)
-    {
-       //RpcAseaEnemySpawn(spawnEnemy, spawnLocation);
-    }
-    [Server]
+
     public void RpcAseaEnemySpawn(int spawnEnemy,int spawnLocation)
     {
         newEnemyClone = Instantiate(aseaEnemyPrefab[spawnEnemy], aseaSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
         NetworkServer.Spawn(newEnemyClone);
-        Debug.Log("spawning");
-        //newEnemyClone.transform.parent = enemyHolder;
+        
         aseaEnemyCounter++;
     }
     void EfosEnemySpawn()

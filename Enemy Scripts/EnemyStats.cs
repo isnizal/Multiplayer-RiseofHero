@@ -48,7 +48,7 @@ public class EnemyStats : NetworkBehaviour
 
     void FixedUpdate()
     {
-        if (isClient)
+        if (isServer)
         {
             EHealthCheck();
         }
@@ -60,20 +60,21 @@ public class EnemyStats : NetworkBehaviour
     }
     public void ETakeDamage(int eDamageToGive,GameObject player)
 	{
-        _levelSystem = player.GetComponent<LevelSystem>();
+
         if (isClient)
         {
-            CmdETakeDamage(eDamageToGive);
+            CmdETakeDamage(eDamageToGive,player);
         }
         SoundManager.PlaySound(SoundManager.Sound.EnemyHit);
     }
     [Command(requiresAuthority = false)]
-    public void CmdETakeDamage(int eDamageToGive)
+    public void CmdETakeDamage(int eDamageToGive,GameObject player)
     {
         enemyCurrentHP -= eDamageToGive;
+        _levelSystem = player.GetComponent<LevelSystem>();
     }
 
-    [Client]
+    [Server]
     void EHealthCheck()
 	{
         if (enemyCurrentHP <= 0)
@@ -164,19 +165,23 @@ public class EnemyStats : NetworkBehaviour
 	{
         if(lootTables != null)
 		{
-            CmdSpawnLootTables();
-		}
+            GameObject current = lootTables.LootItems();
+            lootItem = current;
+            CmdSpawnLoot(lootItem);
+        }
 	}
-    [Command(requiresAuthority = false)]
-    public void CmdSpawnLootTables()
-    {
-        GameObject current = lootTables.LootItems();
-        if (current is null)
+    public void CmdSpawnLoot(GameObject lootItem)
+	{
+        if (lootItem == null)
+        {
+            NetworkServer.Destroy(this.gameObject);
             return;
-        var objectSpawn = Instantiate(current, transform.position, Quaternion.identity);
-        NetworkServer.Spawn(objectSpawn);
-        NetworkServer.Destroy(this.gameObject);
-    }
+        }
+        var objectSpawn = Instantiate(lootItem, this.transform.position, Quaternion.identity);
+		NetworkServer.Spawn(objectSpawn);
+		NetworkServer.Destroy(this.gameObject);
+	}
+    [Server]
     public void Death()
 	{
         SoundManager.PlaySound(SoundManager.Sound.EnemyDie);

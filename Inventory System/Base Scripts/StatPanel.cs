@@ -25,7 +25,7 @@ public class StatPanel : MonoBehaviour
 	}
 	private void Update()
 	{
-		if (_character is null)
+		if (_character == null)
 			return;
 
 		if (_character.isLocalPlayer)

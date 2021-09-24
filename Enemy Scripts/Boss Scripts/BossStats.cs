@@ -40,10 +40,7 @@ public class BossStats : NetworkBehaviour
 
     void FixedUpdate()
     {
-        if (base.hasAuthority)
-        {
-            EHealthCheck();
-        }
+        EHealthCheck();
     }
     private LevelSystem _levelSystem;
     public void ETakeDamage(int eDamageToGive,GameObject other)
@@ -60,7 +57,9 @@ public class BossStats : NetworkBehaviour
             GetComponent<BossAI>().startWaitTime = 1;
         }
         if (enemyCurrentHP <= 0)
+        {
             Death();
+        }
     }
 
     private void OnCollisionEnter2D(Collision2D other)
@@ -86,7 +85,7 @@ public class BossStats : NetworkBehaviour
             }
         }
     }
-    [Command]
+    [Command(requiresAuthority =false)]
     public void CmdNoDamage(int totalDamage, Character other)
     {
         var missclone = Instantiate(damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
@@ -137,7 +136,10 @@ public class BossStats : NetworkBehaviour
         DropLoot();
         GameManager.GameManagerInstance.devilQueenDefeated = 1;
         //GameManager.GameManagerInstance.devilQueenSpawned = false;
-        _levelSystem.gameObject.GetComponent<PlayerCombat>().CmdDestroyObjects(this.gameObject);
+        if (isClient)
+        {
+            _levelSystem.gameObject.GetComponent<PlayerCombat>().CmdDestroyObjects(this.gameObject);
+        }
     }
 
 }

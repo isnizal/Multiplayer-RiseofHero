@@ -424,7 +424,65 @@ public class PlayerCombat : NetworkBehaviour
 	{
 		SetCurrentSpell(3);
 	}
+	[Command(requiresAuthority = false)]
+	public void CmdEnemyRigidbody2D(GameObject enemy,Vector2 newPos)
+	{
+		if (enemy == null)
+			return;
+		EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
+		enemyAI._netRigidbody2D.syncVelocity = false;
+		enemyAI._netRigidbody2D.clearVelocity = true;
+		enemyAI._netRigidbody2D.target.constraints = RigidbodyConstraints2D.FreezeAll;
+		enemyAI.target = this.gameObject.transform;
+		
+		RpcEnemyRigidbody2D(enemy,newPos);
+	}
+	[ClientRpc]
+	public void RpcEnemyRigidbody2D(GameObject enemy,Vector2 newPos)
+	{
+		if (enemy == null)
+			return;
+		EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
+		enemyAI._netRigidbody2D.syncVelocity = false;
+		enemyAI._netRigidbody2D.clearVelocity = true;
+		enemyAI._netRigidbody2D.target.constraints = RigidbodyConstraints2D.FreezeAll;
+		enemyAI.target = this.gameObject.transform;
+	}
+	[Command(requiresAuthority = false)]
+	public void CmdUnEnemyRigidbody2D(GameObject enemy,Vector2 newPos)
+	{
+		if (enemy == null)
+			return;
+		EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
+		enemyAI._netRigidbody2D.syncVelocity = true;
+		enemyAI._netRigidbody2D.clearVelocity = false;
+		enemyAI._netRigidbody2D.target.constraints = RigidbodyConstraints2D.None;
+		RpcUnEnemyRigidbody2D(enemy,newPos);
+	}
+	[ClientRpc]
+	public void RpcUnEnemyRigidbody2D(GameObject enemy,Vector2 newPos)
+	{
+		if (enemy == null)
+			return; 
+		EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
+		enemyAI._netRigidbody2D.syncVelocity = true;
+		enemyAI._netRigidbody2D.clearVelocity = false;
+		enemyAI._netRigidbody2D.target.constraints = RigidbodyConstraints2D.None;
+	}
 
+
+	[Command(requiresAuthority = false)]
+	public void CmdMoveToThis(GameObject enemy,float moveSpeed)
+	{
+		Mirror.NetworkTransform enemyPos = enemy.GetComponent<NetworkTransform>();
+		enemyPos.transform.position = Vector3.MoveTowards(enemyPos.transform.position, transform.position, moveSpeed * Time.deltaTime);
+		//RpcMoveToThis(enemyPos, moveSpeed);
+	}
+	[ClientRpc]
+	public void RpcMoveToThis(NetworkTransform enemy,float moveSpeed)
+	{
+		enemy.transform.position = Vector3.MoveTowards(enemy.transform.position, transform.position, moveSpeed * Time.deltaTime);
+	}
 	public void CheckSpellCost()
 	{
 		if (_character.Intelligence.BaseValue > 0)
