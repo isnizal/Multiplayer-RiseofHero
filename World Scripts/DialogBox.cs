@@ -1,6 +1,6 @@
 using UnityEngine;
 using Mirror;
-public class DialogBox : MonoBehaviour
+public class DialogBox : NetworkBehaviour
 {
 	public static DialogBox instance;
 	public static DialogBox DialogInstance
@@ -30,49 +30,43 @@ public class DialogBox : MonoBehaviour
 
 	void Update()
 	{
-		if (Input.GetKeyUp(KeyCode.Space) && inRange && !_gameManager.isHandheld)
-		{
-			if (!_gameManager.dialogBox.activeInHierarchy)
+        if (isClient) {
+			if (Input.GetKeyUp(KeyCode.Space) && inRange && !_gameManager.isHandheld)
 			{
-				if (profession == Profession.Patrol)
+				if (!_gameManager.dialogBox.activeInHierarchy)
 				{
-					GetComponent<NPCMovement>().ActivateTalkCondition();
-					_gameManager.dialogBox.SetActive(true);
-					_gameManager.DialogBox(dialogMessage);
+					if (profession == Profession.Patrol)
+					{
+						GetComponent<NPCMovement>().ActivateTalkCondition();
+						_gameManager.dialogBox.SetActive(true);
+						_gameManager.DialogBox(dialogMessage);
+					}
+					if (profession == Profession.Sign)
+					{
+
+						_gameManager.dialogBox.SetActive(true);
+						_gameManager.DialogBox(dialogMessage);
+					}
 				}
-				if (profession == Profession.Sign)
+				else
 				{
 
-					_gameManager.dialogBox.SetActive(true);
-					_gameManager.DialogBox(dialogMessage);
-				}
-			}
-			else
-			{
-				if (profession == Profession.Patrol)
-				{
-					GetComponent<NPCMovement>().DeactivateTalkCondition();
-					_gameManager.dialogBox.SetActive(false);
-				}
-				if (profession == Profession.Sign)
-				{
-					_gameManager.dialogBox.SetActive(false);
 				}
 			}
 
 		}
 
 	}
-	private void OnTriggerStay2D(Collider2D other)
-	{
-		if (other.gameObject.CompareTag("Player") && !other.isTrigger)
+    private void OnCollisionEnter2D(Collision2D other)
+    {
+		if (other.gameObject.CompareTag("Player") && !other.collider.isTrigger)
 		{
 			if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
 				return;
 			inRange = true;
 			if (_gameManager.isHandheld)
 			{
-				PlayerMovement playerMovement = other.GetComponent<PlayerMovement>();
+				PlayerMovement playerMovement = other.gameObject.GetComponent<PlayerMovement>();
 				playerMovement.canReadSign = true;
 				playerMovement.actionText.text = "Read";
 				if (playerMovement.pressRead)
@@ -83,20 +77,28 @@ public class DialogBox : MonoBehaviour
 		}
 	}
 
-	private void OnTriggerExit2D(Collider2D other)
+	private void OnCollisionExit2D(Collision2D other)
 	{
-		if (other.gameObject.CompareTag("Player") && !other.isTrigger)
+		if (other.gameObject.CompareTag("Player") && !other.collider.isTrigger)
 		{
 			if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
 				return;
 			inRange = false;
 			if (_gameManager.isHandheld)
 			{
-				PlayerMovement playerMovement = other.GetComponent<PlayerMovement>();
+				PlayerMovement playerMovement = other.gameObject.GetComponent<PlayerMovement>();
 				playerMovement.canReadSign = false;
 				playerMovement.actionText.text = null;
 			}
-			_gameManager.dialogBox.SetActive(false);
+			if (profession == Profession.Patrol)
+			{
+				GetComponent<NPCMovement>().DeactivateTalkCondition();
+				_gameManager.dialogBox.SetActive(false);
+			}
+			if (profession == Profession.Sign)
+			{
+				_gameManager.dialogBox.SetActive(false);
+			}
 		}
 	}
 

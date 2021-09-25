@@ -1,7 +1,8 @@
 using System;
 using UnityEngine;
+using Mirror;
 
-public class LevelSystem : MonoBehaviour
+public class LevelSystem : NetworkBehaviour
 {
     public static LevelSystem instance;
 	public static LevelSystem LevelInstance
@@ -37,10 +38,13 @@ public class LevelSystem : MonoBehaviour
 	}
 	private void Update()
 	{
-		if (_character is null)
-			return;
-		expToLevel = toLevelUp[currentLevel];
-		CheckLevel();
+		if (hasAuthority)
+		{
+			if (_character is null)
+				return;
+			expToLevel = toLevelUp[currentLevel];
+			CheckLevel();
+		}
 	}
 
 	public void CheckLevel()
@@ -82,10 +86,18 @@ public class LevelSystem : MonoBehaviour
 		}
 	}	
 
+	[Server]
 	public void AddExp(int expToAdd)
 	{
-		currentExp += expToAdd;
+		NetworkConnection net = GetComponent<NetworkIdentity>().connectionToClient;
+		TargetAddExp(net, expToAdd);
 	}
+	[TargetRpc]
+	public void TargetAddExp(NetworkConnection target, int expToAdd)
+	{
+		target.identity.gameObject.GetComponent<LevelSystem>().currentExp += expToAdd;
+	}
+
 
 	void StatPoints()
 	{

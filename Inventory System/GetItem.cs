@@ -34,7 +34,6 @@ public class GetItem : MonoBehaviour, ISerializationCallbackReceiver
 	{
 		if (itemToPickUp != null && inRange == true)
 		{
-			Debug.Log("pick up item" + itemToPickUp);
 			SoundManager.PlaySound(SoundManager.Sound.PickupItem);
 			inventory.AddItem(itemToPickUp.GetCopy());
 			_playerCombat.DisplayInformation(itemToPickUp.GetCopy());

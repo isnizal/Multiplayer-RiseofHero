@@ -7,25 +7,26 @@ public class HealItemEffect : UsableItemEffect
 
 	public override void ExecuteEffect(UsableItem usableItem, Character character)
 	{
-		PlayerCombat.CombatInstance.DisableSelfRegenHp();
+		PlayerCombat _playerCombat = character.gameObject.GetComponent<PlayerCombat>();
+		_playerCombat.DisableSelfRegenHp();
 		if (character.newHealth < character.MaxHealth)
 		{
-			character.newHealth += HealAmount;
-			character.Health += HealAmount;
+			character.ExecuteNewHealth(HealAmount);
+			character.ExecuteHealth(HealAmount);
 
-			UIManager.Instance.UpdateHealth();
+			character.uiManager.UpdateHealth();
 			if (character.newHealth > character.MaxHealth || character.Health > character.MaxHealth)
 			{
-				character.newHealth = character.MaxHealth;
-				character.Health = character.MaxHealth;
-				UIManager.Instance.UpdateHealth();
+				character.ExecuteNewHealth(character.MaxHealth);
+				character.ExecuteHealth(character.MaxHealth);
+				character.uiManager.UpdateHealth();
 			}
 		}
 		else if (character.newHealth == character.MaxHealth || character.Health == character.MaxHealth)
 		{
-			character.Health = character.MaxHealth;
-			character.newHealth = character.MaxHealth;
-			UIManager.Instance.UpdateHealth();
+			character.ExecuteNewHealth(character.MaxHealth);
+			character.ExecuteHealth(character.MaxHealth);
+			character.uiManager.UpdateHealth();
 		}
 	}
 	

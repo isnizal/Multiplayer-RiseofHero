@@ -53,17 +53,21 @@ namespace DailyRewardSystem
         [SerializeField] double nextRewardDelay = 3600f;
         [SerializeField] float checkForRewardDelay = 1f;
 
-        private Inventory inventory;
+        private Inventory _inventory;
         private int nextRewardIndex;
         private bool isRewardReady = false;
+        private Character _character;
+        private LevelSystem _levelSystem;
 
-        void Start()
+       public void InitializeDailyRewards(Character character)
         {
+            _character = character;
+            _levelSystem = _character.gameObject.GetComponent<LevelSystem>();
+            _inventory = _character.Inventory;
             Initialize();
             StopAllCoroutines();
             StartCoroutine(CheckForRewards());
-            if (inventory == null)
-                inventory = FindObjectOfType<Inventory>();
+
         }
 
         void Initialize()
@@ -146,21 +150,21 @@ namespace DailyRewardSystem
             {
                 Debug.Log(reward.Type.ToString() + reward.Amount);
                 GameData.CopperCoins += reward.Amount;
-                Character.MyInstance.copperCurrency += reward.Amount;
+                _character.copperCurrency += reward.Amount;
                 isRewardReady = false;
             }
             else if (reward.Type == RewardType.Experience)
             {
                 Debug.Log(reward.Type.ToString() + reward.Amount);
                 GameData.Experience += reward.Amount;
-                LevelSystem.LevelInstance.AddExp(reward.Amount);
+                _levelSystem.AddExp(reward.Amount);
                 isRewardReady = false;
             }
             else if(reward.Type == RewardType.CopperCoins)
             {
                 Debug.Log(reward.Type.ToString() + reward.Amount);
                 GameData.Gems += reward.Amount;
-                Character.MyInstance.premiumCurrency += reward.Amount;
+                _character.premiumCurrency += reward.Amount;
 
                 isRewardReady = false;
             }
@@ -168,7 +172,7 @@ namespace DailyRewardSystem
             {
                 Debug.Log(reward.Type.ToString() + reward.Amount);
                 GameData.Item += reward.Amount;
-                inventory.AddItem(rewardItemSO.GetCopy());
+                _inventory.AddItem(rewardItemSO.GetCopy());
                 isRewardReady = false;
             }
             //nextRewardIndex++;

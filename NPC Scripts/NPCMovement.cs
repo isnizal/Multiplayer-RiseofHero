@@ -2,33 +2,81 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Mirror;
 
-public class NPCMovement : MonoBehaviour
+[RequireComponent(typeof(NetworkTransform))]
+[RequireComponent(typeof(NetworkAnimator))]
+[RequireComponent(typeof(Mirror.Experimental.NetworkRigidbody2D))]
+public class NPCMovement : NetworkBehaviour
 {
     private enum NpcCondition {Idle, Walk, Talking};
+    [SyncVar]
     private NpcCondition currentConditionNPC;
-    private Rigidbody2D rb2D;
+    //private Rigidbody2D rb2D;
+    private Mirror.Experimental.NetworkRigidbody2D _netrb2D;
+    private NetworkTransform _netTransform;
+    private NetworkAnimator _netAnimator;
+    [SyncVar]
     private bool isTalking = false;
-    private Animator anim;
+    //private Animator anim;
 
     [FormerlySerializedAs("movePointsRight")]
     public Transform[] movePointsPos;
     public int randomPosRight;
     public int randomPosUp;
     public float moveSpeed;
-    public bool isIdle = false;
+    
+    [SyncVar]public bool isIdle = false;
+
+
     public int whereMove;
     public bool moveRight;
     public bool moveLeft;
     public bool moveUp;
     public bool moveDown;
 
-
     // Start is called before the first frame update
     void Start()
     {
-        anim = GetComponent<Animator>();
-        rb2D = GetComponent<Rigidbody2D>();
+        if (isServer)
+        {
+
+            //anim = GetComponent<Animator>();
+            //rb2D = GetComponent<Rigidbody2D>();
+
+
+        }
+        //if (isClient)
+        //{
+        //    //anim = GetComponent<Animator>();
+        //    //rb2D = GetComponent<Rigidbody2D>();
+        //    currentConditionNPC = NpcCondition.Walk;
+        //    randomPosRight = Random.Range(0, movePointsPos.Length);
+        //    whereMove = 0;
+        //    isTalking = false;
+        //    isIdle = false;
+        //    moveRight = true;
+        //    movePointsPos = new Transform[5];
+        //    _patrolPos = GameObject.Find("PatrolPos(Clone)");
+        //    for (int i = 0; i < movePointsPos.Length; i++)
+        //    {
+        //        movePointsPos[i] = _patrolPos.gameObject.transform.GetChild(i).transform;
+        //    }
+        //}
+
+    }
+    private GameObject _patrolPos;
+    [Server]
+    public void AssignMovePointPos(GameObject _patrolPos)
+    {
+        movePointsPos = new Transform[5];
+        for (int i = 0; i < movePointsPos.Length; i++)
+        {
+            movePointsPos[i] = _patrolPos.gameObject.transform.GetChild(i).transform;
+        }
+        _netrb2D = GetComponent<Mirror.Experimental.NetworkRigidbody2D>();
+        _netTransform = GetComponent<NetworkTransform>();
+        _netAnimator = GetComponent<NetworkAnimator>();
         currentConditionNPC = NpcCondition.Walk;
         randomPosRight = Random.Range(0, movePointsPos.Length);
         whereMove = 0;
@@ -40,92 +88,105 @@ public class NPCMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (currentConditionNPC == NpcCondition.Walk)
+        if (isServer)
         {
-            if (!isTalking && !isIdle)
+            if (currentConditionNPC == NpcCondition.Walk)
             {
-                if (whereMove == 0)
+                if (!isTalking && !isIdle)
                 {
+                    if (whereMove == 0)
+                    {
+                        _netTransform = GetComponent<NetworkTransform>();
+                        if (_netTransform.transform.position.x != movePointsPos[randomPosRight].transform.position.x)
+                        {
+                            // Debug.Log(movePointsRight[randomPosRight].transform.position.x);
+                            if (moveRight)
+                            {
+                                _netrb2D.target.velocity = new Vector2(moveSpeed, 0);
+                            }
+                            else if (moveLeft)
+                            {
 
-                    if (transform.position.x != movePointsPos[randomPosRight].transform.position.x)
-                    {
-                        // Debug.Log(movePointsRight[randomPosRight].transform.position.x);
-                        if (moveRight)
-                        {
-                            rb2D.velocity = new Vector2(moveSpeed, 0);
+                                _netrb2D.target.velocity = new Vector2(-moveSpeed, 0);
+                            }
                         }
-                        else if (moveLeft)
-                        {
- 
-                            rb2D.velocity = new Vector2(-moveSpeed, 0);
-                        }
+                        // else
+                        // {
+                        //     rigidbody2D.velocity = Vector2.zero;
+                        // }
                     }
-                   // else
-                   // {
-                   //     rigidbody2D.velocity = Vector2.zero;
-                   // }
-                }
-                else if (whereMove == 1)
-                {
-                    if (transform.position.y != movePointsPos[randomPosUp].transform.position.y)
+                    else if (whereMove == 1)
                     {
-                        if (moveUp)
+                        _netTransform = GetComponent<NetworkTransform>();
+                        if (_netTransform.transform.position.y != movePointsPos[randomPosUp].transform.position.y)
                         {
-                            rb2D.velocity = new Vector2(0, moveSpeed);
+                            if (moveUp)
+                            {
+                                _netrb2D.target.velocity = new Vector2(0, moveSpeed);
+                            }
+                            else if (moveDown)
+                            {
+                                _netrb2D.target.velocity = new Vector2(0, -moveSpeed);
+                            }
                         }
-                        else if (moveDown)
-                        {
-                            rb2D.velocity = new Vector2(0, -moveSpeed);
-                        }
+                        // else
+                        // {
+                        //     rigidbody2D.velocity = Vector2.zero;
+                        // }
                     }
-                   // else
-                   // {
-                   //     rigidbody2D.velocity = Vector2.zero;
-                   // }
                 }
             }
+            else if (currentConditionNPC == NpcCondition.Talking)
+            {
+                isTalking = true;
+                StartCoroutine(SetToWalk());
+            }
+            else if (currentConditionNPC == NpcCondition.Idle)
+            {
+                isIdle = true;
+                StartCoroutine(SetToWalk());
+            }
+            AnimationUpdate();
+            InitializeMove();
         }
-        else if (currentConditionNPC == NpcCondition.Talking)
-        {
-            isTalking = true;
-        }
-        else if (currentConditionNPC == NpcCondition.Idle)
-        {
-            isIdle = true;
-            
-        }
-        AnimationUpdate();
-        InitializeMove();
     }
+    private IEnumerator SetToWalk()
+    {
+        yield return new WaitForSeconds(15f);
+        isTalking = false;
+        isIdle = false;
+        currentConditionNPC = NpcCondition.Walk;
+    }
+    [Server]
     private void AnimationUpdate()
     {
         if (moveRight)
         {
             if (isIdle)
             {
-                rb2D.velocity = Vector2.zero;
-                anim.SetBool("isTalk", false);
-                anim.SetBool("isWalk", false);
-                anim.SetBool("isIdle", true);
+                _netrb2D.target.velocity = Vector2.zero;
+                _netAnimator.animator.SetBool("isTalk", false);
+                _netAnimator.animator.SetBool("isWalk", false);
+                _netAnimator.animator.SetBool("isIdle", true);
 
-                anim.SetFloat("IdleX", 1);
-                anim.SetFloat("IdleY", 0);
+                _netAnimator.animator.SetFloat("IdleX", 1);
+                _netAnimator.animator.SetFloat("IdleY", 0);
 
-                anim.SetFloat("TalkX", 0);
-                anim.SetFloat("TalkY", 0);
+                _netAnimator.animator.SetFloat("TalkX", 0);
+                _netAnimator.animator.SetFloat("TalkY", 0);
             }
             else if (isTalking)
             {
-                rb2D.velocity = Vector2.zero;
-                anim.SetBool("isTalk", true);
-                anim.SetBool("isWalk", false);
-                anim.SetBool("isIdle", false);
+                _netrb2D.target.velocity = Vector2.zero;
+                _netAnimator.animator.SetBool("isTalk", true);
+                _netAnimator.animator.SetBool("isWalk", false);
+                _netAnimator.animator.SetBool("isIdle", false);
 
-                anim.SetFloat("IdleX", 0);
-                anim.SetFloat("IdleY", 0);
+                _netAnimator.animator.SetFloat("IdleX", 0);
+                _netAnimator.animator.SetFloat("IdleY", 0);
 
-                anim.SetFloat("TalkX", 1);
-                anim.SetFloat("TalkY", 0);
+                _netAnimator.animator.SetFloat("TalkX", 1);
+                _netAnimator.animator.SetFloat("TalkY", 0);
             }
 
         }
@@ -134,30 +195,30 @@ public class NPCMovement : MonoBehaviour
            
             if (isIdle)
             {
-                rb2D.velocity = Vector2.zero;
-                anim.SetBool("isTalk", false);
-                anim.SetBool("isWalk", false);
-                anim.SetBool("isIdle", true);
+                _netrb2D.target.velocity = Vector2.zero;
+                _netAnimator.animator.SetBool("isTalk", false);
+                _netAnimator.animator.SetBool("isWalk", false);
+                _netAnimator.animator.SetBool("isIdle", true);
 
-                anim.SetFloat("IdleX", -1);
-                anim.SetFloat("IdleY", 0);
+                _netAnimator.animator.SetFloat("IdleX", -1);
+                _netAnimator.animator.SetFloat("IdleY", 0);
 
-                anim.SetFloat("TalkX", 0);
-                anim.SetFloat("TalkY", 0);
+                _netAnimator.animator.SetFloat("TalkX", 0);
+                _netAnimator.animator.SetFloat("TalkY", 0);
             }
             else if (isTalking)
             {
-                rb2D.velocity = Vector2.zero;
-                anim.SetBool("isTalk", true);
+                _netrb2D.target.velocity = Vector2.zero;
+                _netAnimator.animator.SetBool("isTalk", true);
 
-                anim.SetBool("isWalk", false);
-                anim.SetBool("isIdle", false);
+                _netAnimator.animator.SetBool("isWalk", false);
+                _netAnimator.animator.SetBool("isIdle", false);
 
-                anim.SetFloat("IdleX", 0);
-                anim.SetFloat("IdleY", 0);
+                _netAnimator.animator.SetFloat("IdleX", 0);
+                _netAnimator.animator.SetFloat("IdleY", 0);
 
-                anim.SetFloat("TalkX", -1);
-                anim.SetFloat("TalkY", 0);
+                _netAnimator.animator.SetFloat("TalkX", -1);
+                _netAnimator.animator.SetFloat("TalkY", 0);
             }
         }
         else if (moveUp)
@@ -165,29 +226,29 @@ public class NPCMovement : MonoBehaviour
             
             if (isIdle)
             {
-                rb2D.velocity = Vector2.zero;
-                anim.SetBool("isTalk", false);
-                anim.SetBool("isWalk", false);
-                anim.SetBool("isIdle", true);
+                _netrb2D.target.velocity = Vector2.zero;
+                _netAnimator.animator.SetBool("isTalk", false);
+                _netAnimator.animator.SetBool("isWalk", false);
+                _netAnimator.animator.SetBool("isIdle", true);
 
-                anim.SetFloat("IdleX", 0);
-                anim.SetFloat("IdleY", 1);
+                _netAnimator.animator.SetFloat("IdleX", 0);
+                _netAnimator.animator.SetFloat("IdleY", 1);
 
-                anim.SetFloat("TalkX", 0);
-                anim.SetFloat("TalkY", 0);
+                _netAnimator.animator.SetFloat("TalkX", 0);
+                _netAnimator.animator.SetFloat("TalkY", 0);
             }
             else if (isTalking)
             {
-                rb2D.velocity = Vector2.zero;
-                anim.SetBool("isTalk", true);
-                anim.SetBool("isWalk", false);
-                anim.SetBool("isIdle", false);
+                _netrb2D.target.velocity = Vector2.zero;
+                _netAnimator.animator.SetBool("isTalk", true);
+                _netAnimator.animator.SetBool("isWalk", false);
+                _netAnimator.animator.SetBool("isIdle", false);
 
-                anim.SetFloat("IdleX", 0);
-                anim.SetFloat("IdleY", 0);
+                _netAnimator.animator.SetFloat("IdleX", 0);
+                _netAnimator.animator.SetFloat("IdleY", 0);
 
-                anim.SetFloat("TalkX", 0);
-                anim.SetFloat("TalkY", 1);
+                _netAnimator.animator.SetFloat("TalkX", 0);
+                _netAnimator.animator.SetFloat("TalkY", 1);
             }
         }
         else if (moveDown)
@@ -195,61 +256,84 @@ public class NPCMovement : MonoBehaviour
            
             if (isIdle)
             {
-                rb2D.velocity = Vector2.zero;
-                anim.SetBool("isTalk", false);
-                anim.SetBool("isWalk", false);
-                anim.SetBool("isIdle", true);
+                _netrb2D.target.velocity = Vector2.zero;
+                _netAnimator.animator.SetBool("isTalk", false);
+                _netAnimator.animator.SetBool("isWalk", false);
+                _netAnimator.animator.SetBool("isIdle", true);
 
-                anim.SetFloat("IdleX", 0);
-                anim.SetFloat("IdleY", -1);
+                _netAnimator.animator.SetFloat("IdleX", 0);
+                _netAnimator.animator.SetFloat("IdleY", -1);
 
-                anim.SetFloat("TalkX", 0);
-                anim.SetFloat("TalkY", 0);
+                _netAnimator.animator.SetFloat("TalkX", 0);
+                _netAnimator.animator.SetFloat("TalkY", 0);
             }
             else if (isTalking)
             {
-                rb2D.velocity = Vector2.zero;
-                anim.SetBool("isTalk", true);
-                anim.SetBool("isWalk", false);
-                anim.SetBool("isIdle", false);
+                _netrb2D.target.velocity = Vector2.zero;
+                _netAnimator.animator.SetBool("isTalk", true);
+                _netAnimator.animator.SetBool("isWalk", false);
+                _netAnimator.animator.SetBool("isIdle", false);
 
-                anim.SetFloat("IdleX", 0);
-                anim.SetFloat("IdleY", 0);
+                _netAnimator.animator.SetFloat("IdleX", 0);
+                _netAnimator.animator.SetFloat("IdleY", 0);
 
-                anim.SetFloat("TalkX", 0);
-                anim.SetFloat("TalkY", -1);
+                _netAnimator.animator.SetFloat("TalkX", 0);
+                _netAnimator.animator.SetFloat("TalkY", -1);
             }
         }
 
     }
+    [Server]
     private void InitializeMove()
     {
-        anim.SetFloat("moveX", rb2D.velocity.x);
-        anim.SetFloat("moveY", rb2D.velocity.y);
-        if (rb2D.velocity != Vector2.zero)
+        _netAnimator.animator.SetFloat("moveX", _netrb2D.target.velocity.x);
+        _netAnimator.animator.SetFloat("moveY", _netrb2D.target.velocity.y);
+        if (_netrb2D.target.velocity != Vector2.zero)
         {
-            anim.SetBool("isWalk", true);
-            anim.SetBool("isIdle", false);
-            anim.SetBool("isTalk", false);
+            _netAnimator.animator.SetBool("isWalk", true);
+            _netAnimator.animator.SetBool("isIdle", false);
+            _netAnimator.animator.SetBool("isTalk", false);
         }
     }
+    [SyncVar]
     private NpcCondition lastCurrentCondition;
+    [Client]
     public void ActivateTalkCondition()
+    {
+        CmdActivateTalkCondition();
+    }
+    [Command(requiresAuthority = false)]
+    public void CmdActivateTalkCondition()
     {
         lastCurrentCondition = currentConditionNPC;
         currentConditionNPC = NpcCondition.Talking;
     }
-
+    [Client]
     public void DeactivateTalkCondition()
+    {
+        CmdDeactivateTalkCondition();
+    }
+    [Command(requiresAuthority = false)]
+    public void CmdDeactivateTalkCondition()
     {
         isTalking = false;
         isIdle = false;
         currentConditionNPC = lastCurrentCondition;
     }
-
+    public IEnumerator WaitingIdle(float value)
+    {
+        yield return new WaitForSeconds(value);
+        currentConditionNPC = NpcCondition.Walk;
+        isIdle = false;
+    }
     private IEnumerator Waiting;
     public int idleChance = 0;
+    //server
     public void SetRandomCondition()
+    {
+        CmdSetRandomCondition();
+    }
+    public void CmdSetRandomCondition()
     {
         int randomCondition = Random.Range(0, 2);
         if (randomCondition == 0)
@@ -275,6 +359,10 @@ public class NPCMovement : MonoBehaviour
         }
     }
     public void SetRandomPosRight(HitPatrolPos.PatPosType pos)
+    {
+        CmdSetRandomPosRight(pos);
+    }
+    public void CmdSetRandomPosRight(HitPatrolPos.PatPosType pos)
     {
         if (pos == HitPatrolPos.PatPosType.PatLeft)
         {
@@ -323,6 +411,10 @@ public class NPCMovement : MonoBehaviour
     }
     public void SetRandomPosUp(HitPatrolPos.PatPosType posUp,HitPatrolPos.PatPosType posRight)
     {
+        CmdSetRandomPosUp(posUp, posRight);
+    }
+    public void CmdSetRandomPosUp(HitPatrolPos.PatPosType posUp, HitPatrolPos.PatPosType posRight)
+    {
         if (whereMove == 1)
         {
             moveLeft = false;
@@ -338,13 +430,7 @@ public class NPCMovement : MonoBehaviour
             moveUp = true;
             moveDown = false;
         }
-
     }
 
-    public IEnumerator WaitingIdle(float value)
-    {
-        yield return new WaitForSeconds(value);
-        currentConditionNPC = NpcCondition.Walk;
-        isIdle = false;
-    }
+
 }

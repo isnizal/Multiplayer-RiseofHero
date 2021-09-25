@@ -179,8 +179,13 @@ public class EnemyStats : NetworkBehaviour
         }
         var objectSpawn = Instantiate(lootItem, this.transform.position, Quaternion.identity);
 		NetworkServer.Spawn(objectSpawn);
-		NetworkServer.Destroy(this.gameObject);
+        this.gameObject.SetActive(false);
+        Invoke("DestroySelf", 0.7f);
 	}
+    public void DestroySelf()
+    {
+        NetworkServer.Destroy(this.gameObject);
+    }
     [Server]
     public void Death()
 	{

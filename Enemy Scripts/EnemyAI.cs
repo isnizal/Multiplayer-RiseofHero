@@ -7,6 +7,7 @@ using Mirror.Experimental;
 
 [RequireComponent(typeof(NetworkAnimator))]
 [RequireComponent(typeof(NetworkRigidbody2D))]
+[RequireComponent(typeof(Mirror.NetworkTransform))]
 public class EnemyAI : NetworkBehaviour
 {
     public static EnemyAI instance;
@@ -22,6 +23,7 @@ public class EnemyAI : NetworkBehaviour
         }
 
     }
+    [SyncVar]
     public Transform target = null;
     public float moveSpeed;
     public float chaseRadius;
@@ -50,6 +52,9 @@ public class EnemyAI : NetworkBehaviour
     {
         _netRigidbody2D = GetComponent<NetworkRigidbody2D>();
         _netRigidbody2D.target = GetComponent<Rigidbody2D>();
+        _netRigidbody2D.syncAngularVelocity = false;
+        _netRigidbody2D.clearAngularVelocity = true;
+        
         _netAnimator = GetComponent<NetworkAnimator>();
         _netAnimator.animator = GetComponent<Animator>();
         _netTransform = GetComponent<Mirror.NetworkTransform>();
@@ -100,6 +105,8 @@ public class EnemyAI : NetworkBehaviour
         {
             if (newMove)
             {
+                if (target == null)
+                    return;
                target.gameObject.GetComponent<PlayerCombat>().CmdMoveToThis(this.gameObject,moveSpeed);
                 
             }
@@ -112,8 +119,10 @@ public class EnemyAI : NetworkBehaviour
         {
             if (!collision.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
                 return;
-
-            collision.gameObject.GetComponent<PlayerCombat>().CmdEnemyRigidbody2D(this.gameObject,this.transform.position);
+            if (isClient)
+            {
+                collision.gameObject.GetComponent<PlayerCombat>().CmdEnemyRigidbody2D(this.gameObject, this.transform.position);
+            }
             target = collision.gameObject.transform;
         }
     }
@@ -123,7 +132,10 @@ public class EnemyAI : NetworkBehaviour
         {
             if (!collision.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
                 return;
-            collision.gameObject.GetComponent<PlayerCombat>().CmdUnEnemyRigidbody2D(this.gameObject,this.transform.position);
+            if (isClient)
+            {
+                collision.gameObject.GetComponent<PlayerCombat>().CmdUnEnemyRigidbody2D(this.gameObject, this.transform.position);
+            }
         }
     }
     IEnumerator FreezeCooldown(float value)

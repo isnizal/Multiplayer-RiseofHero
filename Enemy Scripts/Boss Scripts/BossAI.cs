@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
-public class BossAI : MonoBehaviour
+public class BossAI : NetworkBehaviour
 {
 	public static BossAI instance;
 	public static BossAI BossInstance
@@ -28,31 +29,35 @@ public class BossAI : MonoBehaviour
 
 	private void Start()
 	{
-		waitTime = startWaitTime;
-		randomSpot = Random.Range(0, wayPoints.Length);
-
-		for (int i = 0; i < wayPoints.Length; i++)
+		if (isServer)
 		{
-			wayPoints[i] = GameObject.Find("Dungeons and Caves").transform.GetChild(0).transform.GetChild(i);
-		}
+			waitTime = startWaitTime;
+			randomSpot = Random.Range(0, wayPoints.Length);
 
+			for (int i = 0; i < wayPoints.Length; i++)
+			{
+				wayPoints[i] = GameObject.Find("Dungeons and Caves").transform.GetChild(0).transform.GetChild(i);
+			}
+		}
 
 	}
 
 	private void Update()
 	{
-
-		transform.position = Vector2.MoveTowards(transform.position, wayPoints[randomSpot].position, speed * Time.deltaTime);
-
-		if (Vector2.Distance(transform.position, wayPoints[randomSpot].position) < 0.2f)
+		if (isServer)
 		{
-			if (waitTime <= 0)
+			transform.position = Vector2.MoveTowards(transform.position, wayPoints[randomSpot].position, speed * Time.deltaTime);
+
+			if (Vector2.Distance(transform.position, wayPoints[randomSpot].position) < 0.2f)
 			{
-				randomSpot = Random.Range(0, wayPoints.Length);
-				waitTime = startWaitTime;
+				if (waitTime <= 0)
+				{
+					randomSpot = Random.Range(0, wayPoints.Length);
+					waitTime = startWaitTime;
+				}
+				else
+				{ waitTime -= Time.deltaTime; }
 			}
-			else
-			{ waitTime -= Time.deltaTime; }
 		}
 	}
 }

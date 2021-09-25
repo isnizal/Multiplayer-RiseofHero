@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
 public class HitPatrolPos : MonoBehaviour
 {
@@ -13,8 +14,9 @@ public class HitPatrolPos : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        bxcdBoundX = GetComponent<BoxCollider2D>().bounds.center.x;
-        bxcdBoundY = GetComponent<BoxCollider2D>().bounds.center.y;
+
+            bxcdBoundX = GetComponent<BoxCollider2D>().bounds.center.x;
+            bxcdBoundY = GetComponent<BoxCollider2D>().bounds.center.y;
     }
 
     // Update is called once per frame

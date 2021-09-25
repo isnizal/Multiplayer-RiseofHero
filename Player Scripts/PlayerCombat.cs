@@ -54,7 +54,7 @@ public class PlayerCombat : NetworkBehaviour
 	public bool playerDied;
 	private GameManager _gameManager;
 	private SpellTree _spellTree;
-	private UIManager _uiManager;
+	public UIManager _uiManager;
 	public void InitializePlayerCombat()
 	{
 		if (isLocalPlayer)
@@ -68,18 +68,26 @@ public class PlayerCombat : NetworkBehaviour
 			playerMovement = GetComponent<PlayerMovement>();
 		}
 	}
+	[Command(requiresAuthority = true)]
+	public void CmdSetHealth()
+	{
+		_character.Health = 0;
+	}
 	void HealthCheck()
 	{
-		if (_character.Health <= 0)
+		if (isClient)
 		{
-			_character.DisableAllRegen();
-			playerDied = true;
-			_gameManager.autoSave = false;
-			StopCoroutine(_gameManager.saveTimer);
-			_character.Health = 0;
-			playerMovement.SetPositionDead();
-			GetComponent<BoxCollider2D>().enabled = false;
-			CheckPlayerDeath();
+			if (_character.Health <= 0)
+			{
+				_character.DisableAllRegen();
+				playerDied = true;
+				_gameManager.autoSave = false;
+				StopCoroutine(_gameManager.saveTimer);
+				CmdSetHealth();
+				playerMovement.SetPositionDead();
+				GetComponent<BoxCollider2D>().enabled = false;
+				CheckPlayerDeath();
+			}
 		}
 	}
 	public void CheckPlayerDeath()
@@ -92,23 +100,33 @@ public class PlayerCombat : NetworkBehaviour
 			SoundManager.PlaySound(SoundManager.Sound.PlayerDie);
 		}
 	}
-
+	[Command(requiresAuthority = true)]
+	public void CmdCharacterDamage(int damageToGive,Character _character)
+	{
+		_character.Health -= damageToGive;
+	}
 	public void TakeDamage(int damageToGive)
 	{
-		if (!playerDied)
+		if (hasAuthority)
 		{
-			_character.notInCombat = false;
-			DisableSelfRegenHp();
-			DisableSelfRegenMana();
-			//set enemy hit to true
-			_character.enemyHit = true;
-			SoundManager.PlaySound(SoundManager.Sound.PlayerHit);
-			_character.Health -= damageToGive;
+			if (!playerDied)
+			{
+				if (isClient)
+				{
+					_character.notInCombat = false;
+					DisableSelfRegenHp();
+					DisableSelfRegenMana();
+					//set enemy hit to true
+					_character.enemyHit = true;
+					SoundManager.PlaySound(SoundManager.Sound.PlayerHit);
+					CmdCharacterDamage(damageToGive,_character);
 
-			_uiManager.UpdateHealth();
-			_uiManager.UpdateMP();
+					_uiManager.UpdateHealth();
+					_uiManager.UpdateMP();
 
-			HealthCheck();
+					HealthCheck();
+				}
+			}
 		}
 	}
 
@@ -175,9 +193,12 @@ public class PlayerCombat : NetworkBehaviour
 			//	nameText.text = _getPlayerName.ToString();
 		}
 	}
-	[Command(requiresAuthority = false)]
+    #region"NetworkAttack"
+    [Command(requiresAuthority = false)]
 	public void CmdCriticalAttack(GameObject enemy, float normalAttack)
 	{
+		if (enemy == null)
+			return;
 		var clone = (GameObject)Instantiate(damageNumbers, enemy.transform.position, Quaternion.Euler(Vector3.zero));
 		NetworkServer.Spawn(clone);
 		RpcCriticalAttack(clone,normalAttack,enemy);
@@ -185,6 +206,8 @@ public class PlayerCombat : NetworkBehaviour
 	[ClientRpc]
 	public void RpcCriticalAttack(GameObject clone,float normalAttack,GameObject enemy)
 	{
+		if (enemy == null)
+			return;
 		clone.GetComponent<DamageNumbers>().damageNumber = (int)normalAttack;
 		clone.GetComponent<DamageNumbers>().isRedAttack = true;
 		enemy.GetComponent<EnemyStats>().ETakeDamage((int)normalAttack, this.gameObject);
@@ -192,6 +215,8 @@ public class PlayerCombat : NetworkBehaviour
 	[Command(requiresAuthority = false)]
 	public void CmdNormalAttack(GameObject enemy, float normalAttack)
 	{
+		if (enemy == null)
+			return;
 		var clone = (GameObject)Instantiate(damageNumbers, enemy.transform.position, Quaternion.Euler(Vector3.zero));
 		NetworkServer.Spawn(clone);
 		RpcNormalAttack(clone, normalAttack,enemy);
@@ -199,6 +224,8 @@ public class PlayerCombat : NetworkBehaviour
 	[ClientRpc]
 	public void RpcNormalAttack(GameObject clone, float normalAttack,GameObject enemy)
 	{
+		if (enemy == null)
+			return;
 		clone.GetComponent<DamageNumbers>().damageNumber = (int)normalAttack;
 		enemy.GetComponent<EnemyStats>().ETakeDamage((int)normalAttack, this.gameObject);
 	}
@@ -208,6 +235,8 @@ public class PlayerCombat : NetworkBehaviour
 	[Command(requiresAuthority = false)]
 	public void CmdBossCriticalAttack(GameObject enemy, float normalAttack)
 	{
+		if (enemy == null)
+			return;
 		var clone = (GameObject)Instantiate(damageNumbers, enemy.transform.position, Quaternion.Euler(Vector3.zero));
 		NetworkServer.Spawn(clone);
 		RpcBossCriticalAttack(clone, normalAttack,enemy);
@@ -215,6 +244,8 @@ public class PlayerCombat : NetworkBehaviour
 	[ClientRpc]
 	public void RpcBossCriticalAttack(GameObject clone, float normalAttack,GameObject enemy)
 	{
+		if (enemy == null)
+			return;
 		clone.GetComponent<DamageNumbers>().damageNumber = (int)normalAttack;
 		clone.GetComponent<DamageNumbers>().isRedAttack = true;
 		enemy.gameObject.GetComponent<BossStats>().ETakeDamage((int)normalAttack, this.gameObject);
@@ -222,7 +253,8 @@ public class PlayerCombat : NetworkBehaviour
 	[Command(requiresAuthority = false)]
 	public void CmdBossNormalAttack(GameObject enemy, float normalAttack)
 	{
-
+		if (enemy == null)
+			return;
 		var clone = (GameObject)Instantiate(damageNumbers, enemy.transform.position, Quaternion.Euler(Vector3.zero));
 		NetworkServer.Spawn(clone);
 		RpcBossNormalAttack(clone, normalAttack,enemy);
@@ -230,6 +262,8 @@ public class PlayerCombat : NetworkBehaviour
 	[ClientRpc]
 	public void RpcBossNormalAttack(GameObject clone, float normalAttack,GameObject enemy)
 	{
+		if (enemy == null)
+			return;
 		clone.GetComponent<DamageNumbers>().damageNumber = (int)normalAttack;
 		clone.GetComponent<DamageNumbers>().isRedAttack = true;
 		enemy.gameObject.GetComponent<BossStats>().ETakeDamage((int)normalAttack, this.gameObject);
@@ -245,8 +279,13 @@ public class PlayerCombat : NetworkBehaviour
 	{
 		Destroy(item.gameObject);
 	}
-
-	public void MeleeAttack(Collider2D enemy)
+	[Command(requiresAuthority = false)]
+	public void CmdSetTarget(GameObject enemy)
+	{
+		enemy.gameObject.GetComponent<EnemyAI>().target = this.transform;
+	}
+    #endregion
+    public void MeleeAttack(Collider2D enemy)
 	{
 		if (isServer) return;
 		float value = GetComponent<Character>().Strength.Value;
@@ -257,6 +296,7 @@ public class PlayerCombat : NetworkBehaviour
 		if (enemy.gameObject.CompareTag("Enemy"))
 		{
 			//int randomDamageRange = Random.Range(GetComponent<Character>().Strength.Value,)
+			CmdSetTarget(enemy.gameObject);
 			//check current attack
 			if (value != 0)
 			{
@@ -474,6 +514,8 @@ public class PlayerCombat : NetworkBehaviour
 	[Command(requiresAuthority = false)]
 	public void CmdMoveToThis(GameObject enemy,float moveSpeed)
 	{
+		if (enemy == null)
+			return;
 		Mirror.NetworkTransform enemyPos = enemy.GetComponent<NetworkTransform>();
 		enemyPos.transform.position = Vector3.MoveTowards(enemyPos.transform.position, transform.position, moveSpeed * Time.deltaTime);
 		//RpcMoveToThis(enemyPos, moveSpeed);
@@ -481,6 +523,8 @@ public class PlayerCombat : NetworkBehaviour
 	[ClientRpc]
 	public void RpcMoveToThis(NetworkTransform enemy,float moveSpeed)
 	{
+		if (enemy == null)
+			return;
 		enemy.transform.position = Vector3.MoveTowards(enemy.transform.position, transform.position, moveSpeed * Time.deltaTime);
 	}
 	public void CheckSpellCost()

@@ -54,6 +54,20 @@ public class NewNetworkManager : NetworkManager
         
         startPositionIndex = 0;
         startPositions.Clear();
+
+    }
+    [SerializeField] GameObject newPatrol;
+    [SerializeField] GameObject newPatrolPos;
+
+    [ServerCallback]
+    public void SpawnPatrol()
+    {
+       var PatrolPos = Instantiate(newPatrolPos);
+       var Patrol = Instantiate(newPatrol);
+        Patrol.GetComponent<NPCMovement>().AssignMovePointPos(PatrolPos);
+       NetworkServer.Spawn(PatrolPos);
+       NetworkServer.Spawn(Patrol);
+        
     }
 
     public override void OnClientChangeScene(string newSceneName, SceneOperation sceneOperation, bool customHandling)

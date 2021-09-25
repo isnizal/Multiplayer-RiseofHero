@@ -95,6 +95,7 @@ public class GameManager :MonoBehaviour
 			FindObjectOfType<SpellTree>().InitializeSpell(player);
 			FindObjectOfType<StatPanel>().InitializeStatPanel(player);
 			FindObjectOfType<StatsModifier>().InitializeStatModifier(player);
+			FindObjectOfType<DailyRewardSystem.DailyRewards>().InitializeDailyRewards(player);
 
 
 			_spellTree = FindObjectOfType<SpellTree>();

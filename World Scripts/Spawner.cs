@@ -59,11 +59,7 @@ public class Spawner : NetworkBehaviour
     {
 
 
-        //InvokeRepeating(nameof(EfosEnemySpawn), timeBetweenSpawn, spawnDelay);
-        //InvokeRepeating(nameof(NewlowCaveEnemySpawn), timeBetweenSpawn, spawnDelay);
-        //InvokeRepeating(nameof(DiregardeCastleEnemySpawn), timeBetweenSpawn, spawnDelay);
-        //InvokeRepeating(nameof(EfosPassEnemySpawn), timeBetweenSpawn, spawnDelay);
-        //InvokeRepeating(nameof(AstadEnemySpawn), timeBetweenSpawn, spawnDelay);
+
     }
     public override void OnStartServer()
     {
@@ -73,6 +69,11 @@ public class Spawner : NetworkBehaviour
         if (isServer)
         {
             InvokeRepeating(nameof(AseaEnemySpawn), timeBetweenSpawn, spawnDelay);
+            InvokeRepeating(nameof(EfosEnemySpawn), timeBetweenSpawn, spawnDelay);
+            InvokeRepeating(nameof(NewlowCaveEnemySpawn), timeBetweenSpawn, spawnDelay);
+            InvokeRepeating(nameof(DiregardeCastleEnemySpawn), timeBetweenSpawn, spawnDelay);
+            InvokeRepeating(nameof(EfosPassEnemySpawn), timeBetweenSpawn, spawnDelay);
+            InvokeRepeating(nameof(AstadEnemySpawn), timeBetweenSpawn, spawnDelay);
         }
 
     }
@@ -107,7 +108,6 @@ public class Spawner : NetworkBehaviour
             CmdEfosEnemySpawn(spawnEnemy, spawnLocation);
         }
     }
-    [ClientRpc]
     public void CmdEfosEnemySpawn(int spawnEnemy, int spawnLocation)
     {
         newEnemyClone = Instantiate(efosEnemyPrefab[spawnEnemy], efosSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
@@ -126,7 +126,6 @@ public class Spawner : NetworkBehaviour
             CmdNewLowCaveEnemySpawn(spawnEnemy, spawnLocation);
         }
     }
-    [ClientRpc]
     public void CmdNewLowCaveEnemySpawn(int spawnEnemy, int spawnLocation)
     {
         newEnemyClone = Instantiate(newlowCaveEnemyPrefab[spawnEnemy], newlowCaveSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
@@ -145,7 +144,6 @@ public class Spawner : NetworkBehaviour
             CmdDiregardeCastleEnemySpawn(spawnEnemy, spawnLocation);
         }
     }
-    [ClientRpc]
     public void CmdDiregardeCastleEnemySpawn(int spawnEnemy, int spawnLocation)
     {
         newEnemyClone = Instantiate(diregardeCastleEnemyPrefab[spawnEnemy], diregardeCastleSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
@@ -163,7 +161,6 @@ public class Spawner : NetworkBehaviour
             CmdEfosPassEnemySpawn(spawnEnemy, spawnLocation);
         }
     }
-    [ClientRpc]
     public void CmdEfosPassEnemySpawn(int spawnEnemy, int spawnLocation)
     {
         newEnemyClone = Instantiate(efosPassEnemyPrefab[spawnEnemy], efosPassSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
@@ -181,7 +178,6 @@ public class Spawner : NetworkBehaviour
             CmdAstadEnemySpawn(spawnEnemy, spawnLocation);
         }
     }
-    [ClientRpc]
     public void CmdAstadEnemySpawn(int spawnEnemy, int spawnLocation)
     {
         newEnemyClone = Instantiate(astadEnemyPrefab[spawnEnemy], astadSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
@@ -199,7 +195,6 @@ public class Spawner : NetworkBehaviour
             CmdDiregardEnemySpawn(spawnEnemy, spawnLocation);
         }
     }
-    [ClientRpc]
     public void CmdDiregardEnemySpawn(int spawnEnemy,int spawnLocation)
     {
         newEnemyClone = Instantiate(diregardeEnemyPrefab[spawnEnemy], diregardeSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;

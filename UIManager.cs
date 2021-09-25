@@ -49,14 +49,14 @@ public class UIManager : MonoBehaviour
         }
 
     }
-    private Character _Character;
+    private Character _character;
     public void InitializeUIVariable(Character player)
     {
         if (player.isLocalPlayer)
         {
             GetComponent<AchievementManager>().AchievementManagerLoad(player);
             GetComponent<InventoryInput>().LoadInventoryInput(player);
-            _Character = player;
+            _character = player;
             levelValue = GameObject.Find("LevelValue").GetComponent<TextMeshProUGUI>();
             premiumValue = GameObject.Find("PremiumValue").GetComponent<TextMeshProUGUI>();
             copperValue = GameObject.Find("CopperValue").GetComponent<TextMeshProUGUI>();
@@ -67,7 +67,7 @@ public class UIManager : MonoBehaviour
             xpSlider = GameObject.Find("XPSlider").GetComponent<Slider>();
             xpValue = GameObject.Find("XPValue").GetComponent<TextMeshProUGUI>();
             chatInput = GameObject.Find("ChatText").GetComponentInChildren<TMP_InputField>();
-            PlayerMovement playerMovement = _Character.gameObject.GetComponent<PlayerMovement>();
+            PlayerMovement playerMovement = _character.gameObject.GetComponent<PlayerMovement>();
             chatInput.onEndEdit.AddListener(playerMovement.SetMessageForPlayer);
         }
     }
@@ -81,44 +81,42 @@ public class UIManager : MonoBehaviour
     void Update()
     {
         
-        if (_Character == null)
+        if (_character == null)
             return;
-        if (_Character.isLocalPlayer)
+        if (_character.hasAuthority)
         {
-            if (hpSlider == null)
-                return;
             UpdateHealth();
             UpdateMP();
-            xpSlider.maxValue = _Character.gameObject.GetComponent<LevelSystem>().toLevelUp[_Character.gameObject.GetComponent<LevelSystem>().currentLevel];
-            xpSlider.value = _Character.gameObject.GetComponent<LevelSystem>().currentExp;
-            xpValue.text = "" + _Character.gameObject.GetComponent<LevelSystem>().currentExp + "/" + _Character.gameObject.GetComponent<LevelSystem>().expToLevel;
+            xpSlider.maxValue = _character.gameObject.GetComponent<LevelSystem>().toLevelUp[_character.gameObject.GetComponent<LevelSystem>().currentLevel];
+            xpSlider.value = _character.gameObject.GetComponent<LevelSystem>().currentExp;
+            xpValue.text = "" + _character.gameObject.GetComponent<LevelSystem>().currentExp + "/" + _character.gameObject.GetComponent<LevelSystem>().expToLevel;
 
-            levelValue.text = "" + _Character.GetComponent<LevelSystem>().currentLevel;
+            levelValue.text = "" + _character.GetComponent<LevelSystem>().currentLevel;
 
-            premiumValue.text = "" + _Character.premiumCurrency;
-            copperValue.text = "" + _Character.copperCurrency;
+            premiumValue.text = "" + _character.premiumCurrency;
+            copperValue.text = "" + _character.copperCurrency;
         }
         if (chatInput == null)
             return;
         if (chatInput.isFocused)
         {
             //disable player keyboard if on desktop
-            _Character.onInput = true;
+            _character.onInput = true;
         }
         else
-            _Character.onInput = false;
+            _character.onInput = false;
     }
     public void UpdateHealth()
     {
-        hpSlider.maxValue = _Character.MaxHealth;
-        hpSlider.value = _Character.Health;
-        hpValue.text = "" + _Character.Health + "/" + _Character.MaxHealth;
+        hpSlider.maxValue = _character.MaxHealth;
+        hpSlider.value = _character.Health;
+        hpValue.text = "" + _character.Health + "/" + _character.MaxHealth;
     }
 
     public void UpdateMP()
 	{
-        mpSlider.maxValue = _Character.MaxMP;
-        mpSlider.value = _Character.Mana;
-        mpValue.text = "" + _Character.Mana + "/" + _Character.MaxMP;
+        mpSlider.maxValue = _character.MaxMP;
+        mpSlider.value = _character.Mana;
+        mpValue.text = "" + _character.Mana + "/" + _character.MaxMP;
 	}
 }

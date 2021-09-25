@@ -117,6 +117,18 @@ public class Character : NetworkBehaviour
 		achievement.kill500AchClaimed = loadedStats[20];
 		achievement.kill500AchDone = loadedStats[21];
 	}
+	public void ExecuteHealth(int health)
+	{
+		if (isClient)
+		{
+			CmdExecuteHealth(health);
+		}
+	}
+	[Command(requiresAuthority = true)]
+	public void CmdExecuteHealth(int health)
+    {
+		this.Health += health;
+    }
 	public void OnHealthChanged(int oldHealth, int newHealth)
 	{
 		Health = newHealth;
@@ -290,12 +302,29 @@ public class Character : NetworkBehaviour
 			}
 		}
 	}
-	[HideInInspector]public int newHealth;
+	public void ExecuteNewHealth(int newHealth)
+	{
+		if (isClient)
+		{
+			CmdExecuteNewHealth(newHealth);
+		}
+	}
+	[Command(requiresAuthority = true)]
+	public void CmdExecuteNewHealth(int newHealth)
+	{
+		this.newHealth += newHealth;
+	}
+	
+	[SyncVar(hook = nameof(OnNewHealthChanged))]public int newHealth;
 	[HideInInspector] public bool isSelfHPRegen = false;
 	[HideInInspector] public bool enemyHit = false;
 	[HideInInspector] public bool onRestoreHealth = false;
 	[HideInInspector] public IEnumerator RestoreHealth;
 	[HideInInspector] public IEnumerator ResetSelfRegenHp;
+	public void OnNewHealthChanged(int oldHealth, int newHealth)
+	{
+		this.newHealth = newHealth;
+	}
 	public IEnumerator SetSelfRegenHp()
 	{
 		yield return new WaitForSeconds(hpRegenTime);
