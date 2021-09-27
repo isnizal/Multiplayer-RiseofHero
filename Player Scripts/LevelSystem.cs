@@ -85,20 +85,20 @@ public class LevelSystem : NetworkBehaviour
 			canLevelUp = false;
 		}
 	}	
-
 	[Server]
 	public void AddExp(int expToAdd)
 	{
 		NetworkConnection net = GetComponent<NetworkIdentity>().connectionToClient;
 		TargetAddExp(net, expToAdd);
 	}
+	
 	[TargetRpc]
 	public void TargetAddExp(NetworkConnection target, int expToAdd)
 	{
 		target.identity.gameObject.GetComponent<LevelSystem>().currentExp += expToAdd;
 	}
 
-
+	[Client]
 	void StatPoints()
 	{
 		if (canLevelUp)
@@ -107,18 +107,26 @@ public class LevelSystem : NetworkBehaviour
 			_character.statPoints += _character.newStatPoints;
 			_character.newStatPoints = 0;
 			SpellPoints();
-			ResetPlayerHealthAndMP();
+			CmdResetPlayerHealthAndMp();
 			canLevelUp = false;
 		}
 	}
-
-	void ResetPlayerHealthAndMP()
+	[Command(requiresAuthority = true)]
+	public void CmdResetPlayerHealthAndMp()
 	{
-		_character.Health = _character.MaxHealth;
-		_character.Mana = _character.MaxMP;
-		_playerCombat.DisableSelfRegenHp();
-		_playerCombat.DisableSelfRegenMana();
-	}	
+		TargetRpcResetPlayerHealthAndMp(this.netIdentity.connectionToClient);
+	}
+	[TargetRpc]
+	public void TargetRpcResetPlayerHealthAndMp(NetworkConnection player)
+	{
+		Character character = player.identity.gameObject.GetComponent<Character>();
+		PlayerCombat playerCombat = player.identity.gameObject.GetComponent<PlayerCombat>();
+
+		character.ExecuteHealth(character.MaxHealth);
+		character.ExecuteNewHealth(character.MaxHealth);
+		character.ExecuteMana(character.MaxMP);
+		character.ExecuteNewMana(character.MaxMP);
+	}
 
 	void SpellPoints()
 	{

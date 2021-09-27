@@ -37,6 +37,7 @@ public class UIManager : MonoBehaviour
 
     private static UIManager instance;
     private TMP_InputField chatInput;
+    [HideInInspector]public GameManager _gameManager;
     public static UIManager Instance
     {
         get
@@ -74,8 +75,8 @@ public class UIManager : MonoBehaviour
     public void InitializeAwake(Character player)
     {
         InitializeUIVariable(player);
-        GetComponent<GameManager>().InitializeGameManagerVariable(player,this);
-
+        _gameManager = GetComponent<GameManager>();
+        _gameManager.InitializeGameManagerVariable(player, this);
     }
 
     void Update()

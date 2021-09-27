@@ -1,63 +1,110 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
-public class FireballDamage : MonoBehaviour
+[RequireComponent(typeof(Mirror.Experimental.NetworkRigidbody2D))]
+public class FireballDamage : NetworkBehaviour
 {
-	private Rigidbody2D _rb;
+	//private Rigidbody2D _rb;
+	private Mirror.Experimental.NetworkRigidbody2D _netrbd2D;
 	public float speed;
-	public float totalFireballDamage;
 
+	[SyncVar]private float totalFireballDamage;
+	[SyncVar]private PlayerCombat _playerCombat;
+	[SyncVar]private Character _character;
+	[SyncVar]private float timeToDestroy = 1f;
 
-	private void Start()
+	private GameManager _gameManager;
+	private SpellTree _spellTree;
+
+	[ClientRpc]
+	public void RpcInitializeBallDamage(PlayerCombat _playerCombat)
 	{
-		_rb = GetComponent<Rigidbody2D>();
+		_netrbd2D = GetComponent<Mirror.Experimental.NetworkRigidbody2D>();
+		this._playerCombat = _playerCombat;
+		this._character = this._playerCombat.character;
+		this._gameManager = _character.GetComponent<PlayerMovement>()._gameManager;
+		this._spellTree = _gameManager._spellTree;
 		CalcFireballDamage();
 	}
-
 	private void Update()
 	{
-		_rb.MovePosition(transform.TransformPoint(speed * Time.deltaTime * Vector3.right));
+		if (hasAuthority)
+		{
+			CmdMoveFireBall();
+			CmdDestoryOverTime();
+		}
+
 	}
-
-
-
+	[Command(requiresAuthority = true)]
+	private void CmdDestoryOverTime()
+	{
+		timeToDestroy -= Time.deltaTime;
+		if (timeToDestroy <= 0)
+		{
+			if (this.gameObject == null)
+				return;
+			NetworkServer.Destroy(this.gameObject);
+		}
+	}
+	[Command(requiresAuthority = true)]
+	private void CmdMoveFireBall()
+	{
+		RpcMoveFireBall();
+	}
+	[ClientRpc]
+	private void RpcMoveFireBall()
+	{
+		_netrbd2D.target.MovePosition(transform.TransformPoint(speed * Time.deltaTime * Vector3.right));
+	}
+	[Command(requiresAuthority = true)]
+	private void CmdDestroySelf()
+	{
+		if (this.gameObject == null)
+			return;
+		NetworkServer.Destroy(this.gameObject);
+	}
 	private void OnTriggerEnter2D(Collider2D other)
 	{
 		if(other.CompareTag("Enemy"))
 		{
-			other.GetComponent<EnemyStats>().ETakeDamage((int)totalFireballDamage, other.gameObject);
-			var clone = (GameObject)Instantiate(PlayerCombat.CombatInstance.damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
-			clone.GetComponent<DamageNumbers>().damageNumber = (int)totalFireballDamage;
-			Destroy(this.gameObject);
+			_playerCombat.CmdEnemyNormalAttack(other.gameObject, totalFireballDamage);
+			CmdDestroySelf();
 		}
 		if(other.CompareTag("Boss"))
 		{
-			other.GetComponent<BossStats>().ETakeDamage((int)totalFireballDamage,other.gameObject);
-			var clone = (GameObject)Instantiate(PlayerCombat.CombatInstance.damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
-			clone.GetComponent<DamageNumbers>().damageNumber = (int)totalFireballDamage;
-			Destroy(this.gameObject);
+			_playerCombat.CmdBossNormalAttack(other.gameObject, totalFireballDamage);
+			CmdDestroySelf();
 		}
 	}
 
-	public void CalcFireballDamage()
+	[Command(requiresAuthority = true)]
+	private void CmdCalCulateFireBallDamage(float fireSpellValue, float levelMultiplier)
 	{
-		if (GameManager.GameManagerInstance.fireball1Active)
+		float totalFireballDamage = Random.Range((int)fireSpellValue * levelMultiplier / .5f, (int)fireSpellValue * levelMultiplier * .5f);
+		this.totalFireballDamage = totalFireballDamage;
+	}
+
+	[Client]
+	private void CalcFireballDamage()
+	{
+		if (_gameManager.fireball1Active)
 		{
-			if (SpellTree.SpellInstance.fireball1Level <= SpellTree.SpellInstance.fireball1LevelMax)
+			if (_spellTree.fireball1Level <= _spellTree.fireball1LevelMax)
 			{
-				float calcfireballSpellValue = Character.MyInstance.Intelligence.BaseValue + Character.MyInstance.Intelligence.Value;
-				float calcLevelMultiplier = SpellTree.SpellInstance.fireball1Level * 0.125f;
-				totalFireballDamage = Random.Range((int)calcfireballSpellValue * calcLevelMultiplier / .5f, (int)calcfireballSpellValue * calcLevelMultiplier * .5f);
+				float calcfireballSpellValue = _character.Intelligence.BaseValue + _character.Intelligence.Value;
+				float calcLevelMultiplier = _gameManager._spellTree.fireball1Level * 0.125f;
+				CmdCalCulateFireBallDamage(calcfireballSpellValue, calcLevelMultiplier);
 			}
 		}
-		if (GameManager.GameManagerInstance.fireball2Active)
+		if (_gameManager.fireball2Active)
 		{
-			if (SpellTree.SpellInstance.fireball2Level <= SpellTree.SpellInstance.fireball2LevelMax)
+			if (_spellTree.fireball2Level <= _spellTree.fireball2LevelMax)
 			{
-				float calcfireballSpellValue2 = Character.MyInstance.Intelligence.BaseValue + Character.MyInstance.Intelligence.Value;
-				float calcLevelMultiplier2 = SpellTree.SpellInstance.fireball2Level * .5f;
-				totalFireballDamage = Random.Range((int)calcfireballSpellValue2 * calcLevelMultiplier2 / .5f, (int)calcfireballSpellValue2 * calcfireballSpellValue2 * .5f);
+				float calcfireballSpellValue2 = _character.Intelligence.BaseValue + _character.Intelligence.Value;
+				float calcLevelMultiplier2 = _gameManager._spellTree.fireball2Level * .5f;
+				CmdCalCulateFireBallDamage(calcfireballSpellValue2, calcLevelMultiplier2);
 			}
 		}
 	}

@@ -107,7 +107,7 @@ public class PlayerMovement : NetworkBehaviour
 		base.OnStartClient();
 		//start client initialize
 		Debug.Log("starting player client");
-		if (isLocalPlayer)
+		if (hasAuthority)
 		{
 			gameClothes = FindObjectOfType<GameClothes>();
 			CmdSetClothesValue(gameClothes.helmetValue, gameClothes.torsoValue, gameClothes.armValue, gameClothes.swordValue,
@@ -118,30 +118,21 @@ public class PlayerMovement : NetworkBehaviour
 			InitializeAwake();
 		}
 	}
-	private Character _character;
-	private Button _actionBtn, _spellBtn, _attackBtn;
-	private GameManager _gameManager;
 
+	private Button _actionBtn, _spellBtn, _attackBtn;
+	public GameManager _gameManager;
+
+	public Character character;
+	public PlayerCombat playerCombat;
+	public LevelSystem levelSystem;
 	//npc should be careful if contain more than one
 	private NPCTeleport _npcTeleport;
 	private NPCCrafter _npcCrafter;
 	private NPCGeneralShop _npcGeneralShop;
 	public void InitializeAwake()
 	{
-		if (isLocalPlayer)
+		if (hasAuthority)
 		{
-			_npcTeleport = FindObjectOfType<NPCTeleport>();
-			_npcCrafter = FindObjectOfType<NPCCrafter>();
-			_npcTeleport = FindObjectOfType<NPCTeleport>();
-			_gameManager = FindObjectOfType<GameManager>();
-			_character = GetComponent<Character>();
-			netAnim = GetComponent<NetworkAnimator>();
-			netRigidbody2D = GetComponent<NetworkRigidbody2D>();
-			netRigidbody2D.target.simulated = base.hasAuthority;
-			gameClothes = FindObjectOfType<GameClothes>();
-			playerClothes = GetComponent<PlayerClothes>();
-			Initialize();
-			CmdSetSpriteFront();
 			//Mobile
 			fixedJoystick = FindObjectOfType<FixedJoystick>();
 			actionText = GameObject.Find("ActionText").GetComponent<TextMeshProUGUI>();
@@ -151,15 +142,33 @@ public class PlayerMovement : NetworkBehaviour
 			_spellBtn.onClick.AddListener(this.GetComponent<PlayerCombat>().CastSpell);
 			_attackBtn = GameObject.Find("AttackButton").GetComponent<Button>();
 			_attackBtn.onClick.AddListener(ActionMobileAttack);
-			GetComponent<PlayerCombat>().InitializePlayerCombat();
-			GetComponent<Character>().InitializeCharacter();
-			GetComponent<LevelSystem>().InitializeLevelSystem();
+
+			//others
+			_npcTeleport = FindObjectOfType<NPCTeleport>();
+			_npcCrafter = FindObjectOfType<NPCCrafter>();
+			_npcTeleport = FindObjectOfType<NPCTeleport>();
+			_gameManager = FindObjectOfType<GameManager>();
+			character = GetComponent<Character>();
+			character.InitializeCharacter();
+			playerCombat = GetComponent<PlayerCombat>();
+			playerCombat.InitializePlayerCombat();
+			levelSystem = GetComponent<LevelSystem>();
+			levelSystem.InitializeLevelSystem();
+			netAnim = GetComponent<NetworkAnimator>();
+			netRigidbody2D = GetComponent<NetworkRigidbody2D>();
+			netRigidbody2D.target.simulated = base.hasAuthority;
+			gameClothes = FindObjectOfType<GameClothes>();
+			playerClothes = GetComponent<PlayerClothes>();
+			Initialize();
+			CmdSetSpriteFront();
+
+
 		}
 
 	}
 	public void Initialize()
 	{
-		if (isLocalPlayer)
+		if (hasAuthority)
 		{
 			attacking = false;
 			waitAttack = true;
@@ -171,17 +180,16 @@ public class PlayerMovement : NetworkBehaviour
 			attackFront = 1;
 			attackBack = 0;
 			attackLeft = 0;
-			if (base.hasAuthority)
-			{
-				netAnim.animator.SetBool("DeadFront", false);
-				netAnim.animator.SetBool("DeadBack", false);
-				netAnim.animator.SetBool("DeadRight", false);
-				netAnim.animator.SetBool("DeadLeft", false);
 
-				netAnim.animator.SetBool("IdleFront", true);
-				netAnim.animator.Play("Base Layer.FrontIdleAnimation");
+			netAnim.animator.SetBool("DeadFront", false);
+			netAnim.animator.SetBool("DeadBack", false);
+			netAnim.animator.SetBool("DeadRight", false);
+			netAnim.animator.SetBool("DeadLeft", false);
 
-			}
+			netAnim.animator.SetBool("IdleFront", true);
+			netAnim.animator.Play("Base Layer.FrontIdleAnimation");
+
+			
 			currePos = 0;
 			canMove = true;
 		}
@@ -287,9 +295,9 @@ public class PlayerMovement : NetworkBehaviour
 	{
 		if (isLocalPlayer)
 		{
-			if (_character is null)
+			if (character is null)
 				return;
-			if (!_character.onInput)
+			if (!character.onInput)
 			{
 				if (!PlayerCombat.CombatInstance.playerDied)
 				{

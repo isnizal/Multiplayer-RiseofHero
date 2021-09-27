@@ -1,10 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using EasyUI.Toast;
 using Mirror;
+using TMPro;
+using UnityEngine;
 
 public class PlayerCombat : NetworkBehaviour
 {
@@ -48,88 +45,30 @@ public class PlayerCombat : NetworkBehaviour
 	public bool arcticBlastActive;
 	public GameObject arcticBlastProjectile;
 	public int arcticMPCost;
-
-	private PlayerMovement playerMovement;
-	private Character _character;
 	public bool playerDied;
-	private GameManager _gameManager;
+
+	
+	private PlayerMovement _playerMovement;
+	[HideInInspector]public Character character;
+
+
+	public GameManager gameManager;
 	private SpellTree _spellTree;
+	
 	public UIManager _uiManager;
 	public void InitializePlayerCombat()
 	{
 		if (isLocalPlayer)
 		{
-			_character = GetComponent<Character>();
-			_gameManager = FindObjectOfType<GameManager>();
+			character = GetComponent<Character>();
 			_spellTree = FindObjectOfType<SpellTree>();
-			_uiManager = FindObjectOfType<UIManager>();
+			_uiManager = character.uiManager;
 			respawnWindow = GameObject.Find("RespawnWindow");
 			respawnWindow.SetActive(false);
-			playerMovement = GetComponent<PlayerMovement>();
+			_playerMovement = GetComponent<PlayerMovement>();
+			gameManager = _playerMovement._gameManager;
 		}
 	}
-	[Command(requiresAuthority = true)]
-	public void CmdSetHealth()
-	{
-		_character.Health = 0;
-	}
-	void HealthCheck()
-	{
-		if (isClient)
-		{
-			if (_character.Health <= 0)
-			{
-				_character.DisableAllRegen();
-				playerDied = true;
-				_gameManager.autoSave = false;
-				StopCoroutine(_gameManager.saveTimer);
-				CmdSetHealth();
-				playerMovement.SetPositionDead();
-				GetComponent<BoxCollider2D>().enabled = false;
-				CheckPlayerDeath();
-			}
-		}
-	}
-	public void CheckPlayerDeath()
-	{
-		if (playerDied)
-		{
-			playerMovement.canMove = false;
-			respawnWindow.SetActive(true);
-			_gameManager.BGM.Stop();
-			SoundManager.PlaySound(SoundManager.Sound.PlayerDie);
-		}
-	}
-	[Command(requiresAuthority = true)]
-	public void CmdCharacterDamage(int damageToGive,Character _character)
-	{
-		_character.Health -= damageToGive;
-	}
-	public void TakeDamage(int damageToGive)
-	{
-		if (hasAuthority)
-		{
-			if (!playerDied)
-			{
-				if (isClient)
-				{
-					_character.notInCombat = false;
-					DisableSelfRegenHp();
-					DisableSelfRegenMana();
-					//set enemy hit to true
-					_character.enemyHit = true;
-					SoundManager.PlaySound(SoundManager.Sound.PlayerHit);
-					CmdCharacterDamage(damageToGive,_character);
-
-					_uiManager.UpdateHealth();
-					_uiManager.UpdateMP();
-
-					HealthCheck();
-				}
-			}
-		}
-	}
-
 	public void DisplayInformation(Item item)
 	{
 		Toast.Show("You picked up: <color=red><b>" + item.ItemName + "</b></color>", 2f, ToastPosition.MiddleCenter);
@@ -139,48 +78,113 @@ public class PlayerCombat : NetworkBehaviour
 	{
 		Toast.Show("You picked up: <color=red><b>" + coin.ToString() + " </b></color>Copper", 2f, ToastPosition.MiddleCenter);
 	}
-	public void DisableSelfRegenHp()
-	{      
-		//check self regen active to stop 
-		if (_character.ResetSelfRegenHp != null)
-			StopCoroutine(_character.ResetSelfRegenHp);
-		if (_character.RestoreHealth != null)
-			StopCoroutine(_character.RestoreHealth);
+	[Command(requiresAuthority = true)]
+	public void CmdSetHealth()
+	{
+		character.Health = 0;
+	}
+	void HealthCheck()
+	{
+		if (isClient)
+		{
+			if (character.Health <= 0)
+			{
+				character.DisableAllRegen();
+				playerDied = true;
+				gameManager.autoSave = false;
+				StopCoroutine(gameManager.saveTimer);
+				CmdSetHealth();
+				_playerMovement.SetPositionDead();
+				GetComponent<BoxCollider2D>().enabled = false;
+				CheckPlayerDeath();
+			}
+		}
+	}
+	public void CheckPlayerDeath()
+	{
+		if (playerDied)
+		{
+			_playerMovement.canMove = false;
+			respawnWindow.SetActive(true);
+			gameManager.BGM.Stop();
+			SoundManager.PlaySound(SoundManager.Sound.PlayerDie);
+		}
+	}
+	[Command(requiresAuthority = true)]
+	public void CmdCharacterDamage(int damageToGive,Character _character)
+	{
+		Debug.Log(damageToGive +"damage");
+		Debug.Log(_character.Health + "character");
+		_character.Health -= damageToGive;
+	}
+	[Client]
+	public void TakeDamage(int damageToGive)
+	{
+		if (hasAuthority)
+		{
+			if (!playerDied)
+			{
+				if (isClient)
+				{
+					character.notInCombat = false;
+					DisableSelfRegenHp();
+					DisableSelfRegenMana();
+					//set enemy hit to true
+					character.enemyHit = true;
+					SoundManager.PlaySound(SoundManager.Sound.PlayerHit);
+					CmdCharacterDamage(damageToGive,character);
+					_uiManager.UpdateHealth();
+					_uiManager.UpdateMP();
+					HealthCheck();
 
-		_character.ResetSelfRegenHp = null;
-		_character.RestoreHealth = null;
+				}
+			}
+		}
+	}
+
+
+	public void DisableSelfRegenHp()
+	{
+		//check self regen active to stop 
+		if (character.ResetSelfRegenHp != null)
+			StopCoroutine(character.ResetSelfRegenHp);
+		if (character.RestoreHealth != null)
+			StopCoroutine(character.RestoreHealth);
+
+		character.ResetSelfRegenHp = null;
+		character.RestoreHealth = null;
 
 		EnableSelfRegenHp();
 	}
 	public void EnableSelfRegenHp()
 	{
-		_character.ResetSelfRegenHp = _character.SetSelfRegenHp();
-		StartCoroutine(_character.ResetSelfRegenHp);
+		character.ResetSelfRegenHp = character.SetSelfRegenHp();
+		StartCoroutine(character.ResetSelfRegenHp);
 	}
 	public void DisableSelfRegenMana()
 	{
-		if (_character.ResetSelfRegenMana != null)
-			StopCoroutine(_character.ResetSelfRegenMana);
-		if (_character.RestoreMana != null)
-			StopCoroutine(_character.RestoreMana);
+		if (character.ResetSelfRegenMana != null)
+			StopCoroutine(character.ResetSelfRegenMana);
+		if (character.RestoreMana != null)
+			StopCoroutine(character.RestoreMana);
 
-		_character.ResetSelfRegenMana = null;
-		_character.RestoreMana = null;
+		character.ResetSelfRegenMana = null;
+		character.RestoreMana = null;
 		EnableSelfRegenMana();
 	}
 	public void EnableSelfRegenMana()
 	{
-		_character.ResetSelfRegenMana = Character.MyInstance.SetSelfRegenMana();
-		StartCoroutine(_character.ResetSelfRegenMana);
+		character.ResetSelfRegenMana = character.SetSelfRegenMana();
+		StartCoroutine(character.ResetSelfRegenMana);
 	}
 
 	private void Update()
 	{
 		if (isLocalPlayer)
 		{
-			if (_character is null)
+			if (character is null)
 				return;
-			if (!_character.onInput)
+			if (!character.onInput)
 			{
 				if (Input.GetKeyDown(KeyCode.LeftControl) && canCastSpells)
 				{
@@ -195,16 +199,16 @@ public class PlayerCombat : NetworkBehaviour
 	}
     #region"NetworkAttack"
     [Command(requiresAuthority = false)]
-	public void CmdCriticalAttack(GameObject enemy, float normalAttack)
+	public void CmdEnemyCriticalAttack(GameObject enemy, float normalAttack)
 	{
 		if (enemy == null)
 			return;
 		var clone = (GameObject)Instantiate(damageNumbers, enemy.transform.position, Quaternion.Euler(Vector3.zero));
 		NetworkServer.Spawn(clone);
-		RpcCriticalAttack(clone,normalAttack,enemy);
+		RpcEnemyCriticalAttack(clone,normalAttack,enemy);
 	}
 	[ClientRpc]
-	public void RpcCriticalAttack(GameObject clone,float normalAttack,GameObject enemy)
+	public void RpcEnemyCriticalAttack(GameObject clone,float normalAttack,GameObject enemy)
 	{
 		if (enemy == null)
 			return;
@@ -213,16 +217,16 @@ public class PlayerCombat : NetworkBehaviour
 		enemy.GetComponent<EnemyStats>().ETakeDamage((int)normalAttack, this.gameObject);
 	}
 	[Command(requiresAuthority = false)]
-	public void CmdNormalAttack(GameObject enemy, float normalAttack)
+	public void CmdEnemyNormalAttack(GameObject enemy, float normalAttack)
 	{
 		if (enemy == null)
 			return;
 		var clone = (GameObject)Instantiate(damageNumbers, enemy.transform.position, Quaternion.Euler(Vector3.zero));
 		NetworkServer.Spawn(clone);
-		RpcNormalAttack(clone, normalAttack,enemy);
+		RpcEnemyNormalAttack(clone, normalAttack,enemy);
 	}
 	[ClientRpc]
-	public void RpcNormalAttack(GameObject clone, float normalAttack,GameObject enemy)
+	public void RpcEnemyNormalAttack(GameObject clone, float normalAttack,GameObject enemy)
 	{
 		if (enemy == null)
 			return;
@@ -272,16 +276,12 @@ public class PlayerCombat : NetworkBehaviour
 	public void CmdDestroyObjects(GameObject item)
 	{
 		NetworkServer.Destroy(item);
-		//RpcDestroyObject(item);
-	}
-	[ClientRpc]
-	public void RpcDestroyObject(GameObject item)
-	{
-		Destroy(item.gameObject);
 	}
 	[Command(requiresAuthority = false)]
 	public void CmdSetTarget(GameObject enemy)
 	{
+		if (enemy == null)
+			return;
 		enemy.gameObject.GetComponent<EnemyAI>().target = this.transform;
 	}
     #endregion
@@ -312,12 +312,12 @@ public class PlayerCombat : NetworkBehaviour
 			//attack more than base attack to show red color
 			if (normalAttack > value)
 			{
-				CmdCriticalAttack(enemy.gameObject, normalAttack);
+				CmdEnemyCriticalAttack(enemy.gameObject, normalAttack);
 				//DamageNumbers.DamageInstance.displayNumber.text = "<color=red><b>" + normalAttack.ToString() + "</color>";
 			}
 			else
 			{
-				CmdNormalAttack(enemy.gameObject, normalAttack);
+				CmdEnemyNormalAttack(enemy.gameObject, normalAttack);
 			}
 		}
 		else if (enemy.gameObject.CompareTag("Boss"))
@@ -351,59 +351,115 @@ public class PlayerCombat : NetworkBehaviour
 	}
 	public void CastSpell()
 	{
-		if (_character.Intelligence.BaseValue > 0)
+		if (character.Intelligence.BaseValue > 0)
 		{
 			DisableSelfRegenMana();
 			SoundManager.PlaySound(SoundManager.Sound.SpellCast);
 
-			if (playerMovement.currePos == 0)
+			if (_playerMovement.currePos == 0)
 			{
 				CmdSpawnSpellDown();
 			}
-			else if (playerMovement.currePos == 1)
+			else if (_playerMovement.currePos == 1)
 			{
 				CmdSpawnSpellRight();
 			}
-			else if (playerMovement.currePos == 2)
+			else if (_playerMovement.currePos == 2)
 			{
 				CmdSpawnSpellUp();
 			}
-			else if (playerMovement.currePos == 3)
+			else if (_playerMovement.currePos == 3)
 			{
 				CmdSpawnSpellLeft();
 			}
 		}
-		else if(_character.Intelligence.BaseValue == 0)
+		else if(character.Intelligence.BaseValue == 0)
 		{
 			Toast.Show("You need intelligence to use this", 2f, ToastPosition.MiddleCenter);
 		}
 	}
-	[Command(requiresAuthority = false)]
+	[Command(requiresAuthority = true)]
 	public void CmdSpawnSpellDown()
 	{
 		var obj = Instantiate(currentProjectile, castPoint.position, Quaternion.Euler(0, 0, -90));
-		NetworkServer.Spawn(obj);
+		NetworkServer.Spawn(obj,connectionToClient);
+		obj.GetComponent<NetworkIdentity>().AssignClientAuthority(connectionToClient);
+		if (obj.TryGetComponent<FireballDamage>(out FireballDamage fire))
+		{
+			fire.RpcInitializeBallDamage(this);
+		}
+		else if (obj.TryGetComponent<IcicleDamage>(out IcicleDamage ice))
+		{
+			ice.RpcInitializeIcicleDamage(this);
+		}
+		else if (obj.TryGetComponent<ArcticBlastDamage>(out ArcticBlastDamage arctic))
+		{
+			arctic.InitializeBlastDamage(this);
+		}
+
 		obj.GetComponent<Mirror.Experimental.NetworkRigidbody2D>().target.velocity = new Vector2(0, -3 + -speed * Time.deltaTime);
 	}
-	[Command(requiresAuthority = false)]
+	[Command(requiresAuthority = true)]
 	public void CmdSpawnSpellRight()
 	{
 		var obj = Instantiate(currentProjectile, castPoint.position, Quaternion.identity);
-		NetworkServer.Spawn(obj);
+		NetworkServer.Spawn(obj, connectionToClient);
+		obj.GetComponent<NetworkIdentity>().AssignClientAuthority(connectionToClient);
+		if (obj.TryGetComponent<FireballDamage>(out FireballDamage fire))
+		{
+			fire.RpcInitializeBallDamage(this);
+		}
+		else if (obj.TryGetComponent<IcicleDamage>(out IcicleDamage ice))
+		{
+			ice.RpcInitializeIcicleDamage(this);
+		}
+		else if (obj.TryGetComponent<ArcticBlastDamage>(out ArcticBlastDamage arctic))
+		{
+			arctic.InitializeBlastDamage(this);
+		}
+
 		obj.GetComponent<Mirror.Experimental.NetworkRigidbody2D>().target.velocity = new Vector2(3 + speed * Time.deltaTime, 0);
 	}
-	[Command(requiresAuthority = false)]
+	[Command(requiresAuthority = true)]
 	public void CmdSpawnSpellUp()
 	{
 		var obj = Instantiate(currentProjectile, castPoint.position, Quaternion.Euler(0, 0, 90));
-		NetworkServer.Spawn(obj);
+		NetworkServer.Spawn(obj, connectionToClient);
+		obj.GetComponent<NetworkIdentity>().AssignClientAuthority(connectionToClient);
+		if (obj.TryGetComponent<FireballDamage>(out FireballDamage fire))
+		{
+			fire.RpcInitializeBallDamage(this);
+		}
+		else if (obj.TryGetComponent<IcicleDamage>(out IcicleDamage ice))
+		{
+			ice.RpcInitializeIcicleDamage(this);
+		}
+		else if (obj.TryGetComponent<ArcticBlastDamage>(out ArcticBlastDamage arctic))
+		{
+			arctic.InitializeBlastDamage(this);
+		}
+
 		obj.GetComponent<Rigidbody2D>().velocity = new Vector2(0, 3 + speed * Time.deltaTime);
 	}
-	[Command(requiresAuthority = false)]
+	[Command(requiresAuthority = true)]
 	public void CmdSpawnSpellLeft()
 	{
 		var obj = Instantiate(currentProjectile, castPoint.position, Quaternion.Euler(0, 0, -180));
-		NetworkServer.Spawn(obj);
+		NetworkServer.Spawn(obj,connectionToClient);
+		obj.GetComponent<NetworkIdentity>().AssignClientAuthority(connectionToClient);
+		if (obj.TryGetComponent<FireballDamage>(out FireballDamage fire))
+		{
+			fire.RpcInitializeBallDamage(this);
+		}
+		else if (obj.TryGetComponent<IcicleDamage>(out IcicleDamage ice))
+		{
+			ice.RpcInitializeIcicleDamage(this);
+		}
+		else if (obj.TryGetComponent<ArcticBlastDamage>(out ArcticBlastDamage arctic))
+		{
+			arctic.InitializeBlastDamage(this);
+		}
+
 		obj.GetComponent<Rigidbody2D>().velocity = new Vector2(-3 + -speed * Time.deltaTime, 0);
 	}
 
@@ -529,25 +585,25 @@ public class PlayerCombat : NetworkBehaviour
 	}
 	public void CheckSpellCost()
 	{
-		if (_character.Intelligence.BaseValue > 0)
+		if (character.Intelligence.BaseValue > 0)
 		{
 			if (fireballActive && canCastSpells)
 			{
-				if (_character.Mana > fireballMPCost)
+				if (character.Mana > fireballMPCost)
 				{
-					if (_gameManager.fireball1Active)
+					if (gameManager.fireball1Active)
 					{
 						CastSpell();
-						_character.Mana -= fireballMPCost;
+						character.Mana -= fireballMPCost;
 					}
-					if (_gameManager.fireball2Active)
+					if (gameManager.fireball2Active)
 					{
 						CastSpell();
-						_character.Mana -= fireballMPCost * 2;
+						character.Mana -= fireballMPCost * 2;
 					}
 
 				}
-				else if (_character.Mana < fireballMPCost)
+				else if (character.Mana < fireballMPCost)
 				{
 					Toast.Show("You need more MP", 2f, ToastPosition.MiddleCenter);
 					SetCurrentSpell(0);
@@ -556,12 +612,12 @@ public class PlayerCombat : NetworkBehaviour
 			}
 			if (icicleActive && canCastSpells)
 			{
-				if (_character.Mana > icicleMPCost)
+				if (character.Mana > icicleMPCost)
 				{
 					CastSpell();
-					_character.Mana -= icicleMPCost;
+					character.Mana -= icicleMPCost;
 				}
-				else if (_character.Mana < fireballMPCost)
+				else if (character.Mana < fireballMPCost)
 				{
 					Toast.Show("You need more MP", 2f, ToastPosition.MiddleCenter);
 					SetCurrentSpell(0);
@@ -570,12 +626,12 @@ public class PlayerCombat : NetworkBehaviour
 			}
 			if (arcticBlastActive && canCastSpells)
 			{
-				if (_character.Mana > arcticMPCost)
+				if (character.Mana > arcticMPCost)
 				{
 					CastSpell();
-					_character.Mana -= arcticMPCost;
+					character.Mana -= arcticMPCost;
 				}
-				else if (_character.Mana < arcticMPCost)
+				else if (character.Mana < arcticMPCost)
 				{
 					Toast.Show("You need more MP", 2f, ToastPosition.MiddleCenter);
 					SetCurrentSpell(0);
@@ -583,7 +639,7 @@ public class PlayerCombat : NetworkBehaviour
 				}
 			}
 		}
-		else if(_character.Intelligence.BaseValue == 0)
+		else if(character.Intelligence.BaseValue == 0)
 		{
 			Toast.Show("You need Intelligence to use this", 2f, ToastPosition.MiddleCenter);
 		}

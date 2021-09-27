@@ -89,12 +89,15 @@ public class SpellTree : MonoBehaviour
         _levelSystem = _character.gameObject.GetComponent<LevelSystem>();
         fireballSpell.SetActive(true);
         fireballSpell.GetComponentInChildren<Button>().onClick.AddListener(_playerCombat.ActivateFireball);
+        fireballSpell.GetComponentInChildren<Image>().sprite = fireball1Image;
         fireballSpell.SetActive(false);
         icicleBallSpell.SetActive(true);
         icicleBallSpell.GetComponentInChildren<Button>().onClick.AddListener(_playerCombat.ActivateIcicle);
+        icicleBallSpell.GetComponentInChildren<Image>().sprite = fireball2Image;
         icicleBallSpell.SetActive(false);
         arcticBallSpell.SetActive(true);
         arcticBallSpell.GetComponentInChildren<Button>().onClick.AddListener(_playerCombat.ActivateArcticBlast);
+        arcticBallSpell.GetComponentInChildren<Image>().sprite = fireball3Image;
         arcticBallSpell.SetActive(false);
     }
 	void Update()

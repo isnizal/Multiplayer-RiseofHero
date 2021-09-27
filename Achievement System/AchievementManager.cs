@@ -438,7 +438,7 @@ public class AchievementManager : MonoBehaviour
 			if (killSlime1Done == 1)
 			{
 				Toast.Show("You gained " + "<color=red>" + achSO[0].achReward + "</color>", 3f, ToastPosition.MiddleCenter);
-				Character.MyInstance.copperCurrency += 100;
+				_character.copperCurrency += 100;
 				killSlime1Claimed = 1;
 				claimButton[buttonNo].interactable = false;
 			}
@@ -452,7 +452,7 @@ public class AchievementManager : MonoBehaviour
 			if (collectCopper1Done == 1)
 			{
 				Toast.Show("You gained " + "<color=red>" + achSO[1].achReward + "</color>", 3f, ToastPosition.MiddleCenter);
-				LevelSystem.LevelInstance.AddExp(50);
+				_levelSystem.AddExp(50);
 				collectCopper1Claimed = 1;
 				claimButton[buttonNo].interactable = false;
 			}
@@ -466,7 +466,7 @@ public class AchievementManager : MonoBehaviour
 			if (kill50AchDone == 1)
 			{
 				Toast.Show("You gained " + "<color=red>" + achSO[2].achReward + "</color>", 3f, ToastPosition.MiddleCenter);
-				Character.MyInstance.copperCurrency += 300;
+				_character.copperCurrency += 300;
 				kill50AchClaimed = 1;
 				claimButton[buttonNo].interactable = false;
 			}
@@ -480,7 +480,7 @@ public class AchievementManager : MonoBehaviour
 			if (killDevilQueenDone == 1)
 			{
 				Toast.Show("You gained " + "<color=red>" + achSO[3].achReward + "</color>", 3f, ToastPosition.MiddleCenter);
-				LevelSystem.LevelInstance.AddExp(250);
+				_levelSystem.AddExp(250);
 				killDevilQueenClaimed = 1;
 				claimButton[buttonNo].interactable = false;
 			}
@@ -494,7 +494,7 @@ public class AchievementManager : MonoBehaviour
 			if (collectCopper2Done == 1)
 			{
 				Toast.Show("You gained " + "<color=red>" + achSO[4].achReward + "</color>", 3f, ToastPosition.MiddleCenter);
-				LevelSystem.LevelInstance.AddExp(250);
+				_levelSystem.AddExp(250);
 				collectCopper2Claimed = 1;
 				claimButton[buttonNo].interactable = false;
 			}
@@ -508,7 +508,7 @@ public class AchievementManager : MonoBehaviour
 			if (kill500AchDone == 1)
 			{
 				Toast.Show("You gained " + "<color=red>" + achSO[5].achReward + "</color>", 3f, ToastPosition.MiddleCenter);
-				Character.MyInstance.copperCurrency += 300;
+				_character.copperCurrency += 300;
 				kill500AchClaimed = 1;
 				claimButton[buttonNo].interactable = false;
 			}

@@ -128,17 +128,15 @@ public class Character : NetworkBehaviour
 	public void CmdExecuteHealth(int health)
     {
 		this.Health += health;
+		if (Health > MaxHealth)
+			Health = MaxHealth;
     }
-	public void OnHealthChanged(int oldHealth, int newHealth)
-	{
-		Health = newHealth;
-	}
+
 	[Header("------> Variable Stats <------")]
-	[SyncVar(hook = nameof(OnHealthChanged))]
-	public int Health;
+	[SyncVar]public int Health;
 	public int MaxHealth;
 	public float hpRegenTime;
-	public int Mana;
+	[SyncVar]public int Mana;
 	public int MaxMP;
 	public float mpRegenTime;
 	public float playerPosX;
@@ -186,10 +184,11 @@ public class Character : NetworkBehaviour
 	private BaseItemSlot dragItemSlot;
 	private AchievementManager achievement;
 	private GameObject _shopWindow;
-	[HideInInspector]public UIManager uiManager;
 
 	public PlayerMovement playerMovement;
 
+	[Tooltip("UI Manager contain game manager initialize")]
+	[HideInInspector] public UIManager uiManager;
 	private void OnValidate()
 	{
 		if (itemTooltip == null)
@@ -198,32 +197,32 @@ public class Character : NetworkBehaviour
 
 	public void InitializeCharacter()
 	{
-		if (isLocalPlayer)
+		if (hasAuthority)
         {
 			Health = MaxHealth;
 			Mana = MaxMP;
 
+			sellItemArea = FindObjectOfType<DropSellArea>();
+			dropItemArea = FindObjectOfType<DropItemArea>();
 			uiManager = FindObjectOfType<UIManager>();
+			uiManager.InitializeAwake(this);
             achievement = FindObjectOfType<AchievementManager>();
             Inventory = FindObjectOfType<Inventory>();
-            EquipmentPanel = FindObjectOfType<EquipmentPanel>();
+			EquipmentPanel = FindObjectOfType<EquipmentPanel>();
             statPanel = FindObjectOfType<StatPanel>();
             itemTooltip = FindObjectOfType<ItemTooltip>();
             itemTooltip.gameObject.SetActive(false);
             draggableItem = GameObject.Find("Draggable Item").GetComponent<Image>();
-            dropItemArea = FindObjectOfType<DropItemArea>();
             dropItemDialog = GameObject.Find("DropItemDialog").GetComponent<QuestionDialog>();
             dropItemDialog.gameObject.SetActive(false);
             playerMovement = gameObject.GetComponent<PlayerMovement>();
             itemSaveManager = FindObjectOfType<ItemSaveManager>();
-            sellItemArea = FindObjectOfType<DropSellArea>();
             craftingWindow = FindObjectOfType<CraftingWindow>();
             craftingWindow.gameObject.SetActive(false);
             //_shopWindow = sellItemArea.gameObject.transform.parent.gameObject;
             //sellItemArea.gameObject.transform.parent.gameObject.SetActive(false);
             sellItemDialog = GameObject.Find("SellItemDialog").GetComponent<QuestionDialog>();
             sellItemDialog.gameObject.SetActive(false);
-            FindObjectOfType<UIManager>().InitializeAwake(this);
             SetupEvents();
         }
     }
@@ -313,6 +312,8 @@ public class Character : NetworkBehaviour
 	public void CmdExecuteNewHealth(int newHealth)
 	{
 		this.newHealth += newHealth;
+		if (newHealth > MaxHealth)
+			newHealth = MaxHealth;
 	}
 	
 	[SyncVar(hook = nameof(OnNewHealthChanged))]public int newHealth;
@@ -324,6 +325,8 @@ public class Character : NetworkBehaviour
 	public void OnNewHealthChanged(int oldHealth, int newHealth)
 	{
 		this.newHealth = newHealth;
+		if (this.newHealth > MaxHealth)
+			this.newHealth = MaxHealth;
 	}
 	public IEnumerator SetSelfRegenHp()
 	{
@@ -351,12 +354,14 @@ public class Character : NetworkBehaviour
 			if (ResetSelfRegenHp == null)
 				break;
 
-			newHealth += 1;
-			Health = newHealth;
-			UIManager.Instance.UpdateHealth();
+			if (isClient)
+			{
+				ExecuteHealth(1);
+			}
+			uiManager.UpdateHealth();
 			if (Health > MaxHealth)
 			{
-				Health = MaxHealth;
+				break;
 			}
 			yield return new WaitForSeconds(Time);
 		}
@@ -378,9 +383,39 @@ public class Character : NetworkBehaviour
 		}
 
 	}
+	public void ExecuteMana(int mana)
+	{
+		CmdExecuteMana(mana);
+	}
+	[Command(requiresAuthority = true)]
+	public void CmdExecuteMana(int mana)
+	{
+		Mana += mana;
+		Debug.Log(Mana);
+		if (Mana > MaxMP)
+			Mana = MaxMP;
+	}
+
+	public void ExecuteNewMana(int mana)
+	{
+		CmdExecuteNewMana(mana);
+	}
+	[Command(requiresAuthority = false)]
+	public void CmdExecuteNewMana(int mana)
+	{
+		newMana += mana;
+		if (newMana > MaxMP)
+			newMana = MaxMP;
+	}
+	private void OnManaChanged(int oldMana, int newMana)
+	{
+		this.newMana = newMana;
+		if (this.newMana > MaxMP)
+			newMana = MaxMP;
+	}
 	[HideInInspector] public bool isSelfManaRegen = false;
 	[HideInInspector] public bool onRestoreMana = false;
-	[HideInInspector] public int newMana;
+	[SyncVar(hook = nameof( OnManaChanged))][HideInInspector] public int newMana;
 	[HideInInspector]public IEnumerator RestoreMana;
 	[HideInInspector] public IEnumerator ResetSelfRegenMana;
 	public void MpRegen()
@@ -425,12 +460,14 @@ public class Character : NetworkBehaviour
 			if (ResetSelfRegenMana == null)
 				break;
 
-			newMana += 1;
-			Mana = newMana;
+			if (isClient)
+			{
+				ExecuteMana(1);
+			}
 			uiManager.UpdateHealth();
 			if (Mana > MaxMP)
 			{
-				Mana = MaxMP;
+				break;
 			}
 			yield return new WaitForSeconds(Time);
 		}

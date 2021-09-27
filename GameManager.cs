@@ -76,35 +76,42 @@ public class GameManager :MonoBehaviour
 	private PlayerMovement _playerMovement;
 	private LevelSystem _levelSystem;
 	private UIManager _uiManager;
-    public void InitializeGameManagerVariable(Character player, UIManager uiManager)
+	public SpellTree _spellTree;
+	private StatPanel _statPanel;
+	private StatsModifier _statsModifier;
+	private DailyRewardSystem.DailyRewards _dailyRewards;
+
+	public void InitializeGameManagerVariable(Character character, UIManager uiManager)
 	{
-		if (player.isLocalPlayer)
+		if (character.isLocalPlayer)
 		{
-			_playerCombat = player.gameObject.GetComponent<PlayerCombat>();
-			_character = player;
-			_playerMovement = player.gameObject.GetComponent<PlayerMovement>();
-			_levelSystem = player.gameObject.GetComponent<LevelSystem>();
+			_playerCombat = character.gameObject.GetComponent<PlayerCombat>();
+			_character = character;
+			_playerMovement = character.gameObject.GetComponent<PlayerMovement>();
+			_levelSystem = character.gameObject.GetComponent<LevelSystem>();
 			_uiManager = uiManager;
 
 			var shopEquip = FindObjectOfType<ShopEquipmentManager>();
-			shopEquip.InitializeShopEquipmentManger(player);
+			shopEquip.InitializeShopEquipmentManger(character);
 			var shopItem = FindObjectOfType<ShopItemManager>();
-			shopItem.InitializeShopItemManager(player);
+			shopItem.InitializeShopItemManager(character);
 			shopItem.gameObject.SetActive(false);
 			shopItem.transform.parent.gameObject.SetActive(false);
-			FindObjectOfType<SpellTree>().InitializeSpell(player);
-			FindObjectOfType<StatPanel>().InitializeStatPanel(player);
-			FindObjectOfType<StatsModifier>().InitializeStatModifier(player);
-			FindObjectOfType<DailyRewardSystem.DailyRewards>().InitializeDailyRewards(player);
 
-
+			_dailyRewards = FindObjectOfType<DailyRewardSystem.DailyRewards>();
+			_dailyRewards.InitializeDailyRewards(character);
+			_statPanel = FindObjectOfType<StatPanel>();
+			_statPanel.InitializeStatPanel(character);
+			_statsModifier = FindObjectOfType<StatsModifier>();
+			_statsModifier.InitializeStatModifier(character);
 			_spellTree = FindObjectOfType<SpellTree>();
+			_spellTree.InitializeSpell(character);
 			//respawn click
 			GetComponent<AudioSource>().Play();
 			yesRespawnBtn.onClick.AddListener(ClickYesRespawn);
 			noRespawnBtn.onClick.AddListener(ClickNoRespawn);
 
-			this._player = player.gameObject;
+			this._player = character.gameObject;
 
 			joystickCanvas = GameObject.Find("JoystickCanvas");
 			//player hud
@@ -133,7 +140,7 @@ public class GameManager :MonoBehaviour
 
 		}
 	}
-	private SpellTree _spellTree;
+
     private void Update()
 	{
 		if (_spellTree  == null)
@@ -276,4 +283,29 @@ public class GameManager :MonoBehaviour
 	}
 }
 
+public struct MyGameManager
+{
+	//public SpellTree spell { get; private set; }
+	public bool arcticblass1 { get; private set; }
+	public bool arcticblass2 { get; private set; }
 
+	public MyGameManager( bool arcticblass1, bool arcticblass2)
+    {
+		//this.spell = tree;
+		this.arcticblass1 = arcticblass1;
+		this.arcticblass2 = arcticblass2;
+    }
+}
+public static class ReadWriteGameManager
+{
+	public static void WriteGameManager(this NetworkWriter write, MyGameManager gameManager)
+	{
+		//write.WriteGameObject(gameManager.spell.GetComponent<SpellTree>().gameObject);
+		write.WriteBool(gameManager.arcticblass2);
+		write.WriteBool(gameManager.arcticblass1);
+	}
+	public static MyGameManager ReadGameManager(this NetworkReader read)
+	{
+		return new MyGameManager(read.ReadBool(), read.ReadBool());
+	}
+}

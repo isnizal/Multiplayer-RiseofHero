@@ -1,35 +1,45 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
-public class ArcticBlastDamage : MonoBehaviour
+[RequireComponent(typeof(Mirror.Experimental.NetworkRigidbody2D))]
+public class ArcticBlastDamage : NetworkBehaviour
 {
-	public float totalArcticDamage;
-
-	public float rotatingSpeed = 200f;
-	public float radius;
-	public float speed;
-	Rigidbody2D rb;
 
 
-	private void Start()
+	[SyncVar]public float rotatingSpeed = 200f;
+	[SyncVar]public float radius;
+	[SyncVar]public float speed;
+	//Rigidbody2D rb;
+	private Mirror.Experimental.NetworkRigidbody2D _netrgb2D;
+	[SyncVar] private float totalArcticDamage;
+	[SyncVar] private PlayerCombat _playerCombat;
+	[SyncVar] private Character _character;
+
+	private GameManager _gameManager;
+	private SpellTree _spellTree;
+
+	[ClientRpc]
+	public void InitializeBlastDamage(PlayerCombat _playerCombat)
 	{
-		rb = GetComponent<Rigidbody2D>();
-	}
+		//rb = GetComponent<Rigidbody2D>();
+		_netrgb2D = GetComponent<Mirror.Experimental.NetworkRigidbody2D>();
 
-	private void Awake()
-	{
+		this._playerCombat = _playerCombat;
+		_character = this._playerCombat.GetComponent<Character>();
+		_gameManager =_character.gameObject.GetComponent<PlayerMovement>()._gameManager;
+		_spellTree = _gameManager._spellTree;
 		CalcArcticDamage();
 	}
 
 	private void Update()
 	{
-		ProjectileHoming();
+		CmdProjectileHoming();
 
 	}
-
-
-	public void ProjectileHoming()
+	[Command(requiresAuthority = true)]
+	public void CmdProjectileHoming()
 	{
 		float distanceToClosestEnemy = Mathf.Infinity;
 		EnemyStats target = null;
@@ -59,50 +69,57 @@ public class ArcticBlastDamage : MonoBehaviour
 					Vector2 pointToTarget = (Vector2)transform.position - (Vector2)target.transform.position;
 					pointToTarget.Normalize();
 					float value = Vector3.Cross(pointToTarget, transform.right).z;
-					rb.angularVelocity = rotatingSpeed * value;
-					rb.velocity = transform.right * speed;
+					_netrgb2D.target.angularVelocity = rotatingSpeed * value;
+					_netrgb2D.target.velocity = transform.right * speed;
 				}
 			}
 		}
 	}
-
 	private void OnTriggerEnter2D(Collider2D other)
 	{
 		if (other.CompareTag("Enemy"))
 		{
-			other.GetComponent<EnemyStats>().ETakeDamage((int)totalArcticDamage, other.gameObject);
-			var clone = (GameObject)Instantiate(PlayerCombat.CombatInstance.damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
-			clone.GetComponent<DamageNumbers>().damageNumber = (int)totalArcticDamage;
-			Destroy(this.gameObject);
+			_playerCombat.CmdEnemyNormalAttack(other.gameObject, totalArcticDamage);
+			CmdDestroySelf();
 		}
-		if(other.CompareTag("Boss"))
+		if (other.CompareTag("Boss"))
 		{
-			other.GetComponent<BossStats>().ETakeDamage((int)totalArcticDamage,other.gameObject);
-			var clone = (GameObject)Instantiate(PlayerCombat.CombatInstance.damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
-			clone.GetComponent<DamageNumbers>().damageNumber = (int)totalArcticDamage;
-			Destroy(this.gameObject);
+			_playerCombat.CmdBossNormalAttack(other.gameObject, totalArcticDamage);
+			CmdDestroySelf();
+		}
+	}
+	[Command(requiresAuthority = true)]
+	public void CmdDestroySelf()
+	{
+		NetworkServer.Destroy(this.gameObject);
+	}
+	[Client]
+	public void CalcArcticDamage()
+	{
+		if (_gameManager.arcticBlast1Active)
+		{
+			if (_spellTree.arcticBlast1Level <= _spellTree.arcticBlast1LevelMax)
+			{
+				float calcarcticSpellValue = _character.Intelligence.BaseValue + _character.Intelligence.Value;
+				float calcLevelMultiplier = _spellTree.arcticBlast1Level * 0.25f;
+				totalArcticDamage = Random.Range((int)calcarcticSpellValue * calcLevelMultiplier / .5f, (int)calcarcticSpellValue * calcLevelMultiplier * .5f);
+			}
+		}
+		if (_gameManager.arcticBlast2Active)
+		{
+			if (_spellTree.arcticBlast2Level <= _spellTree.arcticBlast2LevelMax)
+			{
+				float calcarcticSpellValue2 = _character.Intelligence.BaseValue + _character.Intelligence.Value;
+				float calcLevelMultiplier2 = _spellTree.arcticBlast1Level * .8f;
+				CmdCalCulateFireBallDamage(calcarcticSpellValue2, calcLevelMultiplier2);
+			}
 		}
 	}
 
-	public void CalcArcticDamage()
+	[Command(requiresAuthority = true)]
+	public void CmdCalCulateFireBallDamage(float fireSpellValue, float levelMultiplier)
 	{
-		if(GameManager.GameManagerInstance.arcticBlast1Active)
-		{
-			if(SpellTree.SpellInstance.arcticBlast1Level <= SpellTree.SpellInstance.arcticBlast1LevelMax)
-			{
-				float calcarcticSpellValue = Character.MyInstance.Intelligence.BaseValue + Character.MyInstance.Intelligence.Value;
-				float calcLevelMultiplier = SpellTree.SpellInstance.arcticBlast1Level * 0.25f;
-				totalArcticDamage = Random.Range((int)calcarcticSpellValue * calcLevelMultiplier / .5f, (int)calcarcticSpellValue * calcLevelMultiplier * .5f);
-			}
-		}	
-		if(GameManager.GameManagerInstance.arcticBlast2Active)
-		{
-			if(SpellTree.SpellInstance.arcticBlast2Level <= SpellTree.SpellInstance.arcticBlast2LevelMax)
-			{
-				float calcarcticSpellValue2 = Character.MyInstance.Intelligence.BaseValue + Character.MyInstance.Intelligence.Value;
-				float calcLevelMultiplier2 = SpellTree.SpellInstance.arcticBlast1Level * .8f;
-				totalArcticDamage = Random.Range((int)calcarcticSpellValue2 * calcLevelMultiplier2 / .5f, (int)calcarcticSpellValue2 * calcLevelMultiplier2 * .5f);
-			}
-		}
+		totalArcticDamage = Random.Range((int)fireSpellValue * levelMultiplier / .5f, (int)fireSpellValue * levelMultiplier * .5f);
 	}
+
 }

@@ -1,32 +1,62 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
-public class IcicleDamage : MonoBehaviour
+[RequireComponent(typeof(Mirror.Experimental.NetworkRigidbody2D))]
+public class IcicleDamage : NetworkBehaviour
 {
-	public float totalIcicleDamage;
+
 	public float speed;
-	private Rigidbody2D _rb;
+	//private Rigidbody2D _rb;
+	private Mirror.Experimental.NetworkRigidbody2D _netRb2D;
+	[SyncVar]private float timeToDestroy = 1f;
+	[SyncVar]private PlayerCombat _playerCombat;
+	[SyncVar]private Character _character;
+	[SyncVar]private float totalIcicleDamage;
+	private GameManager _gameManager;
+	private SpellTree _spellTree;
 
-	private void Awake()
+	[ClientRpc]
+	public void RpcInitializeIcicleDamage(PlayerCombat _playerCombat)
 	{
-		
-	}
-
-	private void Start()
-	{
+		this._playerCombat = _playerCombat;
+		_character = _playerCombat.GetComponent<Character>();
+		_gameManager = _playerCombat.gameManager;
+		_spellTree = _gameManager._spellTree;
+		//_rb = GetComponent<Rigidbody2D>();
+		_netRb2D = GetComponent<Mirror.Experimental.NetworkRigidbody2D>();
 		CalcIcicleDamage();
-		_rb = GetComponent<Rigidbody2D>();
+	}
+	[Command(requiresAuthority = true)]
+	private void CmdMoveFireBall()
+	{
+		RpcMoveFireBall();
+	}
+	[ClientRpc]
+	private void RpcMoveFireBall()
+	{
+		_netRb2D.target.MovePosition(transform.TransformPoint(speed * Time.deltaTime * Vector3.right));
 	}
 
 	private void Update()
 	{
-		
-		_rb.MovePosition(transform.TransformPoint(speed * Time.deltaTime * Vector3.right));
+		if (hasAuthority)
+		{
+			CmdMoveFireBall();
+			CmdDestroySelf();
+		}
 	}
-
-
-
+	[Command(requiresAuthority = true)]
+	private void CmdDestroySelf()
+	{
+		timeToDestroy -= Time.deltaTime;
+		if (timeToDestroy <= 0)
+		{
+			Destroy(this.gameObject);
+			NetworkServer.Destroy(this.gameObject);
+		}
+	}
 	private void OnTriggerEnter2D(Collider2D other)
 	{
 		if (other.CompareTag("Enemy"))
@@ -35,10 +65,11 @@ public class IcicleDamage : MonoBehaviour
 			enemyAI.gameObject.GetComponent<SpriteRenderer>().color = Color.blue;
 			enemyAI.freezing = true;
 			enemyAI.StartFreeze(2f);
-			other.GetComponent<EnemyStats>().ETakeDamage((int)totalIcicleDamage,other.gameObject);
-			var clone = (GameObject)Instantiate(PlayerCombat.CombatInstance.damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
-			clone.GetComponent<DamageNumbers>().damageNumber = (int)totalIcicleDamage;
-			Destroy(this.gameObject);
+			//other.GetComponent<EnemyStats>().ETakeDamage((int)totalIcicleDamage,other.gameObject);
+			//var clone = (GameObject)Instantiate(PlayerCombat.CombatInstance.damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
+			//clone.GetComponent<DamageNumbers>().damageNumber = (int)totalIcicleDamage;
+			_playerCombat.CmdEnemyNormalAttack(other.gameObject, totalIcicleDamage);
+			CmdDestroyThis();
 		}
 		if(other.CompareTag("Boss"))
 		{
@@ -46,32 +77,50 @@ public class IcicleDamage : MonoBehaviour
 			enemyAI.gameObject.GetComponent<SpriteRenderer>().color = Color.blue;
 			enemyAI.freezing = true;
 			enemyAI.StartFreeze(1f);
-			other.GetComponent<BossStats>().ETakeDamage((int)totalIcicleDamage,other.gameObject);
-			var clone = (GameObject)Instantiate(PlayerCombat.CombatInstance.damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
-			clone.GetComponent<DamageNumbers>().damageNumber = (int)totalIcicleDamage;
-			Destroy(this.gameObject);
+			//other.GetComponent<BossStats>().ETakeDamage((int)totalIcicleDamage,other.gameObject);
+			//var clone = (GameObject)Instantiate(PlayerCombat.CombatInstance.damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
+			//clone.GetComponent<DamageNumbers>().damageNumber = (int)totalIcicleDamage;
+			_playerCombat.CmdEnemyNormalAttack(other.gameObject, totalIcicleDamage);
+			CmdDestroyThis();
 		}
 	}
-
-	public void CalcIcicleDamage()
+	[Command(requiresAuthority = true)]
+	private void CmdCalCulateIcicleBallDamage(float fireSpellValue, float levelMultiplier)
 	{
-		if(GameManager.GameManagerInstance.icicle1Active)
+		totalIcicleDamage = Random.Range((int)fireSpellValue * levelMultiplier / .5f, (int)fireSpellValue * levelMultiplier * .5f);
+		RpcCalculateIcicleBallDamage(totalIcicleDamage);
+	}
+	[ClientRpc]
+	private void RpcCalculateIcicleBallDamage(float totalIcicleDamage)
+	{
+		this.totalIcicleDamage = totalIcicleDamage;
+	}
+
+	[Command(requiresAuthority = true)]
+	private void CmdDestroyThis()
+	{
+		NetworkServer.Destroy(this.gameObject);
+	}
+	[Client]
+	private void CalcIcicleDamage()
+	{
+		if(_gameManager.icicle1Active)
 		{
-			if (SpellTree.SpellInstance.icicle1Level <= SpellTree.SpellInstance.icicle1LevelMax)
+			if (_spellTree.icicle1Level <= _spellTree.icicle1LevelMax)
 			{
-				float calcicicleSpellValue = Character.MyInstance.Intelligence.BaseValue + Character.MyInstance.Intelligence.Value;
-				float calcLevelMultiplier = SpellTree.SpellInstance.icicle1Level * 0.2f;
-				totalIcicleDamage = Random.Range((int)calcicicleSpellValue * calcLevelMultiplier / .5f, (int)calcicicleSpellValue * calcLevelMultiplier * .5f);
+				float calcicicleSpellValue = _character.Intelligence.BaseValue + _character.Intelligence.Value;
+				float calcLevelMultiplier = _spellTree.icicle1Level * 0.2f;
+				CmdCalCulateIcicleBallDamage(calcicicleSpellValue, calcLevelMultiplier);
 			}
 
 		}
-		if(GameManager.GameManagerInstance.icicle2Active)
+		if(_gameManager.icicle2Active)
 		{
-			if(SpellTree.SpellInstance.icicle2Level <= SpellTree.SpellInstance.icicle2LevelMax)
+			if(_spellTree.icicle2Level <= _spellTree.icicle2LevelMax)
 			{
-				float calcicicleSpellValue2 = Character.MyInstance.Intelligence.BaseValue + Character.MyInstance.Intelligence.Value;
-				float calcLevelMultiplier2 = SpellTree.SpellInstance.icicle2Level * .5f;
-				totalIcicleDamage = Random.Range((int)calcicicleSpellValue2 * calcLevelMultiplier2 / .5f, (int)calcicicleSpellValue2 * calcLevelMultiplier2 * .5f);
+				float calcicicleSpellValue2 = _character.Intelligence.BaseValue + _character.Intelligence.Value;
+				float calcLevelMultiplier2 = _spellTree.icicle2Level * .5f;
+				CmdCalCulateIcicleBallDamage(calcicicleSpellValue2, calcLevelMultiplier2);
 			}
 		}
 

@@ -11,15 +11,15 @@ public class HealMpItemEffect : UsableItemEffect
 		if (character.Mana < character.MaxMP)
 		{
 
-			character.Mana += HealMpAmount;
+			character.ExecuteMana(HealMpAmount);
 			if (character.Mana > character.MaxMP)
 			{
-				character.Mana = character.MaxMP;
+				character.ExecuteMana(character.MaxMP);
 			}
 		}
 		else if (character.Mana == character.MaxMP)
 		{
-			character.Mana = character.MaxMP;
+			character.ExecuteMana(character.MaxMP);
 		}
 	}
 
