@@ -7,19 +7,25 @@ public class HealMpItemEffect : UsableItemEffect
 
 	public override void ExecuteEffect(UsableItem usableItem, Character character)
 	{
-		PlayerCombat.CombatInstance.DisableSelfRegenMana();
+		PlayerCombat _playerCombat = character.gameObject.GetComponent<PlayerCombat>();
+		_playerCombat.DisableSelfRegenMana();
 		if (character.Mana < character.MaxMP)
 		{
-
+			character.ExecuteNewMana(HealMpAmount);
 			character.ExecuteMana(HealMpAmount);
+			character.uiManager.UpdateMP();
 			if (character.Mana > character.MaxMP)
 			{
+				character.ExecuteNewMana(character.MaxMP);
 				character.ExecuteMana(character.MaxMP);
+				character.uiManager.UpdateMP();
 			}
 		}
 		else if (character.Mana == character.MaxMP)
 		{
+			character.ExecuteNewMana(character.MaxMP);
 			character.ExecuteMana(character.MaxMP);
+			character.uiManager.UpdateMP();
 		}
 	}
 

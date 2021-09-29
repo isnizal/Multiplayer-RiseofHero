@@ -117,26 +117,13 @@ public class Character : NetworkBehaviour
 		achievement.kill500AchClaimed = loadedStats[20];
 		achievement.kill500AchDone = loadedStats[21];
 	}
-	public void ExecuteHealth(int health)
-	{
-		if (isClient)
-		{
-			CmdExecuteHealth(health);
-		}
-	}
-	[Command(requiresAuthority = true)]
-	public void CmdExecuteHealth(int health)
-    {
-		this.Health += health;
-		if (Health > MaxHealth)
-			Health = MaxHealth;
-    }
+
 
 	[Header("------> Variable Stats <------")]
-	[SyncVar]public int Health;
+	[SyncVar] public int Health;
+	[SyncVar] public int Mana;
 	public int MaxHealth;
 	public float hpRegenTime;
-	[SyncVar]public int Mana;
 	public int MaxMP;
 	public float mpRegenTime;
 	public float playerPosX;
@@ -198,34 +185,34 @@ public class Character : NetworkBehaviour
 	public void InitializeCharacter()
 	{
 		if (hasAuthority)
-        {
-			Health = MaxHealth;
-			Mana = MaxMP;
+		{
+			ExecuteHealth(MaxHealth);
+			ExecuteMana(MaxMP);
 
 			sellItemArea = FindObjectOfType<DropSellArea>();
 			dropItemArea = FindObjectOfType<DropItemArea>();
 			uiManager = FindObjectOfType<UIManager>();
 			uiManager.InitializeAwake(this);
-            achievement = FindObjectOfType<AchievementManager>();
-            Inventory = FindObjectOfType<Inventory>();
+			achievement = FindObjectOfType<AchievementManager>();
+			Inventory = FindObjectOfType<Inventory>();
 			EquipmentPanel = FindObjectOfType<EquipmentPanel>();
-            statPanel = FindObjectOfType<StatPanel>();
-            itemTooltip = FindObjectOfType<ItemTooltip>();
-            itemTooltip.gameObject.SetActive(false);
-            draggableItem = GameObject.Find("Draggable Item").GetComponent<Image>();
-            dropItemDialog = GameObject.Find("DropItemDialog").GetComponent<QuestionDialog>();
-            dropItemDialog.gameObject.SetActive(false);
-            playerMovement = gameObject.GetComponent<PlayerMovement>();
-            itemSaveManager = FindObjectOfType<ItemSaveManager>();
-            craftingWindow = FindObjectOfType<CraftingWindow>();
-            craftingWindow.gameObject.SetActive(false);
-            //_shopWindow = sellItemArea.gameObject.transform.parent.gameObject;
-            //sellItemArea.gameObject.transform.parent.gameObject.SetActive(false);
-            sellItemDialog = GameObject.Find("SellItemDialog").GetComponent<QuestionDialog>();
-            sellItemDialog.gameObject.SetActive(false);
-            SetupEvents();
-        }
-    }
+			statPanel = FindObjectOfType<StatPanel>();
+			itemTooltip = FindObjectOfType<ItemTooltip>();
+			itemTooltip.gameObject.SetActive(false);
+			draggableItem = GameObject.Find("Draggable Item").GetComponent<Image>();
+			dropItemDialog = GameObject.Find("DropItemDialog").GetComponent<QuestionDialog>();
+			dropItemDialog.gameObject.SetActive(false);
+			playerMovement = gameObject.GetComponent<PlayerMovement>();
+			itemSaveManager = FindObjectOfType<ItemSaveManager>();
+			craftingWindow = FindObjectOfType<CraftingWindow>();
+			craftingWindow.gameObject.SetActive(false);
+			//_shopWindow = sellItemArea.gameObject.transform.parent.gameObject;
+			//sellItemArea.gameObject.transform.parent.gameObject.SetActive(false);
+			sellItemDialog = GameObject.Find("SellItemDialog").GetComponent<QuestionDialog>();
+			sellItemDialog.gameObject.SetActive(false);
+			SetupEvents();
+		}
+	}
 	public bool onInput = false;
 	private void SetupEvents()
 	{
@@ -265,11 +252,11 @@ public class Character : NetworkBehaviour
 	{
 		if (isLocalPlayer)
 		{
-			if(!onInput)
+			if (!onInput)
 				baseMaxHealth = 50 + Vitality.BaseValue;
-				VitalityMonitor();
-				playerPosX = transform.position.x;
-				playerPosY = transform.position.y;
+			VitalityMonitor();
+			playerPosX = transform.position.x;
+			playerPosY = transform.position.y;
 		}
 	}
 	public void DisableAllRegen()
@@ -277,7 +264,7 @@ public class Character : NetworkBehaviour
 		ResetSelfRegenHp = null;
 		ResetSelfRegenMana = null;
 	}
-	[HideInInspector]public bool notInCombat = true;
+	[HideInInspector] public bool notInCombat = true;
 	private bool currentlyHealing = false;
 	private bool currentlyMana = false;
 	private void IdleRegen()
@@ -306,28 +293,46 @@ public class Character : NetworkBehaviour
 		if (isClient)
 		{
 			CmdExecuteNewHealth(newHealth);
+
 		}
 	}
 	[Command(requiresAuthority = true)]
 	public void CmdExecuteNewHealth(int newHealth)
 	{
+		
+		this.newHealth = this.Health;
 		this.newHealth += newHealth;
-		if (newHealth > MaxHealth)
-			newHealth = MaxHealth;
+		this.Health = this.newHealth;
+		if (this.newHealth > MaxHealth)
+			this.newHealth = MaxHealth;
 	}
-	
-	[SyncVar(hook = nameof(OnNewHealthChanged))]public int newHealth;
+	public void ExecuteHealth(int health)
+	{
+		if (isClient)
+		{
+			CmdExecuteHealth(health);
+
+		}
+	}
+	[Command(requiresAuthority = true)]
+	public void CmdExecuteHealth(int health)
+	{
+
+		this.Health += health;
+		this.newHealth = this.Health;
+
+		if (this.Health > MaxHealth)
+			this.Health = MaxHealth;
+
+
+	}
+	[SyncVar] public int newHealth;
 	[HideInInspector] public bool isSelfHPRegen = false;
 	[HideInInspector] public bool enemyHit = false;
 	[HideInInspector] public bool onRestoreHealth = false;
 	[HideInInspector] public IEnumerator RestoreHealth;
 	[HideInInspector] public IEnumerator ResetSelfRegenHp;
-	public void OnNewHealthChanged(int oldHealth, int newHealth)
-	{
-		this.newHealth = newHealth;
-		if (this.newHealth > MaxHealth)
-			this.newHealth = MaxHealth;
-	}
+
 	public IEnumerator SetSelfRegenHp()
 	{
 		yield return new WaitForSeconds(hpRegenTime);
@@ -337,32 +342,17 @@ public class Character : NetworkBehaviour
 	private IEnumerator RestorePotion(float Time)
 	{
 		newHealth = Health;
-		//float newRegenAmount = MaxHealth - newHealth;
 		onRestoreHealth = true;
 		while (newHealth < MaxHealth)
-        {
-
-            currentlyHealing = true;
-			//more than the max health
-			if (newHealth > MaxHealth)
-				break;
+		{
+			currentlyHealing = true;
+			ExecuteNewHealth(1);
 			//break if enemy hit, another restore health and self regen happening
-			if (enemyHit)
-				break;
-			if (RestoreHealth == null)
-				break;
-			if (ResetSelfRegenHp == null)
+			//more than the max health
+			if (newHealth > MaxHealth || enemyHit | RestoreHealth == null || ResetSelfRegenHp == null)
 				break;
 
-			if (isClient)
-			{
-				ExecuteHealth(1);
-			}
-			uiManager.UpdateHealth();
-			if (Health > MaxHealth)
-			{
-				break;
-			}
+
 			yield return new WaitForSeconds(Time);
 		}
 		currentlyHealing = false;
@@ -390,32 +380,30 @@ public class Character : NetworkBehaviour
 	[Command(requiresAuthority = true)]
 	public void CmdExecuteMana(int mana)
 	{
-		Mana += mana;
-		Debug.Log(Mana);
-		if (Mana > MaxMP)
-			Mana = MaxMP;
+		this.Mana += mana;
+		this.newMana = this.Mana;
+		if (this.Mana > MaxMP)
+			this.Mana = MaxMP;
+
 	}
 
 	public void ExecuteNewMana(int mana)
 	{
 		CmdExecuteNewMana(mana);
 	}
-	[Command(requiresAuthority = false)]
+	[Command(requiresAuthority = true)]
 	public void CmdExecuteNewMana(int mana)
 	{
-		newMana += mana;
-		if (newMana > MaxMP)
-			newMana = MaxMP;
+		this.newMana = Mana;
+		this.newMana += mana;
+		this.Mana = this.newMana;
+		if (this.Mana > MaxMP)
+			this.Mana = MaxMP;
 	}
-	private void OnManaChanged(int oldMana, int newMana)
-	{
-		this.newMana = newMana;
-		if (this.newMana > MaxMP)
-			newMana = MaxMP;
-	}
+
 	[HideInInspector] public bool isSelfManaRegen = false;
 	[HideInInspector] public bool onRestoreMana = false;
-	[SyncVar(hook = nameof( OnManaChanged))][HideInInspector] public int newMana;
+	[SyncVar][HideInInspector] public int newMana;
 	[HideInInspector]public IEnumerator RestoreMana;
 	[HideInInspector] public IEnumerator ResetSelfRegenMana;
 	public void MpRegen()
@@ -443,32 +431,16 @@ public class Character : NetworkBehaviour
 	}
 	private IEnumerator RestoreMP(float Time)
 	{
-		newMana = Mana ;
-		//float newRegenAmount = MaxHealth - newHealth;
+		newMana = Mana;
 		onRestoreMana = true;
 		while (newMana < MaxMP)
 		{
 			currentlyMana = true;
-			//more than the max health
-			if (newMana > MaxMP)
-				break;
-			//break if enemy hit, another restore health and self regen happening
-			if (enemyHit)
-				break;
-			if (RestoreMana == null)
-				break;
-			if (ResetSelfRegenMana == null)
-				break;
+			ExecuteNewMana(1);
 
-			if (isClient)
-			{
-				ExecuteMana(1);
-			}
-			uiManager.UpdateHealth();
-			if (Mana > MaxMP)
-			{
+			//more than the max health
+			if (newMana > MaxMP || enemyHit || RestoreMana == null || ResetSelfRegenMana == null)
 				break;
-			}
 			yield return new WaitForSeconds(Time);
 		}
 		currentlyMana = false;

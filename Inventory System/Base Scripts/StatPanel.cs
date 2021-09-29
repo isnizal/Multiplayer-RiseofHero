@@ -40,7 +40,7 @@ public class StatPanel : MonoBehaviour
 	{
 		stats = charStats;
 
-		if (stats.Length > statDisplays.Length)
+		if (stats.Length > statDisplays.Length + 1)
 		{
 			Debug.LogError("Not Enough Stat Displays!");
 			return;

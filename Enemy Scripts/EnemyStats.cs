@@ -25,12 +25,11 @@ public class EnemyStats : NetworkBehaviour
     [Header("Enemy Stats")]
     public int areaSpawnNumber;
     public string enemyName;
-    [SyncVar(hook = nameof(OnEnemyHpChanged))]
-    public int enemyCurrentHP;
-    public int enemyMaxHP;
-    public int enemyAttackPower;
-    public int enemyDefense;
-    public float attackCoolDownTime = 1f;
+    [SyncVar(hook = nameof(OnEnemyHpChanged))]public int enemyCurrentHP;
+    [SyncVar]public int enemyMaxHP;
+    [SyncVar]public int enemyAttackPower;
+    [SyncVar]public int enemyDefense;
+    [SyncVar]public float attackCoolDownTime = 1f;
     [Space]
     public int expToGive;
 
@@ -45,7 +44,6 @@ public class EnemyStats : NetworkBehaviour
         _spawner = FindObjectOfType<Spawner>();
         enemyCurrentHP = enemyMaxHP;
     }
-
     void FixedUpdate()
     {
         if (isServer)
@@ -53,6 +51,7 @@ public class EnemyStats : NetworkBehaviour
             EHealthCheck();
         }
     }
+    //set on the server
     private LevelSystem _levelSystem;
     public void OnEnemyHpChanged(int oldHp, int newHp)
     {
@@ -60,7 +59,6 @@ public class EnemyStats : NetworkBehaviour
     }
     public void ETakeDamage(int eDamageToGive,GameObject player)
 	{
-
         if (isClient)
         {
             CmdETakeDamage(eDamageToGive,player);
@@ -81,7 +79,7 @@ public class EnemyStats : NetworkBehaviour
             Death();
 	}
     private IEnumerator EnemyAttackTimeCorou;
-    public bool isAttack = false;
+    [SyncVar]public bool isAttack = false;
 	private void OnCollisionEnter2D(Collision2D other)
 	{
 		if(other.gameObject.CompareTag("Player"))
@@ -103,7 +101,7 @@ public class EnemyStats : NetworkBehaviour
         _achievementManager = _character.uiManager.gameObject.GetComponent<AchievementManager>();
         while (isAttack)
         {
-            int enemyDamage = GetComponent<EnemyStats>().enemyAttackPower;
+            int enemyDamage = enemyAttackPower;
             int calcTotalDefense = Mathf.RoundToInt(_character.Defense.Value + _character.Defense.BaseValue);
             int calcDefense = Mathf.RoundToInt(calcTotalDefense * .125f);
             int totalDamage = Random.Range(enemyDamage - calcDefense, enemyDamage * 2 - calcDefense);
@@ -161,16 +159,18 @@ public class EnemyStats : NetworkBehaviour
 
 
     protected GameObject lootItem;
+    [Server]
     public void DropLoot()
 	{
         if(lootTables != null)
 		{
             GameObject current = lootTables.LootItems();
             lootItem = current;
-            CmdSpawnLoot(lootItem);
+            SpawnLoot(lootItem);
         }
 	}
-    public void CmdSpawnLoot(GameObject lootItem)
+    [Server]
+    public void SpawnLoot(GameObject lootItem)
 	{
         if (lootItem == null)
         {
@@ -179,13 +179,9 @@ public class EnemyStats : NetworkBehaviour
         }
         var objectSpawn = Instantiate(lootItem, this.transform.position, Quaternion.identity);
 		NetworkServer.Spawn(objectSpawn);
-        this.gameObject.SetActive(false);
-        Invoke("DestroySelf", 0.7f);
-	}
-    public void DestroySelf()
-    {
         NetworkServer.Destroy(this.gameObject);
-    }
+	}
+
     [Server]
     public void Death()
 	{
@@ -223,6 +219,7 @@ public class EnemyStats : NetworkBehaviour
         DropLoot();
     }
 
+    [Server]
     public void CheckAchDeath()
 	{
         if (_achievementManager is null)

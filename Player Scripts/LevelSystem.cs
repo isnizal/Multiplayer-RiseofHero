@@ -20,11 +20,12 @@ public class LevelSystem : NetworkBehaviour
 	public GameObject levelupParticle;
 	public GameObject levelupBanner;
 	public GameObject playerOverhead;
-	public int currentLevel;
-    public int currentExp;
-    public int expToLevel;
-	public bool canLevelUp = false;
-	public float expMultiplier;
+
+	[SyncVar]public int currentLevel;
+    [SyncVar]public int currentExp;
+    [SyncVar]public int expToLevel;
+	[SyncVar]public bool canLevelUp = false;
+	[SyncVar]public float expMultiplier;
 	public int[] toLevelUp;
 
 	private Character _character;
@@ -38,7 +39,7 @@ public class LevelSystem : NetworkBehaviour
 	}
 	private void Update()
 	{
-		if (hasAuthority)
+		if (isLocalPlayer)
 		{
 			if (_character is null)
 				return;
@@ -68,6 +69,7 @@ public class LevelSystem : NetworkBehaviour
 				SoundManager.PlaySound(SoundManager.Sound.LevelUp);
 				Instantiate(levelupParticle, playerOverhead.transform.position, Quaternion.identity);
 				Instantiate(levelupBanner, playerOverhead.transform.position, Quaternion.identity);
+
 			}
 		}
 	}
@@ -121,11 +123,10 @@ public class LevelSystem : NetworkBehaviour
 	{
 		Character character = player.identity.gameObject.GetComponent<Character>();
 		PlayerCombat playerCombat = player.identity.gameObject.GetComponent<PlayerCombat>();
-
+		playerCombat.DisableSelfRegenHp();
 		character.ExecuteHealth(character.MaxHealth);
-		character.ExecuteNewHealth(character.MaxHealth);
+		playerCombat.DisableSelfRegenMana();
 		character.ExecuteMana(character.MaxMP);
-		character.ExecuteNewMana(character.MaxMP);
 	}
 
 	void SpellPoints()

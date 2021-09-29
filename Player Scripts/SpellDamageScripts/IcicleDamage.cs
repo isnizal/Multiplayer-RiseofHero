@@ -39,10 +39,13 @@ public class IcicleDamage : NetworkBehaviour
 		_netRb2D.target.MovePosition(transform.TransformPoint(speed * Time.deltaTime * Vector3.right));
 	}
 
+	private bool isDestroy = false;
 	private void Update()
 	{
 		if (hasAuthority)
 		{
+			if (isDestroy)
+				return;
 			CmdMoveFireBall();
 			CmdDestroySelf();
 		}
@@ -53,7 +56,7 @@ public class IcicleDamage : NetworkBehaviour
 		timeToDestroy -= Time.deltaTime;
 		if (timeToDestroy <= 0)
 		{
-			Destroy(this.gameObject);
+			isDestroy = true;
 			NetworkServer.Destroy(this.gameObject);
 		}
 	}
@@ -61,6 +64,8 @@ public class IcicleDamage : NetworkBehaviour
 	{
 		if (other.CompareTag("Enemy"))
 		{
+			if (_playerCombat == null)
+				return;
 			EnemyAI enemyAI = other.gameObject.GetComponent<EnemyAI>();
 			enemyAI.gameObject.GetComponent<SpriteRenderer>().color = Color.blue;
 			enemyAI.freezing = true;
@@ -73,6 +78,8 @@ public class IcicleDamage : NetworkBehaviour
 		}
 		if(other.CompareTag("Boss"))
 		{
+			if (_playerCombat == null)
+				return;
 			EnemyAI enemyAI = other.GetComponent<EnemyAI>();
 			enemyAI.gameObject.GetComponent<SpriteRenderer>().color = Color.blue;
 			enemyAI.freezing = true;
@@ -99,6 +106,7 @@ public class IcicleDamage : NetworkBehaviour
 	[Command(requiresAuthority = true)]
 	private void CmdDestroyThis()
 	{
+		isDestroy = true;
 		NetworkServer.Destroy(this.gameObject);
 	}
 	[Client]

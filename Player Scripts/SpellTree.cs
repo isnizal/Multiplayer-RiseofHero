@@ -29,7 +29,7 @@ public class SpellTree : MonoBehaviour
     [Space]
 
     [Header("---> Fireball Spell <---")]
-    public GameObject fireballSpell;
+    public GameObject fireballHotbarSlot;
     public GameObject fireball1SkillSlot;
     public GameObject fireball2SkillSlot;
     public int fireball1LevelReq;
@@ -46,7 +46,7 @@ public class SpellTree : MonoBehaviour
     [SerializeField] private Sprite fireball3Image;
     [Space]
     [Header("---> Icicle Spell <---")]
-    public GameObject icicleBallSpell;
+    public GameObject icicleBallHotbarSlot;
     public GameObject icicle1SkillSlot;
     public GameObject icicle2SkillSlot;
     public int icicle1LevelReq;
@@ -63,7 +63,7 @@ public class SpellTree : MonoBehaviour
     [SerializeField] private Sprite icicle3Image;
     [Space]
     [Header("---> Arctic Blast <---")]
-    public GameObject arcticBallSpell;
+    public GameObject arcticBlastHotBarSlot;
     public GameObject arcticBlast1SkillSlot;
     public GameObject arcticBlast2SkillSlot;
     public int arcticBlast1LevelReq;
@@ -87,18 +87,21 @@ public class SpellTree : MonoBehaviour
         _character = character;
         _playerCombat = _character.gameObject.GetComponent<PlayerCombat>();
         _levelSystem = _character.gameObject.GetComponent<LevelSystem>();
-        fireballSpell.SetActive(true);
-        fireballSpell.GetComponentInChildren<Button>().onClick.AddListener(_playerCombat.ActivateFireball);
-        fireballSpell.GetComponentInChildren<Image>().sprite = fireball1Image;
-        fireballSpell.SetActive(false);
-        icicleBallSpell.SetActive(true);
-        icicleBallSpell.GetComponentInChildren<Button>().onClick.AddListener(_playerCombat.ActivateIcicle);
-        icicleBallSpell.GetComponentInChildren<Image>().sprite = fireball2Image;
-        icicleBallSpell.SetActive(false);
-        arcticBallSpell.SetActive(true);
-        arcticBallSpell.GetComponentInChildren<Button>().onClick.AddListener(_playerCombat.ActivateArcticBlast);
-        arcticBallSpell.GetComponentInChildren<Image>().sprite = fireball3Image;
-        arcticBallSpell.SetActive(false);
+
+        fireballHotbarSlot.SetActive(true);
+        fireballHotbarSlot.GetComponent<Image>().sprite = fireball1Image;
+        fireballHotbarSlot.GetComponent<Button>().onClick.AddListener(_playerCombat.ActivateFireball);
+        fireballHotbarSlot.SetActive(false);
+
+        icicleBallHotbarSlot.SetActive(true);
+        icicleBallHotbarSlot.GetComponent<Image>().sprite = icicle1Image;
+        icicleBallHotbarSlot.GetComponent<Button>().onClick.AddListener(_playerCombat.ActivateIcicle);
+        icicleBallHotbarSlot.SetActive(false);
+
+        arcticBlastHotBarSlot.SetActive(true);
+        arcticBlastHotBarSlot.GetComponent<Image>().sprite = arcticBlast1Image;
+        arcticBlastHotBarSlot.GetComponent<Button>().onClick.AddListener(_playerCombat.ActivateArcticBlast);
+        arcticBlastHotBarSlot.SetActive(false);
     }
 	void Update()
     {
@@ -150,7 +153,7 @@ public class SpellTree : MonoBehaviour
         if(fireball1Level >= 1)
 		{
             _playerCombat.canCastSpells = true;
-            fireballSpell.SetActive(true);
+            fireballHotbarSlot.SetActive(true);
             fireballSpellImage.sprite = fireball1Image;
             if(!_playerCombat.fireballActive)
                 fireballSpellImage.color = new Color(1, 1, 1, .5f);
@@ -165,7 +168,7 @@ public class SpellTree : MonoBehaviour
         if(icicle1Level >= 1)
 		{
             _playerCombat.canCastSpells = true;
-            icicleBallSpell.SetActive(true);
+            icicleBallHotbarSlot.SetActive(true);
             icicleSpellImage.sprite = icicle1Image;
             if(!_playerCombat.icicleActive)
                 icicleSpellImage.color = new Color(1, 1, 1, .5f);
@@ -180,7 +183,7 @@ public class SpellTree : MonoBehaviour
         if(arcticBlast1Level >= 1)
 		{
             _playerCombat.canCastSpells = true;
-            arcticBallSpell.SetActive(true);
+            arcticBlastHotBarSlot.SetActive(true);
             arcticBlastSpellImage.sprite = arcticBlast1Image;
             if (!_playerCombat.arcticBlastActive)
                 arcticBlastSpellImage.color = new Color(1, 1, 1, .5f);

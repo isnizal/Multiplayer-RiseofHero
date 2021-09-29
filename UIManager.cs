@@ -109,6 +109,7 @@ public class UIManager : MonoBehaviour
     }
     public void UpdateHealth()
     {
+
         hpSlider.maxValue = _character.MaxHealth;
         hpSlider.value = _character.Health;
         hpValue.text = "" + _character.Health + "/" + _character.MaxHealth;

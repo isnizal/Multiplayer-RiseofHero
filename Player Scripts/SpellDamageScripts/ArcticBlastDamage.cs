@@ -21,7 +21,7 @@ public class ArcticBlastDamage : NetworkBehaviour
 	private SpellTree _spellTree;
 
 	[ClientRpc]
-	public void InitializeBlastDamage(PlayerCombat _playerCombat)
+	public void RpcInitializeBlastDamage(PlayerCombat _playerCombat)
 	{
 		//rb = GetComponent<Rigidbody2D>();
 		_netrgb2D = GetComponent<Mirror.Experimental.NetworkRigidbody2D>();
@@ -35,7 +35,10 @@ public class ArcticBlastDamage : NetworkBehaviour
 
 	private void Update()
 	{
-		CmdProjectileHoming();
+		if (hasAuthority)
+		{
+			CmdProjectileHoming();
+		}
 
 	}
 	[Command(requiresAuthority = true)]
@@ -79,11 +82,16 @@ public class ArcticBlastDamage : NetworkBehaviour
 	{
 		if (other.CompareTag("Enemy"))
 		{
+			if (_playerCombat == null)
+				return;
 			_playerCombat.CmdEnemyNormalAttack(other.gameObject, totalArcticDamage);
 			CmdDestroySelf();
 		}
 		if (other.CompareTag("Boss"))
 		{
+			if (_playerCombat == null)
+				return;
+
 			_playerCombat.CmdBossNormalAttack(other.gameObject, totalArcticDamage);
 			CmdDestroySelf();
 		}
@@ -102,7 +110,7 @@ public class ArcticBlastDamage : NetworkBehaviour
 			{
 				float calcarcticSpellValue = _character.Intelligence.BaseValue + _character.Intelligence.Value;
 				float calcLevelMultiplier = _spellTree.arcticBlast1Level * 0.25f;
-				totalArcticDamage = Random.Range((int)calcarcticSpellValue * calcLevelMultiplier / .5f, (int)calcarcticSpellValue * calcLevelMultiplier * .5f);
+				CmdCalCulateFireBallDamage(calcarcticSpellValue, calcLevelMultiplier);
 			}
 		}
 		if (_gameManager.arcticBlast2Active)

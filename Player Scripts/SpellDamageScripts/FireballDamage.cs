@@ -9,26 +9,28 @@ public class FireballDamage : NetworkBehaviour
 	//private Rigidbody2D _rb;
 	private Mirror.Experimental.NetworkRigidbody2D _netrbd2D;
 	public float speed;
-
+	[SyncVar] private PlayerCombat _playerCombat;
+	[SyncVar] private Character _character;
 	[SyncVar]private float totalFireballDamage;
-	[SyncVar]private PlayerCombat _playerCombat;
-	[SyncVar]private Character _character;
 	[SyncVar]private float timeToDestroy = 1f;
 
 	private GameManager _gameManager;
 	private SpellTree _spellTree;
 
-	[ClientRpc]
-	public void RpcInitializeBallDamage(PlayerCombat _playerCombat)
+	[TargetRpc]
+	public void RpcInitializeBallDamage(NetworkConnection conn)
 	{
-		_netrbd2D = GetComponent<Mirror.Experimental.NetworkRigidbody2D>();
-		this._playerCombat = _playerCombat;
+		this._playerCombat = conn.identity.gameObject.GetComponent<PlayerCombat>();
 		this._character = this._playerCombat.character;
 		this._gameManager = _character.GetComponent<PlayerMovement>()._gameManager;
 		this._spellTree = _gameManager._spellTree;
 		CalcFireballDamage();
 	}
-	private void Update()
+    private void Awake()
+    {
+		_netrbd2D = GetComponent<Mirror.Experimental.NetworkRigidbody2D>();
+	}
+    private void Update()
 	{
 		if (hasAuthority)
 		{
@@ -40,14 +42,14 @@ public class FireballDamage : NetworkBehaviour
 	[Command(requiresAuthority = true)]
 	private void CmdDestoryOverTime()
 	{
+		if (this.gameObject == null)
+			return;
 		timeToDestroy -= Time.deltaTime;
 		if (timeToDestroy <= 0)
 		{
-			if (this.gameObject == null)
-				return;
 			NetworkServer.Destroy(this.gameObject);
 		}
-	}
+	}			
 	[Command(requiresAuthority = true)]
 	private void CmdMoveFireBall()
 	{
@@ -61,21 +63,28 @@ public class FireballDamage : NetworkBehaviour
 	[Command(requiresAuthority = true)]
 	private void CmdDestroySelf()
 	{
-		if (this.gameObject == null)
-			return;
 		NetworkServer.Destroy(this.gameObject);
 	}
 	private void OnTriggerEnter2D(Collider2D other)
 	{
-		if(other.CompareTag("Enemy"))
+		if (isClient)
 		{
-			_playerCombat.CmdEnemyNormalAttack(other.gameObject, totalFireballDamage);
-			CmdDestroySelf();
-		}
-		if(other.CompareTag("Boss"))
-		{
-			_playerCombat.CmdBossNormalAttack(other.gameObject, totalFireballDamage);
-			CmdDestroySelf();
+			if (other.CompareTag("Enemy"))
+			{
+				if (_playerCombat == null)
+					return;
+
+				_playerCombat.CmdEnemyNormalAttack(other.gameObject, totalFireballDamage);
+				CmdDestroySelf();
+			}
+			if (other.CompareTag("Boss"))
+			{
+				if (_playerCombat == null)
+					return;
+
+				_playerCombat.CmdBossNormalAttack(other.gameObject, totalFireballDamage);
+				CmdDestroySelf();
+			}
 		}
 	}
 

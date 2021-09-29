@@ -47,20 +47,7 @@ public class PlayerMovement : NetworkBehaviour
 
 	private GameClothes gameClothes;
 	private PlayerClothes playerClothes;
-	[SyncVar]
-	public int helmetValue = -1;
-	[SyncVar]
-	public int torsoValue = -1;
-	[SyncVar]
-	public int armValue = -1;
-	[SyncVar]
-	public int bootValue = -1;
-	[SyncVar]
-	public int swordValue = -1;
-	[SyncVar]
-	public int shieldValue = -1;
-	[SyncVar]
-	public int hairValue = -1;
+
 
 
 	public void CheckValueClothes()
@@ -107,7 +94,7 @@ public class PlayerMovement : NetworkBehaviour
 		base.OnStartClient();
 		//start client initialize
 		Debug.Log("starting player client");
-		if (hasAuthority)
+		if (isLocalPlayer)
 		{
 			gameClothes = FindObjectOfType<GameClothes>();
 			CmdSetClothesValue(gameClothes.helmetValue, gameClothes.torsoValue, gameClothes.armValue, gameClothes.swordValue,
@@ -129,9 +116,11 @@ public class PlayerMovement : NetworkBehaviour
 	private NPCTeleport _npcTeleport;
 	private NPCCrafter _npcCrafter;
 	private NPCGeneralShop _npcGeneralShop;
+
+	[Client]
 	public void InitializeAwake()
 	{
-		if (hasAuthority)
+		if (isLocalPlayer)
 		{
 			//Mobile
 			fixedJoystick = FindObjectOfType<FixedJoystick>();
@@ -168,7 +157,7 @@ public class PlayerMovement : NetworkBehaviour
 	}
 	public void Initialize()
 	{
-		if (hasAuthority)
+		if (isLocalPlayer)
 		{
 			attacking = false;
 			waitAttack = true;
@@ -195,17 +184,7 @@ public class PlayerMovement : NetworkBehaviour
 		}
 	}
     
-    [Command(requiresAuthority =false)]
-	private void CmdSetClothesValue(int helmet, int torso, int arm, int sword, int shiedl, int boot, int hair)
-	{
-		helmetValue = helmet;
-		torsoValue = torso;
-		armValue = arm;
-		bootValue = boot;
-		swordValue = sword;
-		shieldValue = shiedl;
-		hairValue = hair;
-	}
+
 	public override void OnStartAuthority()
 	{
 		base.OnStartAuthority();
@@ -438,16 +417,7 @@ public class PlayerMovement : NetworkBehaviour
 
 	private bool waitAttack = true;
 
-	[Header("Avatar")]
-	[SerializeField] private GameObject hairAvatar;
-	[SerializeField] private GameObject helmetAvatar;
-	[SerializeField] private GameObject torsoAvatar;
-	[SerializeField] private GameObject shieldAvatar;
-	[SerializeField] private GameObject leftarmAvatar;
-	[SerializeField] private GameObject rightarmAvatar;
-	[SerializeField] private GameObject leftBootAvatar;
-	[SerializeField] private GameObject rightBootAvatar;
-	[SerializeField] private GameObject swordAvatar;
+
 
 	private void CheckMovePos()
 	{
@@ -508,9 +478,45 @@ public class PlayerMovement : NetworkBehaviour
 		
 	}
 
+	#region "SetPlayerSprite"
+	[Header("Avatar")]
+	[SerializeField] private GameObject hairAvatar;
+	[SerializeField] private GameObject helmetAvatar;
+	[SerializeField] private GameObject torsoAvatar;
+	[SerializeField] private GameObject shieldAvatar;
+	[SerializeField] private GameObject leftarmAvatar;
+	[SerializeField] private GameObject rightarmAvatar;
+	[SerializeField] private GameObject leftBootAvatar;
+	[SerializeField] private GameObject rightBootAvatar;
+	[SerializeField] private GameObject swordAvatar;
 
-    #region "SetPlayerSprite"
-    [Command]
+	[SyncVar]
+	public int helmetValue = -1;
+	[SyncVar]
+	public int torsoValue = -1;
+	[SyncVar]
+	public int armValue = -1;
+	[SyncVar]
+	public int bootValue = -1;
+	[SyncVar]
+	public int swordValue = -1;
+	[SyncVar]
+	public int shieldValue = -1;
+	[SyncVar]
+	public int hairValue = -1;
+
+	[Command(requiresAuthority = true)]
+	private void CmdSetClothesValue(int helmet, int torso, int arm, int sword, int shiedl, int boot, int hair)
+	{
+		helmetValue = helmet;
+		torsoValue = torso;
+		armValue = arm;
+		bootValue = boot;
+		swordValue = sword;
+		shieldValue = shiedl;
+		hairValue = hair;
+	}
+	[Command(requiresAuthority = true)]
 	private void CmdSetSpriteFront()
 	{
 		if (isServer)
@@ -519,9 +525,9 @@ public class PlayerMovement : NetworkBehaviour
 	[ClientRpc]
 	public void RpcSetSpriteFront()
 	{
-		if (playerClothes is null)
+		if (playerClothes == null)
 			playerClothes = GetComponent<PlayerClothes>();
-		if (playerClothes is null)
+		if (playerClothes == null)
 			return;
 
 		if (helmetAvatar.activeInHierarchy)
@@ -580,7 +586,7 @@ public class PlayerMovement : NetworkBehaviour
 		}
 	}
 
-	[Command]
+	[Command(requiresAuthority = true)]
 	private void CmdSetSpriteLeft()
 	{	
 
@@ -592,9 +598,9 @@ public class PlayerMovement : NetworkBehaviour
 	[ClientRpc]
 	private void RpcSetSpriteLeft()
 	{
-		if (playerClothes is null)
+		if (playerClothes == null)
 			playerClothes = GetComponent<PlayerClothes>();
-		if (playerClothes is null)
+		if (playerClothes == null)
 			return;
 		if (helmetAvatar.activeInHierarchy)
 		{
@@ -652,7 +658,7 @@ public class PlayerMovement : NetworkBehaviour
 		}
 	}
 
-	[Command]
+	[Command(requiresAuthority = true)]
 	private void CmdSetSpriteRight()
 	{
 		if (isServer)
@@ -662,9 +668,9 @@ public class PlayerMovement : NetworkBehaviour
 	[ClientRpc]
 	private void RpcSetSpriteRight()
 	{
-		if (playerClothes is null)
+		if (playerClothes == null)
 			playerClothes = GetComponent<PlayerClothes>();
-		if (playerClothes is null)
+		if (playerClothes == null)
 			return;
 		if (helmetAvatar.activeInHierarchy)
 		{
@@ -723,7 +729,7 @@ public class PlayerMovement : NetworkBehaviour
 	}
 	
 
-	[Command]
+	[Command(requiresAuthority = true)]
 	private void CmdSetSpriteBack()
 	{
 		if (isServer)
@@ -733,9 +739,9 @@ public class PlayerMovement : NetworkBehaviour
 	[ClientRpc]
 	private void RpcSetSpriteBack()
 	{
-		if (playerClothes is null)
+		if (playerClothes == null)
 			playerClothes = GetComponent<PlayerClothes>();
-		if (playerClothes is null)
+		if (playerClothes == null)
 			return;
 		if (helmetAvatar.activeInHierarchy)
 		{

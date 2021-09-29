@@ -200,10 +200,12 @@ public class GameManager :MonoBehaviour
 		_levelSystem.currentExp = LevelSystem.LevelInstance.currentExp / 2;
 
 		yield return new WaitForSeconds(fadeDelay);
-		_character.newHealth = _character.MaxHealth;
-		_character.Health = _character.newHealth;
-		_character.newMana = _character.MaxMP;
-		_character.Mana = _character.newMana;
+
+		//_character.Health = _character.MaxHealth;
+		_character.ExecuteHealth(_character.MaxHealth);
+		//_character.newHealth = _character.Health;
+		_character.ExecuteMana(_character.MaxMP);
+		//_character.newMana = _character.Mana;
 
 		_uiManager.UpdateHealth();
 

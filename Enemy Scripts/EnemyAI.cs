@@ -23,20 +23,22 @@ public class EnemyAI : NetworkBehaviour
         }
 
     }
-    [SyncVar]
-    public Transform target = null;
-    public float moveSpeed;
-    public float chaseRadius;
-    public float attackRadius;
+
+    [SyncVar] public Transform target = null;
+    [SyncVar] public float moveSpeed;
+    [SyncVar] public float chaseRadius;
+    [SyncVar] public float attackRadius;
 
     //private Rigidbody2D myRigidbody;
-    private bool moving;
-    public float timeBetweenMove;
-    private float timeBetweenMoveCounter;
-    public float timeToMove;
-    private float timeToMoveCounter;
 
-    private Vector3 moveDirection;
+    [SyncVar] public float timeBetweenMove;
+    [SyncVar] public float timeToMove;
+
+    [SyncVar] private float timeBetweenMoveCounter;
+    [SyncVar] private float timeToMoveCounter;
+    [SyncVar] private bool moving;
+    [SyncVar] private Vector3 moveDirection;
+
     //public GameObject damageNumbers;
 
     //public GameObject enemyText;
@@ -103,12 +105,15 @@ public class EnemyAI : NetworkBehaviour
         }
         else if (isClient)
         {
-            if (newMove)
+            if (!freezing)
             {
-                if (target == null)
-                    return;
-               target.gameObject.GetComponent<PlayerCombat>().CmdMoveToThis(this.gameObject,moveSpeed);
-                
+                if (newMove)
+                {
+                    if (target == null)
+                        return;
+                    target.gameObject.GetComponent<PlayerCombat>().CmdMoveToThis(this.gameObject, moveSpeed);
+
+                }
             }
         }
     }

@@ -49,7 +49,7 @@ public class PlayerCombat : NetworkBehaviour
 
 	
 	private PlayerMovement _playerMovement;
-	[HideInInspector]public Character character;
+	public Character character;
 
 
 	public GameManager gameManager;
@@ -79,7 +79,7 @@ public class PlayerCombat : NetworkBehaviour
 		Toast.Show("You picked up: <color=red><b>" + coin.ToString() + " </b></color>Copper", 2f, ToastPosition.MiddleCenter);
 	}
 	[Command(requiresAuthority = true)]
-	public void CmdSetHealth()
+	public void CmdSetHealth(Character characte)
 	{
 		character.Health = 0;
 	}
@@ -93,7 +93,7 @@ public class PlayerCombat : NetworkBehaviour
 				playerDied = true;
 				gameManager.autoSave = false;
 				StopCoroutine(gameManager.saveTimer);
-				CmdSetHealth();
+				CmdSetHealth(character);
 				_playerMovement.SetPositionDead();
 				GetComponent<BoxCollider2D>().enabled = false;
 				CheckPlayerDeath();
@@ -113,8 +113,6 @@ public class PlayerCombat : NetworkBehaviour
 	[Command(requiresAuthority = true)]
 	public void CmdCharacterDamage(int damageToGive,Character _character)
 	{
-		Debug.Log(damageToGive +"damage");
-		Debug.Log(_character.Health + "character");
 		_character.Health -= damageToGive;
 	}
 	[Client]
@@ -386,7 +384,7 @@ public class PlayerCombat : NetworkBehaviour
 		obj.GetComponent<NetworkIdentity>().AssignClientAuthority(connectionToClient);
 		if (obj.TryGetComponent<FireballDamage>(out FireballDamage fire))
 		{
-			fire.RpcInitializeBallDamage(this);
+			fire.RpcInitializeBallDamage(connectionToClient);
 		}
 		else if (obj.TryGetComponent<IcicleDamage>(out IcicleDamage ice))
 		{
@@ -394,7 +392,7 @@ public class PlayerCombat : NetworkBehaviour
 		}
 		else if (obj.TryGetComponent<ArcticBlastDamage>(out ArcticBlastDamage arctic))
 		{
-			arctic.InitializeBlastDamage(this);
+			arctic.RpcInitializeBlastDamage(this);
 		}
 
 		obj.GetComponent<Mirror.Experimental.NetworkRigidbody2D>().target.velocity = new Vector2(0, -3 + -speed * Time.deltaTime);
@@ -407,7 +405,7 @@ public class PlayerCombat : NetworkBehaviour
 		obj.GetComponent<NetworkIdentity>().AssignClientAuthority(connectionToClient);
 		if (obj.TryGetComponent<FireballDamage>(out FireballDamage fire))
 		{
-			fire.RpcInitializeBallDamage(this);
+			fire.RpcInitializeBallDamage(connectionToClient);
 		}
 		else if (obj.TryGetComponent<IcicleDamage>(out IcicleDamage ice))
 		{
@@ -415,7 +413,7 @@ public class PlayerCombat : NetworkBehaviour
 		}
 		else if (obj.TryGetComponent<ArcticBlastDamage>(out ArcticBlastDamage arctic))
 		{
-			arctic.InitializeBlastDamage(this);
+			arctic.RpcInitializeBlastDamage(this);
 		}
 
 		obj.GetComponent<Mirror.Experimental.NetworkRigidbody2D>().target.velocity = new Vector2(3 + speed * Time.deltaTime, 0);
@@ -428,7 +426,7 @@ public class PlayerCombat : NetworkBehaviour
 		obj.GetComponent<NetworkIdentity>().AssignClientAuthority(connectionToClient);
 		if (obj.TryGetComponent<FireballDamage>(out FireballDamage fire))
 		{
-			fire.RpcInitializeBallDamage(this);
+			fire.RpcInitializeBallDamage(connectionToClient);
 		}
 		else if (obj.TryGetComponent<IcicleDamage>(out IcicleDamage ice))
 		{
@@ -436,7 +434,7 @@ public class PlayerCombat : NetworkBehaviour
 		}
 		else if (obj.TryGetComponent<ArcticBlastDamage>(out ArcticBlastDamage arctic))
 		{
-			arctic.InitializeBlastDamage(this);
+			arctic.RpcInitializeBlastDamage(this);
 		}
 
 		obj.GetComponent<Rigidbody2D>().velocity = new Vector2(0, 3 + speed * Time.deltaTime);
@@ -449,7 +447,7 @@ public class PlayerCombat : NetworkBehaviour
 		obj.GetComponent<NetworkIdentity>().AssignClientAuthority(connectionToClient);
 		if (obj.TryGetComponent<FireballDamage>(out FireballDamage fire))
 		{
-			fire.RpcInitializeBallDamage(this);
+			fire.RpcInitializeBallDamage(connectionToClient);
 		}
 		else if (obj.TryGetComponent<IcicleDamage>(out IcicleDamage ice))
 		{
@@ -457,12 +455,13 @@ public class PlayerCombat : NetworkBehaviour
 		}
 		else if (obj.TryGetComponent<ArcticBlastDamage>(out ArcticBlastDamage arctic))
 		{
-			arctic.InitializeBlastDamage(this);
+			arctic.RpcInitializeBlastDamage(this);
 		}
 
 		obj.GetComponent<Rigidbody2D>().velocity = new Vector2(-3 + -speed * Time.deltaTime, 0);
 	}
 
+	[ClientCallback]
 	public void SetCurrentSpell(int spellID)
 	{
 		Color IconEnabled = new Color(1, 1, 1, 1f);
@@ -470,7 +469,7 @@ public class PlayerCombat : NetworkBehaviour
 		switch (spellID)
 		{
 			case 0: //if you run out of mp
-				currentProjectile = null;
+				CmdSetCurrentProjectile(0);
 				fireballActive = false;
 				icicleActive = false;
 				arcticBlastActive = false;
@@ -479,7 +478,7 @@ public class PlayerCombat : NetworkBehaviour
 				_spellTree.arcticBlastSpellImage.color = IconDisabled;
 				break;
 			case 1: //Fireball Spell
-				currentProjectile = fireballProjectile;
+				CmdSetCurrentProjectile(1);
 				fireballActive = true;
 				_spellTree.fireballSpellImage.color = IconEnabled;
 				_spellTree.icicleSpellImage.color = IconDisabled;
@@ -489,7 +488,7 @@ public class PlayerCombat : NetworkBehaviour
 				break;
 
 			case 2: //Icicle Spell
-				currentProjectile = icicleProjectile;
+				CmdSetCurrentProjectile(2);
 				icicleActive = true;
 				_spellTree.icicleSpellImage.color = IconEnabled;
 				_spellTree.fireballSpellImage.color = IconDisabled;
@@ -498,13 +497,52 @@ public class PlayerCombat : NetworkBehaviour
 				arcticBlastActive = false;
 				break;
 			case 3: //ArcticBlast Spell
-				currentProjectile = arcticBlastProjectile;
+				CmdSetCurrentProjectile(3);
 				arcticBlastActive = true;
 				_spellTree.arcticBlastSpellImage.color = IconEnabled;
 				_spellTree.icicleSpellImage.color = IconDisabled;
 				_spellTree.fireballSpellImage.color = IconDisabled;
 				fireballActive = false;
 				icicleActive = false;
+				break;
+		}
+	}
+	[Command(requiresAuthority = true)]
+	private void CmdSetCurrentProjectile(int id)
+	{
+		switch (id) {
+			case 0:
+				currentProjectile = null;
+				break;
+			case 1:
+				currentProjectile = fireballProjectile;
+				break;
+			case 2:
+				currentProjectile = icicleProjectile;
+				break;
+			case 3:
+				currentProjectile = arcticBlastProjectile;
+				break;
+		}
+		TargetSetCurrentProjectile(connectionToClient, id);
+		
+	}
+	[TargetRpc]
+	private void TargetSetCurrentProjectile(NetworkConnection conn,int id)
+	{
+		switch (id)
+		{
+			case 0:
+				conn.identity.gameObject.GetComponent<PlayerCombat>().currentProjectile = null;
+				break;
+			case 1:
+				conn.identity.gameObject.GetComponent<PlayerCombat>().currentProjectile = fireballProjectile;
+				break;
+			case 2:
+				conn.identity.gameObject.GetComponent<PlayerCombat>().currentProjectile = icicleProjectile;
+				break;
+			case 3:
+				conn.identity.gameObject.GetComponent<PlayerCombat>().currentProjectile = arcticBlastProjectile;
 				break;
 		}
 	}
@@ -538,6 +576,7 @@ public class PlayerCombat : NetworkBehaviour
 	{
 		if (enemy == null)
 			return;
+
 		EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
 		enemyAI._netRigidbody2D.syncVelocity = false;
 		enemyAI._netRigidbody2D.clearVelocity = true;
@@ -549,6 +588,7 @@ public class PlayerCombat : NetworkBehaviour
 	{
 		if (enemy == null)
 			return;
+
 		EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
 		enemyAI._netRigidbody2D.syncVelocity = true;
 		enemyAI._netRigidbody2D.clearVelocity = false;
@@ -560,6 +600,7 @@ public class PlayerCombat : NetworkBehaviour
 	{
 		if (enemy == null)
 			return; 
+
 		EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
 		enemyAI._netRigidbody2D.syncVelocity = true;
 		enemyAI._netRigidbody2D.clearVelocity = false;
@@ -572,16 +613,15 @@ public class PlayerCombat : NetworkBehaviour
 	{
 		if (enemy == null)
 			return;
+
 		Mirror.NetworkTransform enemyPos = enemy.GetComponent<NetworkTransform>();
 		enemyPos.transform.position = Vector3.MoveTowards(enemyPos.transform.position, transform.position, moveSpeed * Time.deltaTime);
-		//RpcMoveToThis(enemyPos, moveSpeed);
 	}
-	[ClientRpc]
-	public void RpcMoveToThis(NetworkTransform enemy,float moveSpeed)
+	[Command(requiresAuthority = true)]
+	private void CmdReduceManaCost(int manaCost)
 	{
-		if (enemy == null)
-			return;
-		enemy.transform.position = Vector3.MoveTowards(enemy.transform.position, transform.position, moveSpeed * Time.deltaTime);
+		character = gameObject.GetComponent<Character>();
+		character.Mana -= manaCost;
 	}
 	public void CheckSpellCost()
 	{
@@ -594,12 +634,12 @@ public class PlayerCombat : NetworkBehaviour
 					if (gameManager.fireball1Active)
 					{
 						CastSpell();
-						character.Mana -= fireballMPCost;
+						CmdReduceManaCost(fireballMPCost);
 					}
 					if (gameManager.fireball2Active)
 					{
 						CastSpell();
-						character.Mana -= fireballMPCost * 2;
+						CmdReduceManaCost(fireballMPCost * 2);
 					}
 
 				}
@@ -615,7 +655,7 @@ public class PlayerCombat : NetworkBehaviour
 				if (character.Mana > icicleMPCost)
 				{
 					CastSpell();
-					character.Mana -= icicleMPCost;
+					CmdReduceManaCost(icicleMPCost);
 				}
 				else if (character.Mana < fireballMPCost)
 				{
@@ -629,7 +669,7 @@ public class PlayerCombat : NetworkBehaviour
 				if (character.Mana > arcticMPCost)
 				{
 					CastSpell();
-					character.Mana -= arcticMPCost;
+					CmdReduceManaCost(arcticMPCost);
 				}
 				else if (character.Mana < arcticMPCost)
 				{

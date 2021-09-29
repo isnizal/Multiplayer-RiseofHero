@@ -21,6 +21,7 @@ public class CurrencyManager : MonoBehaviour
         {
             if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
                 return;
+
             thePlayer = other.gameObject.GetComponent<Character>();
             thePlayer.AddCurrency(amount);
             SoundManager.PlaySound(SoundManager.Sound.PickupCurrency);
