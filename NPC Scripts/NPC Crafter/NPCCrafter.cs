@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
 public class NPCCrafter : MonoBehaviour
 {
@@ -55,17 +56,22 @@ public class NPCCrafter : MonoBehaviour
 			}
 		}
 	}
-
+	private GameManager _gameManager;
+	private PlayerMovement _playerMovement;
 	private void OnTriggerEnter2D(Collider2D other)
 	{
 		if (other.gameObject.CompareTag("Player"))
 		{
+			if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
+				return;
+			_gameManager = other.gameObject.GetComponent<PlayerMovement>()._gameManager;
+			_playerMovement = other.gameObject.GetComponent<PlayerMovement>();
 			CheckCraftContextClue(true);
 			inRange = true;
-			if (GameManager.GameManagerInstance.isHandheld)
+			if (_gameManager.isHandheld)
 			{
-				PlayerMovement.PlayerMovementInstance.canTalkNPCCrafter = true;
-				PlayerMovement.PlayerMovementInstance.actionText.text = "Talk";
+				_playerMovement.canTalkNPCCrafter = true;
+				_playerMovement.actionText.text = "Talk";
 			}
 		}
 	}
@@ -74,16 +80,18 @@ public class NPCCrafter : MonoBehaviour
 	{
 		if (other.gameObject.CompareTag("Player"))
 		{
+			if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
+				return;
 			CheckCraftContextClue(false);
 			inRange = false;
 			craftingDialogIsOpen = false;
 			craftingDisplay = false;
 			craftingDialog.SetActive(false);
 			craftingCanvas.SetActive(false);
-			if (GameManager.GameManagerInstance.isHandheld)
+			if (_gameManager.isHandheld)
 			{
-				PlayerMovement.PlayerMovementInstance.canTalkNPCCrafter = false;
-				PlayerMovement.PlayerMovementInstance.actionText.text = null;
+				_playerMovement.canTalkNPCCrafter = false;
+				_playerMovement.actionText.text = null;
 			}
 		}
 	}

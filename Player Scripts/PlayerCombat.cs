@@ -175,18 +175,54 @@ public class PlayerCombat : NetworkBehaviour
 		character.ResetSelfRegenMana = character.SetSelfRegenMana();
 		StartCoroutine(character.ResetSelfRegenMana);
 	}
+	private bool isChatOpen = false;
+	public bool isMobileChat = false;
 
+	public void MobileChat()
+	{
+		if (!isMobileChat)
+			isMobileChat = true;
+		else
+			isMobileChat = false;
+	}
 	private void Update()
 	{
 		if (isLocalPlayer)
 		{
-			if (character is null)
+			if (_uiManager == null)
+				_uiManager = character.uiManager;
+			if (Input.GetKeyDown(KeyCode.C))
+			{
+				if (isChatOpen)
+				{
+					_uiManager.chatInput.interactable = false;
+					isChatOpen = false;
+				}
+				else
+				{
+					_uiManager.chatInput.interactable = true;
+					isChatOpen = true;
+				}
+			}
+			if (character == null)
 				return;
 			if (!character.onInput)
 			{
 				if (Input.GetKeyDown(KeyCode.LeftControl) && canCastSpells)
 				{
 					CheckSpellCost();
+				}
+			}
+			if(gameManager == null)
+				gameManager = _playerMovement._gameManager;
+			if (gameManager != null)
+			{
+				if (gameManager.isHandheld)
+				{
+					if (isMobileChat)
+						_uiManager.chatInput.interactable = true;
+					else
+						_uiManager.chatInput.interactable = false;
 				}
 			}
 			//if (_getPlayerName == string.Empty)
@@ -376,7 +412,8 @@ public class PlayerCombat : NetworkBehaviour
 			Toast.Show("You need intelligence to use this", 2f, ToastPosition.MiddleCenter);
 		}
 	}
-	[Command(requiresAuthority = true)]
+    #region"SpawnSpell"
+    [Command(requiresAuthority = true)]
 	public void CmdSpawnSpellDown()
 	{
 		var obj = Instantiate(currentProjectile, castPoint.position, Quaternion.Euler(0, 0, -90));
@@ -546,7 +583,8 @@ public class PlayerCombat : NetworkBehaviour
 				break;
 		}
 	}
-	public void ActivateFireball()
+    #endregion
+    public void ActivateFireball()
 	{
 		SetCurrentSpell(1);
 	}
@@ -558,7 +596,8 @@ public class PlayerCombat : NetworkBehaviour
 	{
 		SetCurrentSpell(3);
 	}
-	[Command(requiresAuthority = false)]
+    #region"EnableRigidbodyEnemy"
+    [Command(requiresAuthority = false)]
 	public void CmdEnemyRigidbody2D(GameObject enemy,Vector2 newPos)
 	{
 		if (enemy == null)
@@ -618,12 +657,13 @@ public class PlayerCombat : NetworkBehaviour
 		enemyPos.transform.position = Vector3.MoveTowards(enemyPos.transform.position, transform.position, moveSpeed * Time.deltaTime);
 	}
 	[Command(requiresAuthority = true)]
-	private void CmdReduceManaCost(int manaCost)
+    private void CmdReduceManaCost(int manaCost)
 	{
 		character = gameObject.GetComponent<Character>();
 		character.Mana -= manaCost;
 	}
-	public void CheckSpellCost()
+    #endregion
+    public void CheckSpellCost()
 	{
 		if (character.Intelligence.BaseValue > 0)
 		{

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
 public class CraftingWindow : MonoBehaviour
 {
@@ -20,12 +21,12 @@ public class CraftingWindow : MonoBehaviour
 	{
 		Init();
 	}
-
-	private void Start()
+	public void InitializeCraftingWindow()
 	{
 		Init();
 		foreach (CraftingRecipeUI craftingRecipeUI in craftingRecipeUIs)
 		{
+			craftingRecipeUI.InitializeCraftingRecipeUI();
 			craftingRecipeUI.OnPointerEnterEvent += slot => OnPointerEnterEvent(slot);
 			craftingRecipeUI.OnPointerExitEvent += slot => OnPointerExitEvent(slot);
 		}

@@ -48,16 +48,25 @@ public class DialogBox : NetworkBehaviour
 						_gameManager.DialogBox(dialogMessage);
 					}
 				}
-				else
-				{
 
+			}
+			else
+			{
+				if (playerMovement != null && _gameManager.isHandheld)
+				{
+					if (playerMovement.pressRead)
+					{
+						playerMovement.AllSignRead(dialogMessage);
+					}
 				}
 			}
 
 		}
 
 	}
-    private void OnCollisionEnter2D(Collision2D other)
+	PlayerMovement playerMovement;
+
+	private void OnCollisionEnter2D(Collision2D other)
     {
 		if (other.gameObject.CompareTag("Player") && !other.collider.isTrigger)
 		{
@@ -66,13 +75,10 @@ public class DialogBox : NetworkBehaviour
 			inRange = true;
 			if (_gameManager.isHandheld)
 			{
-				PlayerMovement playerMovement = other.gameObject.GetComponent<PlayerMovement>();
+				playerMovement = other.gameObject.GetComponent<PlayerMovement>();
 				playerMovement.canReadSign = true;
 				playerMovement.actionText.text = "Read";
-				if (playerMovement.pressRead)
-				{
-					playerMovement.AllSignRead(dialogMessage);
-				}
+
 			}
 		}
 	}
@@ -86,7 +92,7 @@ public class DialogBox : NetworkBehaviour
 			inRange = false;
 			if (_gameManager.isHandheld)
 			{
-				PlayerMovement playerMovement = other.gameObject.GetComponent<PlayerMovement>();
+				playerMovement = other.gameObject.GetComponent<PlayerMovement>();
 				playerMovement.canReadSign = false;
 				playerMovement.actionText.text = null;
 			}

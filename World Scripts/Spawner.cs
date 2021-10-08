@@ -54,13 +54,6 @@ public class Spawner : NetworkBehaviour
     public int astadEnemyCounter, astadMaxEnemyCounter;
     [SyncVar]
     public int diregardeEnemyCounter, diregardeMaxEnemyCounter;
-
-    private void Awake()
-    {
-
-
-
-    }
     public override void OnStartServer()
     {
         DontDestroyOnLoad(gameObject);
@@ -93,6 +86,7 @@ public class Spawner : NetworkBehaviour
     public void RpcAseaEnemySpawn(int spawnEnemy,int spawnLocation)
     {
         newEnemyClone = Instantiate(aseaEnemyPrefab[spawnEnemy], aseaSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
+        newEnemyClone.transform.parent = enemyHolder;
         NetworkServer.Spawn(newEnemyClone);
         
         aseaEnemyCounter++;
@@ -111,6 +105,7 @@ public class Spawner : NetworkBehaviour
     public void CmdEfosEnemySpawn(int spawnEnemy, int spawnLocation)
     {
         newEnemyClone = Instantiate(efosEnemyPrefab[spawnEnemy], efosSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
+        NetworkServer.Spawn(newEnemyClone);
         newEnemyClone.transform.parent = enemyHolder;
         efosEnemyCounter++;
     }
@@ -129,6 +124,7 @@ public class Spawner : NetworkBehaviour
     public void CmdNewLowCaveEnemySpawn(int spawnEnemy, int spawnLocation)
     {
         newEnemyClone = Instantiate(newlowCaveEnemyPrefab[spawnEnemy], newlowCaveSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
+        NetworkServer.Spawn(newEnemyClone);
         newEnemyClone.transform.parent = enemyHolder;
         newlowCaveEnemyCounter++;
     }
@@ -147,6 +143,7 @@ public class Spawner : NetworkBehaviour
     public void CmdDiregardeCastleEnemySpawn(int spawnEnemy, int spawnLocation)
     {
         newEnemyClone = Instantiate(diregardeCastleEnemyPrefab[spawnEnemy], diregardeCastleSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
+        NetworkServer.Spawn(newEnemyClone);
         newEnemyClone.transform.parent = enemyHolder;
         diregardeCastleEnemyCounter++;
     }
@@ -164,6 +161,7 @@ public class Spawner : NetworkBehaviour
     public void CmdEfosPassEnemySpawn(int spawnEnemy, int spawnLocation)
     {
         newEnemyClone = Instantiate(efosPassEnemyPrefab[spawnEnemy], efosPassSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
+        NetworkServer.Spawn(newEnemyClone);
         newEnemyClone.transform.parent = enemyHolder;
         efosPassEnemyCounter++;
     }
@@ -181,6 +179,7 @@ public class Spawner : NetworkBehaviour
     public void CmdAstadEnemySpawn(int spawnEnemy, int spawnLocation)
     {
         newEnemyClone = Instantiate(astadEnemyPrefab[spawnEnemy], astadSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
+        NetworkServer.Spawn(newEnemyClone);
         newEnemyClone.transform.parent = enemyHolder;
         astadEnemyCounter++;
     }
@@ -198,6 +197,7 @@ public class Spawner : NetworkBehaviour
     public void CmdDiregardEnemySpawn(int spawnEnemy,int spawnLocation)
     {
         newEnemyClone = Instantiate(diregardeEnemyPrefab[spawnEnemy], diregardeSpawnPoints[spawnLocation].position, Quaternion.identity) as GameObject;
+        NetworkServer.Spawn(newEnemyClone);
         newEnemyClone.transform.parent = enemyHolder;
         diregardeEnemyCounter++;
     }

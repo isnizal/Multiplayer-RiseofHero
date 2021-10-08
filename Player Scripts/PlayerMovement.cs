@@ -106,7 +106,7 @@ public class PlayerMovement : NetworkBehaviour
 		}
 	}
 
-	private Button _actionBtn, _spellBtn, _attackBtn;
+	private GameObject _actionObj, _spellObj, _attackObj, _chatObj;
 	public GameManager _gameManager;
 
 	public Character character;
@@ -122,25 +122,30 @@ public class PlayerMovement : NetworkBehaviour
 	{
 		if (isLocalPlayer)
 		{
+			playerCombat = GetComponent<PlayerCombat>();
+			playerCombat.InitializePlayerCombat();
 			//Mobile
 			fixedJoystick = FindObjectOfType<FixedJoystick>();
 			actionText = GameObject.Find("ActionText").GetComponent<TextMeshProUGUI>();
-			_actionBtn = GameObject.Find("ActionButton").GetComponent<Button>();
-			_actionBtn.onClick.AddListener(ActionButton);
-			_spellBtn = GameObject.Find("SpellButton").GetComponent<Button>();
-			_spellBtn.onClick.AddListener(this.GetComponent<PlayerCombat>().CastSpell);
-			_attackBtn = GameObject.Find("AttackButton").GetComponent<Button>();
-			_attackBtn.onClick.AddListener(ActionMobileAttack);
+			_actionObj = GameObject.Find("ActionButton").gameObject;
+			_actionObj.GetComponent<Button>().onClick.AddListener(()=>ActionButton());
+			_spellObj = GameObject.Find("SpellButton").gameObject;
+			_spellObj.GetComponent<Button>().onClick.AddListener(()=>playerCombat.CastSpell());
+			_attackObj = GameObject.Find("AttackButton").gameObject;
+			//_attackObj.GetComponent<Button>().onClick.RemoveAllListeners();
+			_attackObj.GetComponent<Button>().onClick.AddListener(()=>ActionMobileAttack());
+			_chatObj = GameObject.Find("ChatButton").gameObject;
+			_chatObj.GetComponent<Button>().onClick.AddListener(()=>playerCombat.MobileChat());
 
 			//others
 			_npcTeleport = FindObjectOfType<NPCTeleport>();
 			_npcCrafter = FindObjectOfType<NPCCrafter>();
 			_npcTeleport = FindObjectOfType<NPCTeleport>();
+			_npcGeneralShop = FindObjectOfType<NPCGeneralShop>();
 			_gameManager = FindObjectOfType<GameManager>();
 			character = GetComponent<Character>();
 			character.InitializeCharacter();
-			playerCombat = GetComponent<PlayerCombat>();
-			playerCombat.InitializePlayerCombat();
+
 			levelSystem = GetComponent<LevelSystem>();
 			levelSystem.InitializeLevelSystem();
 			netAnim = GetComponent<NetworkAnimator>();
@@ -183,8 +188,6 @@ public class PlayerMovement : NetworkBehaviour
 			canMove = true;
 		}
 	}
-    
-
 	public override void OnStartAuthority()
 	{
 		base.OnStartAuthority();
@@ -283,9 +286,11 @@ public class PlayerMovement : NetworkBehaviour
 					if (GameManager.GameManagerInstance.isHandheld)
 					{
 						change = Vector3.zero;
-						change.x = fixedJoystick.Horizontal;
-						change.y = fixedJoystick.Vertical;
-
+						if (!attacking)
+						{
+							change.x = fixedJoystick.Horizontal;
+							change.y = fixedJoystick.Vertical;
+						}
 						if (base.hasAuthority)
 						{
 							UpdateAnimation();
@@ -310,9 +315,40 @@ public class PlayerMovement : NetworkBehaviour
 					}
 				}
 			}
+
+
 		}
-
-
+		if (hasAuthority)
+		{
+			if (Input.GetKeyDown(KeyCode.P) && _itemToPick != null || _isMobilePick && _itemToPick != null)
+			{
+				_itemToPick.gameObject.GetComponent<GetItem>().PickupItem();
+				_isMobilePick = false;
+			}
+		}
+	}
+	public void PressingMobilePick()
+	{
+		if (isItemTrigger)
+		{
+			isItemTrigger = false;
+			_isMobilePick = true;
+		}
+	}
+	private bool _isMobilePick = false;
+	private bool isItemTrigger = false;
+	private GameObject _itemToPick = null;
+	public void SetItemToPickTrue(GameObject item)
+	{
+		_itemToPick = item;
+		isItemTrigger = true;
+		//_isMobilePick = true;
+	}
+	public void SetItemToPickFalse()
+	{
+		_itemToPick = null;
+		isItemTrigger = false;
+		//_isMobilePick = false;
 	}
 	public void ActionMobileAttack()
 	{
@@ -665,7 +701,7 @@ public class PlayerMovement : NetworkBehaviour
 			RpcSetSpriteRight();
 	}
 
-	[ClientRpc]
+	[TargetRpc]
 	private void RpcSetSpriteRight()
 	{
 		if (playerClothes == null)
@@ -951,19 +987,26 @@ public class PlayerMovement : NetworkBehaviour
 
 	}
 	public bool pressRead = false;
+
 	public void ActionButton()
 	{
 		if (canTalkNPCTeleport)
 			_npcTeleport.OpenTeleportChat();
-		if (canTalkNPCCrafter)
+		else if (canTalkNPCCrafter)
 			_npcCrafter.TalkToNPCCrafter();
-		if (canTalkNPCShop)
+		else if (canTalkNPCShop)
 			_npcGeneralShop.TalkToNPCShop();
-		if (canReadSign)
+		else if (canReadSign)
 		{
 			pressRead = true;
 		}
+		else if (isItemTrigger)
+			PressingMobilePick();
+		//if (itemPick)
+		//	item.MobilePickUp(this.gameObject);
 	}
+	//[HideInInspector] public bool itemPick = false;
+	//private GetItem item = null;
 	public void AllSignRead(string message)
 	{
 		pressRead = false;

@@ -23,9 +23,7 @@ public class Character : NetworkBehaviour
 
 	public void Save()
 	{
-		if (achievement is null)
-			achievement = FindObjectOfType<AchievementManager>();
-		if (achievement is null)
+		if (achievement ==  null)
 			return;
 
 		SaveLoadManager.SavePlayerData(this, GetComponent<LevelSystem>());
@@ -205,6 +203,7 @@ public class Character : NetworkBehaviour
 			playerMovement = gameObject.GetComponent<PlayerMovement>();
 			itemSaveManager = FindObjectOfType<ItemSaveManager>();
 			craftingWindow = FindObjectOfType<CraftingWindow>();
+			craftingWindow.GetComponent<CraftingWindow>().InitializeCraftingWindow();
 			craftingWindow.gameObject.SetActive(false);
 			//_shopWindow = sellItemArea.gameObject.transform.parent.gameObject;
 			//sellItemArea.gameObject.transform.parent.gameObject.SetActive(false);
@@ -299,7 +298,6 @@ public class Character : NetworkBehaviour
 	[Command(requiresAuthority = true)]
 	public void CmdExecuteNewHealth(int newHealth)
 	{
-		
 		this.newHealth = this.Health;
 		this.newHealth += newHealth;
 		this.Health = this.newHealth;
@@ -317,7 +315,7 @@ public class Character : NetworkBehaviour
 	[Command(requiresAuthority = true)]
 	public void CmdExecuteHealth(int health)
 	{
-
+		
 		this.Health += health;
 		this.newHealth = this.Health;
 
@@ -386,7 +384,6 @@ public class Character : NetworkBehaviour
 			this.Mana = MaxMP;
 
 	}
-
 	public void ExecuteNewMana(int mana)
 	{
 		CmdExecuteNewMana(mana);
@@ -400,7 +397,6 @@ public class Character : NetworkBehaviour
 		if (this.Mana > MaxMP)
 			this.Mana = MaxMP;
 	}
-
 	[HideInInspector] public bool isSelfManaRegen = false;
 	[HideInInspector] public bool onRestoreMana = false;
 	[SyncVar][HideInInspector] public int newMana;
@@ -422,7 +418,6 @@ public class Character : NetworkBehaviour
 		}
 
 	}
-	
 	public IEnumerator SetSelfRegenMana()
 	{
 		yield return new WaitForSeconds(mpRegenTime);
@@ -817,7 +812,6 @@ public class Character : NetworkBehaviour
 		statPanel.UpdateStatValues();
 
 	}
-
 	public void AddCurrency(int amount)
 	{
 		copperCurrency += amount;
@@ -826,7 +820,6 @@ public class Character : NetworkBehaviour
 			achievement.collectCopperCountAch += amount;
 		}
 	}
-
 	public float currentVitality;
 	public float amountToAddMaxHealth;
 	public float baseMaxHealth;

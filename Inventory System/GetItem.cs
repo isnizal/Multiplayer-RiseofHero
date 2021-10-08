@@ -15,7 +15,7 @@ public class GetItem : MonoBehaviour, ISerializationCallbackReceiver
 			return instance;
 		}
 	}
-	public Inventory inventory;
+	private Inventory inventory;
 	public Sprite uiDisplay;
 	public Item itemToPickUp;
 	public bool inRange;
@@ -23,16 +23,27 @@ public class GetItem : MonoBehaviour, ISerializationCallbackReceiver
 	public int itemCost;
 
 	public static GetItem instance;
-
+	
 	private void Start()
 	{
 		instance = this;
 	}
+	//public void MobilePickUp(GameObject _character)
+	//{
+	//	inventory = _character.gameObject.GetComponent<Character>().Inventory;
+	//}
+    private void Update()
+    {
+		//if (Input.GetKey(KeyCode.P) && notPickUp || mobilePickUp && notPickUp)
+		//{
+		//	PickupItem();
+		//}
+    }
 
-
+    [Client]
 	public void PickupItem()
 	{
-		if (itemToPickUp != null && inRange == true)
+		if (itemToPickUp != null)
 		{
 			SoundManager.PlaySound(SoundManager.Sound.PickupItem);
 			inventory.AddItem(itemToPickUp.GetCopy());
@@ -45,6 +56,7 @@ public class GetItem : MonoBehaviour, ISerializationCallbackReceiver
 		
 	}
 	private PlayerCombat _playerCombat;
+	private PlayerMovement _playerMovement;
 	private void OnTriggerEnter2D(Collider2D other)
 	{
 		if (other.CompareTag("Player"))
@@ -52,9 +64,12 @@ public class GetItem : MonoBehaviour, ISerializationCallbackReceiver
 			if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
 				return;
 			_playerCombat = other.gameObject.GetComponent<PlayerCombat>();
-			inRange = true;
-			inventory = other.gameObject.GetComponent<Character>().Inventory;
-			PickupItem();
+			inventory = _playerCombat.gameObject.GetComponent<Character>().Inventory;
+			_playerMovement = _playerCombat.GetComponent<PlayerMovement>();
+			if (_playerMovement._gameManager.isHandheld)
+				_playerMovement.actionText.text = "Pick";
+			_playerCombat.GetComponent<PlayerMovement>().SetItemToPickTrue(this.gameObject);
+
 		}
 		
 
@@ -65,10 +80,12 @@ public class GetItem : MonoBehaviour, ISerializationCallbackReceiver
 		{
 			if (!other.gameObject.GetComponent<NetworkIdentity>().isLocalPlayer)
 				return;
-			inRange = false;
+			if(_playerCombat != null)
+				_playerCombat.GetComponent<PlayerMovement>().SetItemToPickFalse();
+
+			_playerMovement.actionText.text = " ";
 		}
 	}
-
 	public void OnBeforeSerialize()
 	{
 #if UNITY_EDITOR

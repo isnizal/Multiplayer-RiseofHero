@@ -12,20 +12,20 @@ public class HealItemEffect : UsableItemEffect
 		if (character.newHealth < character.MaxHealth)
 		{
 			character.ExecuteNewHealth(HealAmount);
-			character.ExecuteHealth(HealAmount);
+			//character.ExecuteHealth(HealAmount);
 
 			character.uiManager.UpdateHealth();
 			if (character.newHealth > character.MaxHealth || character.Health > character.MaxHealth)
 			{
 				character.ExecuteNewHealth(character.MaxHealth);
-				character.ExecuteHealth(character.MaxHealth);
+				//character.ExecuteHealth(character.MaxHealth);
 				character.uiManager.UpdateHealth();
 			}
 		}
 		else if (character.newHealth == character.MaxHealth || character.Health == character.MaxHealth)
 		{
 			character.ExecuteNewHealth(character.MaxHealth);
-			character.ExecuteHealth(character.MaxHealth);
+			//character.ExecuteHealth(character.MaxHealth);
 			character.uiManager.UpdateHealth();
 		}
 	}

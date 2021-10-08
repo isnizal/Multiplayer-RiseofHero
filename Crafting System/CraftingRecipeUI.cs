@@ -26,7 +26,7 @@ public class CraftingRecipeUI : MonoBehaviour
 		itemSlots = GetComponentsInChildren<BaseItemSlot>(includeInactive: true);
 	}
 
-	private void Start()
+	public void InitializeCraftingRecipeUI()
 	{
 		foreach (BaseItemSlot itemSlot in itemSlots)
 		{

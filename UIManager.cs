@@ -36,7 +36,7 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI xpValue;
 
     private static UIManager instance;
-    private TMP_InputField chatInput;
+    public TMP_InputField chatInput;
     [HideInInspector]public GameManager _gameManager;
     public static UIManager Instance
     {
@@ -70,6 +70,7 @@ public class UIManager : MonoBehaviour
             chatInput = GameObject.Find("ChatText").GetComponentInChildren<TMP_InputField>();
             PlayerMovement playerMovement = _character.gameObject.GetComponent<PlayerMovement>();
             chatInput.onEndEdit.AddListener(playerMovement.SetMessageForPlayer);
+            chatInput.interactable = false;
         }
     }
     public void InitializeAwake(Character player)
@@ -99,6 +100,7 @@ public class UIManager : MonoBehaviour
         }
         if (chatInput == null)
             return;
+
         if (chatInput.isFocused)
         {
             //disable player keyboard if on desktop

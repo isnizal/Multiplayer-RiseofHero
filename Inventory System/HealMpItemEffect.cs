@@ -12,19 +12,19 @@ public class HealMpItemEffect : UsableItemEffect
 		if (character.Mana < character.MaxMP)
 		{
 			character.ExecuteNewMana(HealMpAmount);
-			character.ExecuteMana(HealMpAmount);
+			//character.ExecuteMana(HealMpAmount);
 			character.uiManager.UpdateMP();
 			if (character.Mana > character.MaxMP)
 			{
 				character.ExecuteNewMana(character.MaxMP);
-				character.ExecuteMana(character.MaxMP);
+				//character.ExecuteMana(character.MaxMP);
 				character.uiManager.UpdateMP();
 			}
 		}
 		else if (character.Mana == character.MaxMP)
 		{
 			character.ExecuteNewMana(character.MaxMP);
-			character.ExecuteMana(character.MaxMP);
+			//character.ExecuteMana(character.MaxMP);
 			character.uiManager.UpdateMP();
 		}
 	}

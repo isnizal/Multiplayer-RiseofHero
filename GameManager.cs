@@ -123,16 +123,16 @@ public class GameManager :MonoBehaviour
 			//transition
 			transition = GameObject.Find("CrossFade").GetComponent<Animator>();
 
-			if (SystemInfo.deviceType == DeviceType.Handheld)
-			{
-				joystickCanvas.SetActive(true);
-				isHandheld = true;
-			}
-			else
-			{
-				joystickCanvas.SetActive(false);
-				isDesktop = true;
-			}
+			//if (SystemInfo.deviceType == DeviceType.Handheld)
+			//{
+			//	joystickCanvas.SetActive(true);
+			//	isHandheld = true;
+			//}
+			//else
+			//{
+			//	joystickCanvas.SetActive(false);
+			//	isDesktop = true;
+			//}
 
 			autoSave = true;
 			saveTimer = StartSaveTimer();
