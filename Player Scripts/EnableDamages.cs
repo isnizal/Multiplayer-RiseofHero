@@ -7,7 +7,8 @@ public class EnableDamages : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        PlayerCombat.CombatInstance.MeleeAttack(collision);
+        GetComponentInParent<PlayerCombat>().MeleeAttack(collision);
+        //PlayerCombat.CombatInstance.MeleeAttack(collision);
     }
 
 }

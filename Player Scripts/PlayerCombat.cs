@@ -53,7 +53,7 @@ public class PlayerCombat : NetworkBehaviour
 
 
 	public GameManager gameManager;
-	private SpellTree _spellTree;
+	public SpellTree _spellTree;
 	
 	public UIManager _uiManager;
 	public void InitializePlayerCombat()
@@ -61,12 +61,13 @@ public class PlayerCombat : NetworkBehaviour
 		if (isLocalPlayer)
 		{
 			character = GetComponent<Character>();
-			_spellTree = FindObjectOfType<SpellTree>();
-			_uiManager = character.uiManager;
-			respawnWindow = GameObject.Find("RespawnWindow");
-			respawnWindow.SetActive(false);
 			_playerMovement = GetComponent<PlayerMovement>();
 			gameManager = _playerMovement._gameManager;
+			_uiManager = UIManager.Instance;
+			_spellTree = SpellTree.SpellInstance;
+			respawnWindow = GameObject.Find("RespawnWindow");
+			respawnWindow.SetActive(false);
+
 		}
 	}
 	public void DisplayInformation(Item item)
@@ -79,7 +80,7 @@ public class PlayerCombat : NetworkBehaviour
 		Toast.Show("You picked up: <color=red><b>" + coin.ToString() + " </b></color>Copper", 2f, ToastPosition.MiddleCenter);
 	}
 	[Command(requiresAuthority = true)]
-	public void CmdSetHealth(Character characte)
+	public void CmdSetHealth(Character character)
 	{
 		character.Health = 0;
 	}
@@ -240,6 +241,8 @@ public class PlayerCombat : NetworkBehaviour
 		var clone = (GameObject)Instantiate(damageNumbers, enemy.transform.position, Quaternion.Euler(Vector3.zero));
 		NetworkServer.Spawn(clone);
 		RpcEnemyCriticalAttack(clone,normalAttack,enemy);
+		NetworkConnection con = GetComponent<NetworkIdentity>().connectionToClient;
+		TargetEnemyCriticalAttack(con,normalAttack, enemy);
 	}
 	[ClientRpc]
 	public void RpcEnemyCriticalAttack(GameObject clone,float normalAttack,GameObject enemy)
@@ -248,7 +251,12 @@ public class PlayerCombat : NetworkBehaviour
 			return;
 		clone.GetComponent<DamageNumbers>().damageNumber = (int)normalAttack;
 		clone.GetComponent<DamageNumbers>().isRedAttack = true;
-		enemy.GetComponent<EnemyStats>().ETakeDamage((int)normalAttack, this.gameObject);
+
+	}
+	[TargetRpc]
+	public void TargetEnemyCriticalAttack( NetworkConnection player, float normalAttack, GameObject enemy)
+	{
+		enemy.GetComponent<EnemyStats>().ETakeDamage((int)normalAttack, player);
 	}
 	[Command(requiresAuthority = false)]
 	public void CmdEnemyNormalAttack(GameObject enemy, float normalAttack)
@@ -258,6 +266,8 @@ public class PlayerCombat : NetworkBehaviour
 		var clone = (GameObject)Instantiate(damageNumbers, enemy.transform.position, Quaternion.Euler(Vector3.zero));
 		NetworkServer.Spawn(clone);
 		RpcEnemyNormalAttack(clone, normalAttack,enemy);
+		NetworkConnection con = GetComponent<NetworkIdentity>().connectionToClient;
+		TargetEnemyNormalAttack(con, normalAttack, enemy);
 	}
 	[ClientRpc]
 	public void RpcEnemyNormalAttack(GameObject clone, float normalAttack,GameObject enemy)
@@ -265,7 +275,12 @@ public class PlayerCombat : NetworkBehaviour
 		if (enemy == null)
 			return;
 		clone.GetComponent<DamageNumbers>().damageNumber = (int)normalAttack;
-		enemy.GetComponent<EnemyStats>().ETakeDamage((int)normalAttack, this.gameObject);
+
+	}
+	[TargetRpc]
+	public void TargetEnemyNormalAttack(NetworkConnection player, float normalAttack, GameObject enemy)
+	{
+		enemy.GetComponent<EnemyStats>().ETakeDamage((int)normalAttack, player);
 	}
 
 

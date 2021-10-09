@@ -46,38 +46,39 @@ public class EnemyStats : NetworkBehaviour
     }
     void FixedUpdate()
     {
-        if (isServer)
-        {
-            EHealthCheck();
-        }
+        //if (isServer)
+        //{
+        //    EHealthCheck();
+        //}
     }
     //set on the server
-    private LevelSystem _levelSystem;
+    //private LevelSystem _levelSystem;
     public void OnEnemyHpChanged(int oldHp, int newHp)
     {
         this.enemyCurrentHP = newHp;
     }
-    public void ETakeDamage(int eDamageToGive,GameObject player)
+    [Client]
+    public void ETakeDamage(int eDamageToGive,NetworkConnection player)
 	{
-        if (isClient)
-        {
-            CmdETakeDamage(eDamageToGive,player);
-        }
+        CmdETakeDamage(eDamageToGive,player.identity.gameObject);
+        
         SoundManager.PlaySound(SoundManager.Sound.EnemyHit);
     }
     [Command(requiresAuthority = false)]
     public void CmdETakeDamage(int eDamageToGive,GameObject player)
     {
+
         enemyCurrentHP -= eDamageToGive;
-        _levelSystem = player.GetComponent<LevelSystem>();
+        //_levelSystem = player.GetComponent<LevelSystem>();
+        if (enemyCurrentHP <= 0)
+            Death(player);
     }
 
-    [Server]
-    void EHealthCheck()
-	{
-        if (enemyCurrentHP <= 0)
-            Death();
-	}
+    //[Server]
+    //void EHealthCheck(NetworkConnection player)
+	//{
+    //
+	//}
     private IEnumerator EnemyAttackTimeCorou;
     [SyncVar]public bool isAttack = false;
 	private void OnCollisionEnter2D(Collision2D other)
@@ -183,10 +184,10 @@ public class EnemyStats : NetworkBehaviour
 	}
 
     [Server]
-    public void Death()
+    public void Death(GameObject player)
 	{
         SoundManager.PlaySound(SoundManager.Sound.EnemyDie);
-        _levelSystem.AddExp(expToGive);
+        player.GetComponent<LevelSystem>().AddExp(expToGive);
         CheckAchDeath();
         if(areaSpawnNumber == 1)//Asea Area
 		{

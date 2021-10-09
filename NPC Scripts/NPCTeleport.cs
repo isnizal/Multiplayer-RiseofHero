@@ -54,8 +54,8 @@ public class NPCTeleport : MonoBehaviour
 			if (!other.GetComponent<NetworkIdentity>().isLocalPlayer)
 				return;
 			_character = other.gameObject.GetComponent<Character>();
-			_gameManager = FindObjectOfType<GameManager>();
-			_playerMovement = _character.gameObject.GetComponent<PlayerMovement>();
+			_gameManager = _character.playerMovement._gameManager;
+			_playerMovement = _character.playerMovement;
 			player = other.gameObject;
 			inRange = true;
 			if (_gameManager.isHandheld)

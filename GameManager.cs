@@ -85,10 +85,10 @@ public class GameManager :MonoBehaviour
 	{
 		if (character.isLocalPlayer)
 		{
-			_playerCombat = character.gameObject.GetComponent<PlayerCombat>();
+			_playerCombat = character.playerMovement.playerCombat;
 			_character = character;
-			_playerMovement = character.gameObject.GetComponent<PlayerMovement>();
-			_levelSystem = character.gameObject.GetComponent<LevelSystem>();
+			_playerMovement = character.playerMovement;
+			_levelSystem = character.playerMovement.levelSystem;
 			_uiManager = uiManager;
 
 			var shopEquip = FindObjectOfType<ShopEquipmentManager>();
@@ -104,14 +104,14 @@ public class GameManager :MonoBehaviour
 			_statPanel.InitializeStatPanel(character);
 			_statsModifier = FindObjectOfType<StatsModifier>();
 			_statsModifier.InitializeStatModifier(character);
-			_spellTree = FindObjectOfType<SpellTree>();
+			_spellTree = _playerCombat._spellTree;
 			_spellTree.InitializeSpell(character);
 			//respawn click
 			GetComponent<AudioSource>().Play();
 			yesRespawnBtn.onClick.AddListener(ClickYesRespawn);
 			noRespawnBtn.onClick.AddListener(ClickNoRespawn);
 
-			this._player = character.gameObject;
+			_player = character.gameObject;
 
 			joystickCanvas = GameObject.Find("JoystickCanvas");
 			//player hud

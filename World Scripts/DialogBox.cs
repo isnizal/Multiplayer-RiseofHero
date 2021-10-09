@@ -1,6 +1,6 @@
 using UnityEngine;
 using Mirror;
-public class DialogBox : NetworkBehaviour
+public class DialogBox : MonoBehaviour
 {
 	public static DialogBox instance;
 	public static DialogBox DialogInstance
@@ -30,7 +30,7 @@ public class DialogBox : NetworkBehaviour
 
 	void Update()
 	{
-        if (isClient) {
+ 
 			if (Input.GetKeyUp(KeyCode.Space) && inRange && !_gameManager.isHandheld)
 			{
 				if (!_gameManager.dialogBox.activeInHierarchy)
@@ -61,7 +61,7 @@ public class DialogBox : NetworkBehaviour
 				}
 			}
 
-		}
+		
 
 	}
 	PlayerMovement playerMovement;

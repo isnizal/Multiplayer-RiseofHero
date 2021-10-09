@@ -184,14 +184,16 @@ public class Character : NetworkBehaviour
 	{
 		if (hasAuthority)
 		{
+			playerMovement = gameObject.GetComponent<PlayerMovement>();
 			ExecuteHealth(MaxHealth);
 			ExecuteMana(MaxMP);
 
 			sellItemArea = FindObjectOfType<DropSellArea>();
 			dropItemArea = FindObjectOfType<DropItemArea>();
-			uiManager = FindObjectOfType<UIManager>();
+			uiManager = playerMovement.playerCombat._uiManager;
 			uiManager.InitializeAwake(this);
-			achievement = FindObjectOfType<AchievementManager>();
+			achievement = AchievementManager.instance;
+
 			Inventory = FindObjectOfType<Inventory>();
 			EquipmentPanel = FindObjectOfType<EquipmentPanel>();
 			statPanel = FindObjectOfType<StatPanel>();
@@ -200,10 +202,9 @@ public class Character : NetworkBehaviour
 			draggableItem = GameObject.Find("Draggable Item").GetComponent<Image>();
 			dropItemDialog = GameObject.Find("DropItemDialog").GetComponent<QuestionDialog>();
 			dropItemDialog.gameObject.SetActive(false);
-			playerMovement = gameObject.GetComponent<PlayerMovement>();
 			itemSaveManager = FindObjectOfType<ItemSaveManager>();
 			craftingWindow = FindObjectOfType<CraftingWindow>();
-			craftingWindow.GetComponent<CraftingWindow>().InitializeCraftingWindow();
+			craftingWindow.InitializeCraftingWindow();
 			craftingWindow.gameObject.SetActive(false);
 			//_shopWindow = sellItemArea.gameObject.transform.parent.gameObject;
 			//sellItemArea.gameObject.transform.parent.gameObject.SetActive(false);

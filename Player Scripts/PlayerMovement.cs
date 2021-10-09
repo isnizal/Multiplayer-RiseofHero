@@ -116,14 +116,20 @@ public class PlayerMovement : NetworkBehaviour
 	private NPCTeleport _npcTeleport;
 	private NPCCrafter _npcCrafter;
 	private NPCGeneralShop _npcGeneralShop;
+	private Animator transition;
 
 	[Client]
 	public void InitializeAwake()
 	{
 		if (isLocalPlayer)
 		{
+			_gameManager = GameManager.instance;
 			playerCombat = GetComponent<PlayerCombat>();
 			playerCombat.InitializePlayerCombat();
+			levelSystem = GetComponent<LevelSystem>();
+			levelSystem.InitializeLevelSystem();
+			character = GetComponent<Character>();
+			character.InitializeCharacter();
 			//Mobile
 			fixedJoystick = FindObjectOfType<FixedJoystick>();
 			actionText = GameObject.Find("ActionText").GetComponent<TextMeshProUGUI>();
@@ -142,20 +148,18 @@ public class PlayerMovement : NetworkBehaviour
 			_npcCrafter = FindObjectOfType<NPCCrafter>();
 			_npcTeleport = FindObjectOfType<NPCTeleport>();
 			_npcGeneralShop = FindObjectOfType<NPCGeneralShop>();
-			_gameManager = FindObjectOfType<GameManager>();
-			character = GetComponent<Character>();
-			character.InitializeCharacter();
 
-			levelSystem = GetComponent<LevelSystem>();
-			levelSystem.InitializeLevelSystem();
+			transition = GameObject.Find("CrossFade").GetComponent<Animator>();
+
+
+
 			netAnim = GetComponent<NetworkAnimator>();
 			netRigidbody2D = GetComponent<NetworkRigidbody2D>();
 			netRigidbody2D.target.simulated = base.hasAuthority;
-			gameClothes = FindObjectOfType<GameClothes>();
 			playerClothes = GetComponent<PlayerClothes>();
 			Initialize();
 			CmdSetSpriteFront();
-
+			transition.SetBool("End", true);
 
 		}
 
@@ -701,7 +705,7 @@ public class PlayerMovement : NetworkBehaviour
 			RpcSetSpriteRight();
 	}
 
-	[TargetRpc]
+	[ClientRpc]
 	private void RpcSetSpriteRight()
 	{
 		if (playerClothes == null)

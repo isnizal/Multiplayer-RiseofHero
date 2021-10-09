@@ -35,7 +35,7 @@ public class LevelSystem : NetworkBehaviour
 	{
 		_character = GetComponent<Character>();
 		_playerCombat = GetComponent<PlayerCombat>();
-		_spellTree = FindObjectOfType<SpellTree>();
+		_spellTree = _playerCombat._spellTree;
 	}
 	private void Update()
 	{
@@ -87,17 +87,18 @@ public class LevelSystem : NetworkBehaviour
 			canLevelUp = false;
 		}
 	}	
-	[Server]
+	[TargetRpc]
 	public void AddExp(int expToAdd)
 	{
-		NetworkConnection net = GetComponent<NetworkIdentity>().connectionToClient;
-		TargetAddExp(net, expToAdd);
+		currentExp += expToAdd;
+		//NetworkConnection net = GetComponent<NetworkIdentity>().connectionToClient;
+		//TargetAddExp(net, expToAdd);
 	}
 	
 	[TargetRpc]
 	public void TargetAddExp(NetworkConnection target, int expToAdd)
 	{
-		target.identity.gameObject.GetComponent<LevelSystem>().currentExp += expToAdd;
+		//target.identity.gameObject.GetComponent<LevelSystem>().currentExp += expToAdd;
 	}
 
 	[Client]
