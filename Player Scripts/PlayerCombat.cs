@@ -293,6 +293,7 @@ public class PlayerCombat : NetworkBehaviour
 		var clone = (GameObject)Instantiate(damageNumbers, enemy.transform.position, Quaternion.Euler(Vector3.zero));
 		NetworkServer.Spawn(clone);
 		RpcBossCriticalAttack(clone, normalAttack,enemy);
+		TargetRpcBossCriticalAttack(connectionToClient, normalAttack, enemy);
 	}
 	[ClientRpc]
 	public void RpcBossCriticalAttack(GameObject clone, float normalAttack,GameObject enemy)
@@ -301,7 +302,12 @@ public class PlayerCombat : NetworkBehaviour
 			return;
 		clone.GetComponent<DamageNumbers>().damageNumber = (int)normalAttack;
 		clone.GetComponent<DamageNumbers>().isRedAttack = true;
-		enemy.gameObject.GetComponent<BossStats>().ETakeDamage((int)normalAttack, this.gameObject);
+
+	}
+	[TargetRpc]
+	public void TargetRpcBossCriticalAttack(NetworkConnection player, float normalAttack, GameObject enemy)
+	{
+		enemy.gameObject.GetComponent<BossStats>().ETakeDamage(player,(int)normalAttack);
 	}
 	[Command(requiresAuthority = false)]
 	public void CmdBossNormalAttack(GameObject enemy, float normalAttack)
@@ -311,6 +317,7 @@ public class PlayerCombat : NetworkBehaviour
 		var clone = (GameObject)Instantiate(damageNumbers, enemy.transform.position, Quaternion.Euler(Vector3.zero));
 		NetworkServer.Spawn(clone);
 		RpcBossNormalAttack(clone, normalAttack,enemy);
+		TargetBossNormalAttack(connectionToClient, normalAttack, enemy);
 	}
 	[ClientRpc]
 	public void RpcBossNormalAttack(GameObject clone, float normalAttack,GameObject enemy)
@@ -319,7 +326,12 @@ public class PlayerCombat : NetworkBehaviour
 			return;
 		clone.GetComponent<DamageNumbers>().damageNumber = (int)normalAttack;
 		clone.GetComponent<DamageNumbers>().isRedAttack = true;
-		enemy.gameObject.GetComponent<BossStats>().ETakeDamage((int)normalAttack, this.gameObject);
+
+	}
+	[TargetRpc]
+	public void TargetBossNormalAttack(NetworkConnection player, float normalAttack, GameObject enemy)
+	{
+		enemy.gameObject.GetComponent<BossStats>().ETakeDamage(player,(int)normalAttack);
 	}
 	[Command(requiresAuthority = false)]
 	public void CmdDestroyObjects(GameObject item)

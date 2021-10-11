@@ -55,8 +55,8 @@ public class UIManager : MonoBehaviour
     {
         if (player.isLocalPlayer)
         {
-            GetComponent<AchievementManager>().AchievementManagerLoad(player);
-            GetComponent<InventoryInput>().LoadInventoryInput(player);
+            player.achievement.AchievementManagerLoad(player);
+            player.inventoryInput.LoadInventoryInput(player);
             _character = player;
             levelValue = GameObject.Find("LevelValue").GetComponent<TextMeshProUGUI>();
             premiumValue = GameObject.Find("PremiumValue").GetComponent<TextMeshProUGUI>();
@@ -76,7 +76,7 @@ public class UIManager : MonoBehaviour
     public void InitializeAwake(Character player)
     {
         InitializeUIVariable(player);
-        _gameManager = GetComponent<GameManager>();
+        _gameManager = player.playerMovement._gameManager;
         _gameManager.InitializeGameManagerVariable(player, this);
     }
 

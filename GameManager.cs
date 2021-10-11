@@ -78,7 +78,7 @@ public class GameManager :MonoBehaviour
 	private UIManager _uiManager;
 	public SpellTree _spellTree;
 	private StatPanel _statPanel;
-	private StatsModifier _statsModifier;
+	public StatsModifier _statsModifier;
 	private DailyRewardSystem.DailyRewards _dailyRewards;
 
 	public void InitializeGameManagerVariable(Character character, UIManager uiManager)
@@ -123,16 +123,16 @@ public class GameManager :MonoBehaviour
 			//transition
 			transition = GameObject.Find("CrossFade").GetComponent<Animator>();
 
-			//if (SystemInfo.deviceType == DeviceType.Handheld)
-			//{
-			//	joystickCanvas.SetActive(true);
-			//	isHandheld = true;
-			//}
-			//else
-			//{
-			//	joystickCanvas.SetActive(false);
-			//	isDesktop = true;
-			//}
+			if (SystemInfo.deviceType == DeviceType.Handheld)
+			{
+				joystickCanvas.SetActive(true);
+				isHandheld = true;
+			}
+			else
+			{
+				joystickCanvas.SetActive(false);
+				isDesktop = true;
+			}
 
 			autoSave = true;
 			saveTimer = StartSaveTimer();

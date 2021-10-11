@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
-public class DestroyIfExit : MonoBehaviour
+using Mirror;
+public class DestroyIfExit : NetworkBehaviour
 {
 	public static DestroyIfExit instance;
 
@@ -11,8 +11,12 @@ public class DestroyIfExit : MonoBehaviour
 		instance = this;
 	}
 
+	[Server]
 	public void DestroyObject()
 	{
-		Destroy(this.gameObject);
+		if (isServer)
+		{
+			NetworkServer.Destroy(this.gameObject);
+		}
 	}
 }

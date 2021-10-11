@@ -86,11 +86,21 @@ public class LevelSystem : NetworkBehaviour
 		{
 			canLevelUp = false;
 		}
-	}	
-	[TargetRpc]
-	public void AddExp(int expToAdd)
+	}
+	[Client]
+	public void ExperienceReward(int expToAdd)
 	{
-		currentExp += expToAdd;
+		CmdAddExperienceReward(expToAdd);
+	}
+	[Command(requiresAuthority = true)]
+	public void CmdAddExperienceReward(int expToAdd)
+	{
+		AddExp(connectionToClient, expToAdd);
+	}
+	[TargetRpc]
+	public void AddExp(NetworkConnection conn, int expToAdd)
+	{
+		conn.identity.GetComponent<LevelSystem>().currentExp += expToAdd;
 		//NetworkConnection net = GetComponent<NetworkIdentity>().connectionToClient;
 		//TargetAddExp(net, expToAdd);
 	}

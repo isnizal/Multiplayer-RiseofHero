@@ -61,8 +61,9 @@ namespace DailyRewardSystem
 
        public void InitializeDailyRewards(Character character)
         {
+            
             _character = character;
-            _levelSystem = _character.gameObject.GetComponent<LevelSystem>();
+            _levelSystem = _character.playerMovement.levelSystem;
             _inventory = _character.Inventory;
             Initialize();
             StopAllCoroutines();
@@ -157,7 +158,7 @@ namespace DailyRewardSystem
             {
                 Debug.Log(reward.Type.ToString() + reward.Amount);
                 GameData.Experience += reward.Amount;
-                _levelSystem.AddExp(reward.Amount);
+                _levelSystem.ExperienceReward(reward.Amount);
                 isRewardReady = false;
             }
             else if(reward.Type == RewardType.CopperCoins)

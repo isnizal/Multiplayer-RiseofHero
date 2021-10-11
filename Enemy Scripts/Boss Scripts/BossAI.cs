@@ -36,7 +36,7 @@ public class BossAI : NetworkBehaviour
 
 			for (int i = 0; i < wayPoints.Length; i++)
 			{
-				wayPoints[i] = GameObject.Find("Dungeons and Caves").transform.GetChild(0).transform.GetChild(i);
+				wayPoints[i] = GameObject.Find("DevilQueen(Boss)").transform.GetChild(0).transform.GetChild(i);
 			}
 		}
 

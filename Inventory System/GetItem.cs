@@ -20,7 +20,7 @@ public class GetItem : MonoBehaviour, ISerializationCallbackReceiver
 	public Item itemToPickUp;
 	public bool inRange;
 	[Space]
-	public int itemCost;
+	//public int itemCost;
 
 	public static GetItem instance;
 	
@@ -83,7 +83,8 @@ public class GetItem : MonoBehaviour, ISerializationCallbackReceiver
 			if(_playerCombat != null)
 				_playerCombat.GetComponent<PlayerMovement>().SetItemToPickFalse();
 
-			_playerMovement.actionText.text = " ";
+			if(_playerMovement._gameManager.isHandheld)
+				_playerMovement.actionText.text = " ";
 		}
 	}
 	public void OnBeforeSerialize()

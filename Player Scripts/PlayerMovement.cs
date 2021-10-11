@@ -112,6 +112,7 @@ public class PlayerMovement : NetworkBehaviour
 	public Character character;
 	public PlayerCombat playerCombat;
 	public LevelSystem levelSystem;
+	public ServerManager serverManager;
 	//npc should be careful if contain more than one
 	private NPCTeleport _npcTeleport;
 	private NPCCrafter _npcCrafter;
@@ -124,24 +125,32 @@ public class PlayerMovement : NetworkBehaviour
 		if (isLocalPlayer)
 		{
 			_gameManager = GameManager.instance;
+			if (_gameManager == null)
+				_gameManager = FindObjectOfType<GameManager>();
 			playerCombat = GetComponent<PlayerCombat>();
 			playerCombat.InitializePlayerCombat();
 			levelSystem = GetComponent<LevelSystem>();
 			levelSystem.InitializeLevelSystem();
 			character = GetComponent<Character>();
 			character.InitializeCharacter();
+			//server
+			serverManager = FindObjectOfType<ServerManager>();
+			FindObjectOfType<BossDoor>().InitializeBossDoor(this);
 			//Mobile
-			fixedJoystick = FindObjectOfType<FixedJoystick>();
-			actionText = GameObject.Find("ActionText").GetComponent<TextMeshProUGUI>();
-			_actionObj = GameObject.Find("ActionButton").gameObject;
-			_actionObj.GetComponent<Button>().onClick.AddListener(()=>ActionButton());
-			_spellObj = GameObject.Find("SpellButton").gameObject;
-			_spellObj.GetComponent<Button>().onClick.AddListener(()=>playerCombat.CastSpell());
-			_attackObj = GameObject.Find("AttackButton").gameObject;
-			//_attackObj.GetComponent<Button>().onClick.RemoveAllListeners();
-			_attackObj.GetComponent<Button>().onClick.AddListener(()=>ActionMobileAttack());
-			_chatObj = GameObject.Find("ChatButton").gameObject;
-			_chatObj.GetComponent<Button>().onClick.AddListener(()=>playerCombat.MobileChat());
+			if (_gameManager.isHandheld)
+			{
+				fixedJoystick = FindObjectOfType<FixedJoystick>();
+				actionText = GameObject.Find("ActionText").GetComponent<TextMeshProUGUI>();
+				_actionObj = GameObject.Find("ActionButton").gameObject;
+				_actionObj.GetComponent<Button>().onClick.AddListener(() => ActionButton());
+				_spellObj = GameObject.Find("SpellButton").gameObject;
+				_spellObj.GetComponent<Button>().onClick.AddListener(() => playerCombat.CastSpell());
+				_attackObj = GameObject.Find("AttackButton").gameObject;
+				//_attackObj.GetComponent<Button>().onClick.RemoveAllListeners();
+				_attackObj.GetComponent<Button>().onClick.AddListener(() => ActionMobileAttack());
+				_chatObj = GameObject.Find("ChatButton").gameObject;
+				_chatObj.GetComponent<Button>().onClick.AddListener(() => playerCombat.MobileChat());
+			}
 
 			//others
 			_npcTeleport = FindObjectOfType<NPCTeleport>();
@@ -200,6 +209,16 @@ public class PlayerMovement : NetworkBehaviour
 		string findName = FindObjectOfType<GameObserver>().LocalPlayerName;
 		InvokeCanvasObjects(findName);
 
+	}
+	[Client]
+	public void ContactServerManager(Vector2 position)
+	{
+		CmdContactServerManager(position,serverManager);
+	}
+	[Command(requiresAuthority = false)]
+	public void CmdContactServerManager(Vector2 position,ServerManager serverManager)
+	{
+		serverManager.SpawnBossDevilQueen(position);
 	}
 
     #region "Message and Chat"
@@ -285,9 +304,9 @@ public class PlayerMovement : NetworkBehaviour
 				return;
 			if (!character.onInput)
 			{
-				if (!PlayerCombat.CombatInstance.playerDied)
+				if (!playerCombat.playerDied)
 				{
-					if (GameManager.GameManagerInstance.isHandheld)
+					if (_gameManager.isHandheld)
 					{
 						change = Vector3.zero;
 						if (!attacking)
@@ -302,7 +321,7 @@ public class PlayerMovement : NetworkBehaviour
 						}
 					}
 
-					if (GameManager.GameManagerInstance.isDesktop)
+					if (_gameManager.isDesktop)
 					{
 
 						change = Vector3.zero;

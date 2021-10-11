@@ -187,7 +187,7 @@ public class EnemyStats : NetworkBehaviour
     public void Death(GameObject player)
 	{
         SoundManager.PlaySound(SoundManager.Sound.EnemyDie);
-        player.GetComponent<LevelSystem>().AddExp(expToGive);
+        player.GetComponent<LevelSystem>().AddExp(connectionToClient,expToGive);
         CheckAchDeath();
         if(areaSpawnNumber == 1)//Asea Area
 		{

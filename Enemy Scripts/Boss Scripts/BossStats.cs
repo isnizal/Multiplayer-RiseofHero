@@ -4,6 +4,8 @@ using UnityEngine;
 using Mirror;
 
 [RequireComponent(typeof(NetworkIdentity))]
+[RequireComponent(typeof(NetworkTransform))]
+[RequireComponent(typeof(NetworkAnimator))]
 public class BossStats : NetworkBehaviour
 {
     public static BossStats instance;
@@ -21,8 +23,7 @@ public class BossStats : NetworkBehaviour
     }
     [Header("Enemy Stats")]
     public string enemyName;
-    [SyncVar]
-    public int enemyCurrentHP;
+    [SyncVar] public int enemyCurrentHP;
     public int enemyMaxHP;
     public int enemyAttackPower;
     public int enemyDefense;
@@ -40,19 +41,21 @@ public class BossStats : NetworkBehaviour
 
     void FixedUpdate()
     {
-        EHealthCheck();
+        //EHealthCheck();
     }
-    private LevelSystem _levelSystem;
-    public void ETakeDamage(int eDamageToGive,GameObject other)
+    [Client]
+    public void ETakeDamage(NetworkConnection conn,int eDamageToGive)
     {
-        enemyCurrentHP -= eDamageToGive;
-        _levelSystem = other.GetComponent<LevelSystem>();
+
+        _playerMovement = conn.identity.gameObject.GetComponent<PlayerMovement>();
     }
 
-    void EHealthCheck()
+    [Command(requiresAuthority = false)]
+    public void CmdTakeDamage(int eDamageToGive)
     {
-        if(enemyCurrentHP < enemyMaxHP / 2)
-		{
+        enemyCurrentHP -= eDamageToGive;
+        if (enemyCurrentHP < enemyMaxHP / 2)
+        {
             GetComponent<BossAI>().speed = 10;
             GetComponent<BossAI>().startWaitTime = 1;
         }
@@ -62,6 +65,13 @@ public class BossStats : NetworkBehaviour
         }
     }
 
+   // [Server]
+   // void EHealthCheck()
+   // {
+   //
+   // }
+
+    private PlayerMovement _playerMovement;
     private void OnCollisionEnter2D(Collision2D other)
     {
         if (other.gameObject.CompareTag("Player"))
@@ -85,7 +95,8 @@ public class BossStats : NetworkBehaviour
             }
         }
     }
-    [Command(requiresAuthority =false)]
+    #region "EnemyAttack"
+    [Command(requiresAuthority = false)]
     public void CmdNoDamage(int totalDamage, Character other)
     {
         var missclone = Instantiate(damageNumbers, other.transform.position, Quaternion.Euler(Vector3.zero));
@@ -110,9 +121,9 @@ public class BossStats : NetworkBehaviour
     {
         clone.GetComponent<DamageNumbers>().damageNumber = totalDamage;
     }
+    #endregion
 
-
-
+    [Server]
     public void DropLoot()
     {
         if (lootTables != null)
@@ -120,26 +131,25 @@ public class BossStats : NetworkBehaviour
             GameObject current = lootTables.LootItems();
             if (current != null)
             {
-                CmdDropLoot(current);
+                Destroy(current);
             }
         }
     }
-    [Command(requiresAuthority = false)]
-    public void CmdDropLoot(GameObject current)
+    [Server]
+    public void Destroy(GameObject current)
     {
         var loot = Instantiate(current.gameObject, transform.position, Quaternion.identity);
         NetworkServer.Spawn(loot);
+        NetworkServer.Destroy(this.gameObject);
     }
+    [Server]
     public void Death()
     {
-        _levelSystem.gameObject.GetComponent<LevelSystem>().AddExp(expToGive);
+        _playerMovement.levelSystem.AddExp(connectionToClient,expToGive);
         DropLoot();
-        GameManager.GameManagerInstance.devilQueenDefeated = 1;
+
+        _playerMovement.serverManager.devilQueenDefeated = true;
         //GameManager.GameManagerInstance.devilQueenSpawned = false;
-        if (isClient)
-        {
-            _levelSystem.gameObject.GetComponent<PlayerCombat>().CmdDestroyObjects(this.gameObject);
-        }
     }
 
 }

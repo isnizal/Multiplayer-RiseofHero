@@ -144,7 +144,7 @@ public class AchievementManager : MonoBehaviour
 
 	private void Update()
 	{
-		if (_character is null)
+		if (_character == null)
 			return;
 		if (_character.isLocalPlayer)
 		{
@@ -155,7 +155,7 @@ public class AchievementManager : MonoBehaviour
 	}
 	public void ActiveAch()
 	{
-		if (_levelSystem is null)
+		if (_levelSystem == null)
 			return;
 
 		for (int i = 0; i < achSO.Length; i++)
@@ -452,7 +452,7 @@ public class AchievementManager : MonoBehaviour
 			if (collectCopper1Done == 1)
 			{
 				Toast.Show("You gained " + "<color=red>" + achSO[1].achReward + "</color>", 3f, ToastPosition.MiddleCenter);
-				_levelSystem.AddExp(50);
+				_levelSystem.ExperienceReward(50);
 				collectCopper1Claimed = 1;
 				claimButton[buttonNo].interactable = false;
 			}
@@ -480,7 +480,7 @@ public class AchievementManager : MonoBehaviour
 			if (killDevilQueenDone == 1)
 			{
 				Toast.Show("You gained " + "<color=red>" + achSO[3].achReward + "</color>", 3f, ToastPosition.MiddleCenter);
-				_levelSystem.AddExp(250);
+				_levelSystem.ExperienceReward(250);
 				killDevilQueenClaimed = 1;
 				claimButton[buttonNo].interactable = false;
 			}
@@ -494,7 +494,7 @@ public class AchievementManager : MonoBehaviour
 			if (collectCopper2Done == 1)
 			{
 				Toast.Show("You gained " + "<color=red>" + achSO[4].achReward + "</color>", 3f, ToastPosition.MiddleCenter);
-				_levelSystem.AddExp(250);
+				_levelSystem.ExperienceReward(250);
 				collectCopper2Claimed = 1;
 				claimButton[buttonNo].interactable = false;
 			}

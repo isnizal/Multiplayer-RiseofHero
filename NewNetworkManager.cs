@@ -7,11 +7,15 @@ using System;
 public class NewNetworkManager : NetworkManager
 {
     private GameObject _spawner;
+    [SerializeField]private GameObject _serverManager;
     public override void OnStartServer()
     {
         base.OnStartServer();
         _spawner = Instantiate(spawnPrefabs[0]);
         NetworkServer.Spawn(_spawner);
+        //spawn server manager
+        SpawnServerManager();
+        
     }
     public override void OnServerAddPlayer(NetworkConnection conn)
     {
@@ -39,10 +43,10 @@ public class NewNetworkManager : NetworkManager
         // it will be re-enabled in FinishLoadScene.
         NetworkServer.isLoadingScene = true;
         loadingSceneAsync = SceneManager.LoadSceneAsync(newSceneName);
-        if (FindObjectOfType<MainMenu>() is null)
-            return;
+        //if (FindObjectOfType<MainMenu>() == null)
+           // return;
 
-        FindObjectOfType<MainMenu>().LoadNewGame(loadingSceneAsync);
+        //FindObjectOfType<MainMenu>().LoadNewGame(loadingSceneAsync);
 
         // ServerChangeScene can be called when stopping the server
         // when this happens the server is not active so does not need to tell clients about the change
@@ -68,6 +72,12 @@ public class NewNetworkManager : NetworkManager
        NetworkServer.Spawn(PatrolPos);
        NetworkServer.Spawn(Patrol);
         
+    }
+    [ServerCallback]
+    public void SpawnServerManager()
+    {
+        var server = Instantiate(_serverManager);
+        NetworkServer.Spawn(server);
     }
 
     public override void OnClientChangeScene(string newSceneName, SceneOperation sceneOperation, bool customHandling)

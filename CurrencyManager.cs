@@ -3,16 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
 
-public class CurrencyManager : MonoBehaviour
+[RequireComponent(typeof(NetworkIdentity))]
+public class CurrencyManager : NetworkBehaviour
 {
     private int amount;
     public int minAmount;
     public int maxAmount;
     private Character thePlayer;
 
-    void Start()
+    public override void OnStartServer()
     {
+        base.OnStartServer();
         amount = Random.Range(minAmount, maxAmount);
+        //Debug.Log("coin start");
     }
 
     private void OnTriggerEnter2D(Collider2D other)

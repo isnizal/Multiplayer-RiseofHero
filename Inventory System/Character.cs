@@ -48,23 +48,23 @@ public class Character : NetworkBehaviour
 		Mana = loadedStats[2];
 		MaxMP = loadedStats[3];
 		copperCurrency = loadedStats[4];
-		LevelSystem.LevelInstance.currentLevel = loadedStats[5];
-		LevelSystem.LevelInstance.currentExp = loadedStats[6];
+		playerMovement.levelSystem.currentLevel = loadedStats[5];
+		playerMovement.levelSystem.currentExp = loadedStats[6];
 		statPoints = loadedStats[7];
 		statPointsAllocated = loadedStats[8];
-		StatsModifier.StatsInstance.currentStrValue = loadedStats[9];
-		StatsModifier.StatsInstance.currentDefValue = loadedStats[10];
-		StatsModifier.StatsInstance.currentIntValue = loadedStats[11];
-		StatsModifier.StatsInstance.currentVitValue = loadedStats[12];
+		playerMovement._gameManager._statsModifier.currentStrValue = loadedStats[9];
+		playerMovement._gameManager._statsModifier.currentDefValue = loadedStats[10];
+		playerMovement._gameManager._statsModifier.currentIntValue = loadedStats[11];
+		playerMovement._gameManager._statsModifier.currentVitValue = loadedStats[12];
 		premiumCurrency = loadedStats[13];
-		SpellTree.SpellInstance.spellPointsAvailable = loadedStats[14];
-		SpellTree.SpellInstance.spellPointsAllocated = loadedStats[15];
-		SpellTree.SpellInstance.fireball1Level = loadedStats[16];
-		SpellTree.SpellInstance.icicle1Level = loadedStats[17];
-		SpellTree.SpellInstance.arcticBlast1Level = loadedStats[18];
+		playerMovement._gameManager._spellTree.spellPointsAvailable = loadedStats[14];
+		playerMovement._gameManager._spellTree.spellPointsAllocated = loadedStats[15];
+		playerMovement._gameManager._spellTree.fireball1Level = loadedStats[16];
+		playerMovement._gameManager._spellTree.icicle1Level = loadedStats[17];
+		playerMovement._gameManager._spellTree.arcticBlast1Level = loadedStats[18];
 
-		UIManager.Instance.UpdateHealth();
-		UIManager.Instance.UpdateMP();
+		playerMovement.playerCombat._uiManager.UpdateHealth();
+		playerMovement.playerCombat._uiManager.UpdateMP();
 		itemSaveManager.LoadEquipment(this);
 		itemSaveManager.LoadInventory(this);
 		itemSaveManager.LoadItemStash(this);
@@ -76,13 +76,13 @@ public class Character : NetworkBehaviour
 		playerMovement.swordValue = loadedStats[25];
 		playerMovement.shieldValue = loadedStats[26];
 		playerMovement.hairValue = loadedStats[27];
-		GameManager.GameManagerInstance.devilQueenDefeated = loadedStats[28];
-		GameManager.GameManagerInstance.firstTimePlaying = loadedStats[29];
+		//GameManager.GameManagerInstance.devilQueenDefeated = loadedStats[28];
+		playerMovement._gameManager.firstTimePlaying = loadedStats[29];
 
 		Health = MaxHealth;
 		Mana = MaxMP;
-		PlayerCombat.CombatInstance.EnableSelfRegenHp();
-		PlayerCombat.CombatInstance.EnableSelfRegenMana();
+		playerMovement.playerCombat.EnableSelfRegenHp();
+		playerMovement.playerCombat.EnableSelfRegenMana();
 
 		playerMovement.CheckValueClothes();
 		//load game initialize
@@ -127,7 +127,6 @@ public class Character : NetworkBehaviour
 	public float playerPosX;
 	public float playerPosY;
 
-
 	[Space]
 
 	[Header("------> Currency <------")]
@@ -167,7 +166,8 @@ public class Character : NetworkBehaviour
 	[SerializeField] ItemSaveManager itemSaveManager;
 
 	private BaseItemSlot dragItemSlot;
-	private AchievementManager achievement;
+	public AchievementManager achievement;
+	public InventoryInput inventoryInput;
 	private GameObject _shopWindow;
 
 	public PlayerMovement playerMovement;
@@ -188,16 +188,18 @@ public class Character : NetworkBehaviour
 			ExecuteHealth(MaxHealth);
 			ExecuteMana(MaxMP);
 
-			sellItemArea = FindObjectOfType<DropSellArea>();
-			dropItemArea = FindObjectOfType<DropItemArea>();
-			uiManager = playerMovement.playerCombat._uiManager;
-			uiManager.InitializeAwake(this);
-			achievement = AchievementManager.instance;
-
 			Inventory = FindObjectOfType<Inventory>();
 			EquipmentPanel = FindObjectOfType<EquipmentPanel>();
 			statPanel = FindObjectOfType<StatPanel>();
 			itemTooltip = FindObjectOfType<ItemTooltip>();
+			sellItemArea = FindObjectOfType<DropSellArea>();
+			dropItemArea = FindObjectOfType<DropItemArea>();
+
+			uiManager = playerMovement.playerCombat._uiManager;
+			achievement = uiManager.GetComponent<AchievementManager>();
+			inventoryInput = uiManager.GetComponent<InventoryInput>();
+			uiManager.InitializeAwake(this);
+
 			itemTooltip.gameObject.SetActive(false);
 			draggableItem = GameObject.Find("Draggable Item").GetComponent<Image>();
 			dropItemDialog = GameObject.Find("DropItemDialog").GetComponent<QuestionDialog>();

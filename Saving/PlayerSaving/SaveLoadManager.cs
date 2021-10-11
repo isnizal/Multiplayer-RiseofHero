@@ -86,11 +86,11 @@ public class PlayerData
 		playerIntStats[11] = (int)character.Intelligence.BaseValue;
 		playerIntStats[12] = (int)character.Vitality.BaseValue;
 		playerIntStats[13] = character.premiumCurrency;
-		playerIntStats[14] = SpellTree.SpellInstance.spellPointsAvailable;
-		playerIntStats[15] = SpellTree.SpellInstance.spellPointsAllocated;
-		playerIntStats[16] = SpellTree.SpellInstance.fireball1Level;
-		playerIntStats[17] = SpellTree.SpellInstance.icicle1Level;
-		playerIntStats[18] = SpellTree.SpellInstance.arcticBlast1Level;
+		playerIntStats[14] = character.playerMovement._gameManager._spellTree.spellPointsAvailable;
+		playerIntStats[15] = character.playerMovement._gameManager._spellTree.spellPointsAllocated;
+		playerIntStats[16] = character.playerMovement._gameManager._spellTree.fireball1Level;
+		playerIntStats[17] = character.playerMovement._gameManager._spellTree.icicle1Level;
+		playerIntStats[18] = character.playerMovement._gameManager._spellTree.arcticBlast1Level;
 		playerIntStats[19] = (int)character.playerPosX;
 		playerIntStats[20] = (int)character.playerPosY;
 		playerIntStats[21] = character.playerMovement.helmetValue;
@@ -100,8 +100,8 @@ public class PlayerData
 		playerIntStats[25] = character.playerMovement.swordValue;
 		playerIntStats[26] = character.playerMovement.shieldValue;
 		playerIntStats[27] = character.playerMovement.hairValue;
-		playerIntStats[28] = GameManager.GameManagerInstance.devilQueenDefeated;
-		playerIntStats[29] = GameManager.GameManagerInstance.firstTimePlaying;
+		//playerIntStats[28] = GameManager.GameManagerInstance.devilQueenDefeated;
+		playerIntStats[28] = character.playerMovement._gameManager.firstTimePlaying;
 	}
 	public PlayerData(AchievementManager achievementManager)
 	{
