@@ -11,9 +11,9 @@ public class CurrencyManager : NetworkBehaviour
     public int maxAmount;
     private Character thePlayer;
 
-    public override void OnStartServer()
+    public void Start()
     {
-        base.OnStartServer();
+        //base.OnStartServer();
         amount = Random.Range(minAmount, maxAmount);
         //Debug.Log("coin start");
     }
